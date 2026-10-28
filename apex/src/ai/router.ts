@@ -1,22 +1,109 @@
-import { getModelForAgent } from './models';
 import type { AIAgentRole } from './types';
 
-const keywordMap: Array<[AIAgentRole, RegExp]> = [
-  ['technical', /code|api|database|firebase|supabase|security|deploy|bug|architecture/i],
-  ['ux', /ui|ux|design|layout|mobile|responsive|user flow|واجهة|تصميم|تجربة/i],
-  ['sales', /price|cost|quote|budget|client|شراء|سعر|تكلفة|عميل/i],
-  ['copy', /copy|caption|headline|text|content|محتوى|نص|إعلان/i],
-  ['research', /research|latest|current|compare|بحث|آخر|حالي|قارن/i],
-  ['support', /help|how|problem|error|مساعدة|مشكلة|خطأ/i],
+const technicalKeywords = [
+  'code',
+  'coding',
+  'bug',
+  'error',
+  'api',
+  'database',
+  'backend',
+  'frontend',
+  'react',
+  'typescript',
+  'javascript',
+  'firebase',
+  'supabase',
+  'برمجة',
+  'كود',
+  'خطأ',
+  'باك اند',
+  'فرونت اند',
 ];
 
-export function routeAgent(input: string): AIAgentRole {
-  for (const [agent, pattern] of keywordMap) {
-    if (pattern.test(input)) return agent;
-  }
-  return 'discovery';
+const uxKeywords = [
+  'ui',
+  'ux',
+  'design',
+  'interface',
+  'layout',
+  'responsive',
+  'تصميم',
+  'واجهة',
+  'تجربة المستخدم',
+];
+
+const salesKeywords = [
+  'price',
+  'pricing',
+  'cost',
+  'quote',
+  'service',
+  'buy',
+  'سعر',
+  'تكلفة',
+  'خدمة',
+  'اشتراك',
+];
+
+const copyKeywords = [
+  'copy',
+  'content',
+  'headline',
+  'caption',
+  'marketing',
+  'محتوى',
+  'عنوان',
+  'إعلان',
+  'تسويق',
+];
+
+const researchKeywords = [
+  'search',
+  'research',
+  'latest',
+  'current',
+  'today',
+  'ابحث',
+  'بحث',
+  'آخر',
+  'حالي',
+  'اليوم',
+];
+
+function containsKeyword(
+  text: string,
+  keywords: string[],
+): boolean {
+  const normalized = text.toLowerCase();
+
+  return keywords.some((keyword) =>
+    normalized.includes(keyword.toLowerCase()),
+  );
 }
 
-export function modelForInput(input: string) {
-  return getModelForAgent(routeAgent(input));
+export function routeAIRequest(
+  message: string,
+): AIAgentRole {
+  if (containsKeyword(message, technicalKeywords)) {
+    return 'technical';
+  }
+
+  if (containsKeyword(message, uxKeywords)) {
+    return 'ux';
+  }
+
+  if (containsKeyword(message, salesKeywords)) {
+    return 'sales';
+  }
+
+  if (containsKeyword(message, copyKeywords)) {
+    return 'copy';
+  }
+
+  if (containsKeyword(message, researchKeywords)) {
+    return 'research';
+  }
+
+  return 'discovery';
 }
