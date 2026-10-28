@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowUpRight, Bot, Check, ChevronDown, ExternalLink, Globe2, Menu, MessageCircle, MoveUpRight, Play, Plus, Send, Sparkles, X, Zap } from 'lucide-react';
 import './styles.css';
+import { aiClient } from './ai/client';
 import { filterProjects, validateProjectRequest, type Locale, type ProjectCategory, type ProjectRequestDraft } from './lib/site';
 import type { ProjectCard } from './lib/site';
 
@@ -181,9 +182,46 @@ function RequestModal({ locale, onClose }: { locale: Locale; onClose: () => void
 function AssistantModal({ locale, onClose, onStart }: { locale: Locale; onClose: () => void; onStart: () => void }) {
   const ar = locale === 'ar';
   const [messages, setMessages] = useState<{from:'bot'|'user'; text:string}[]>([{from:'bot', text: ar ? 'أهلًا. احكيلي في سطر واحد إيه اللي عايز تبنيه، وأنا أساعدك نحدد الاتجاه.' : 'Hey. Tell me in one line what you want to build, and I’ll help you find the right direction.'}]);
-  const [value,setValue]=useState('');
-  const send = () => { if(!value.trim()) return; const q=value.trim(); setMessages(m=>[...m,{from:'user',text:q},{from:'bot',text: ar ? 'فهمت. غالبًا نحتاج نحدد نوع المنتج، المستخدم الأساسي، والهدف التجاري. أقدر أحول ده إلى Project Brief مرتب.' : 'Got it. We should define the product type, primary user and business goal. I can turn that into a clean project brief.'}]); setValue(''); };
-  return <div className="modalBackdrop" onClick={onClose}><div className="assistantModal" onClick={e=>e.stopPropagation()} dir={ar?'rtl':'ltr'}><div className="assistantHead"><div><div className="eyebrow">APEX AI / CONCEPT</div><h2>{ar?'اسأل APEX':'Ask APEX'}</h2></div><button className="close" onClick={onClose}><X/></button></div><div className="messages">{messages.map((m,i)=><div className={m.from==='bot'?'msg bot':'msg user'} key={i}>{m.text}</div>)}</div><div className="assistantInput"><input value={value} onChange={e=>setValue(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')send()}} placeholder={ar?'اكتب فكرتك...':'Describe your idea...'}/><button onClick={send}><Send size={17}/></button></div><button className="briefButton" onClick={onStart}>{ar?'حوّل المحادثة إلى طلب مشروع':'Turn this into a project brief'} <ArrowUpRight size={16}/></button></div></div>
+  const [value, setValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const send = async () => {
+    const question = value.trim();
+    if (!question || loading) return;
+
+    const history = [...messages, { from: 'user' as const, text: question }];
+    setMessages(history);
+    setValue('');
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await aiClient.generate({
+        agent: 'orchestrator',
+        messages: history.map((message) => ({
+          role: message.from === 'bot' ? 'assistant' as const : 'user' as const,
+          content: message.text,
+        })),
+        temperature: 0.4,
+        maxOutputTokens: 600,
+      });
+      setMessages((current) => [...current, { from: 'bot', text: response.content }]);
+    } catch {
+      setError(ar
+        ? 'تعذر الاتصال بالمساعد الذكي. تأكد من إعداد VITE_AI_API_URL وأن خدمة الذكاء الاصطناعي تعمل، ثم حاول مرة أخرى.'
+        : 'Could not reach the AI assistant. Check VITE_AI_API_URL and make sure the AI service is running, then try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return <div className="modalBackdrop" onClick={onClose}><div className="assistantModal" onClick={e=>e.stopPropagation()} dir={ar?'rtl':'ltr'}>
+    <div className="assistantHead"><div><div className="eyebrow">APEX AI / CONCEPT</div><h2>{ar?'اسأل APEX':'Ask APEX'}</h2></div><button className="close" onClick={onClose} aria-label={ar?'إغلاق':'Close'}><X/></button></div>
+    <div className="messages" aria-live="polite">{messages.map((m,i)=><div className={m.from==='bot'?'msg bot':'msg user'} key={i}>{m.text}</div>)}{loading&&<div className="msg bot">{ar?'جاري التفكير...':'Thinking...'}</div>}{error&&<div className="msg bot" role="alert">{error}</div>}</div>
+    <div className="assistantInput"><input value={value} onChange={e=>setValue(e.target.value)} onKeyDown={e=>{if(e.key==='Enter') void send();}} placeholder={ar?'اكتب فكرتك...':'Describe your idea...'} disabled={loading}/><button onClick={()=>void send()} disabled={loading||!value.trim()} aria-label={ar?'إرسال':'Send'}><Send size={17}/></button></div>
+    <button className="briefButton" onClick={onStart}>{ar?'حوّل المحادثة إلى طلب مشروع':'Turn this into a project brief'} <ArrowUpRight size={16}/></button>
+  </div></div>
 }
 
 createRoot(document.getElementById('root')!).render(<App />);
