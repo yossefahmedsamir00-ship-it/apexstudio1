@@ -1,4 +1,9 @@
-export type AIProvider = 'openai' | 'anthropic' | 'google' | 'groq' | 'custom';
+export type AIProvider =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'groq'
+  | 'custom';
 
 export type AIAgentRole =
   | 'orchestrator'
@@ -10,15 +15,18 @@ export type AIAgentRole =
   | 'support'
   | 'research';
 
-export type AIModelTier = 'reasoning' | 'balanced' | 'fast';
+export type AIModelTier =
+  | 'reasoning'
+  | 'balanced'
+  | 'fast';
 
 export interface AIModelConfig {
   id: string;
   provider: AIProvider;
   model: string;
   tier: AIModelTier;
-  maxOutputTokens: number;
-  temperature: number;
+  temperature?: number;
+  maxOutputTokens?: number;
 }
 
 export interface AIMessage {
@@ -29,20 +37,22 @@ export interface AIMessage {
 export interface AIRequest {
   agent: AIAgentRole;
   messages: AIMessage[];
-  locale: 'en' | 'ar';
-  modelId?: string;
+  model?: string;
   temperature?: number;
   maxOutputTokens?: number;
 }
 
 export interface AIResponse {
-  text: string;
-  modelId: string;
-  provider: AIProvider;
-  requestId?: string;
-  usage?: { inputTokens?: number; outputTokens?: number };
+  content: string;
+  model?: string;
+  provider?: AIProvider;
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+    totalTokens?: number;
+  };
 }
 
 export interface AIClient {
-  complete(request: AIRequest): Promise<AIResponse>;
+  generate(request: AIRequest): Promise<AIResponse>;
 }
