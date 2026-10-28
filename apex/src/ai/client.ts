@@ -1,36 +1,48 @@
-import type { AIClient, AIRequest, AIResponse } from './types';
-import { getModelForAgent } from './models';
-import { systemPrompt } from './prompts';
+import type {
+  AIClient,
+  AIRequest,
+  AIResponse,
+} from './types';
 
-const API_URL = (import.meta.env.VITE_AI_API_URL as string | undefined)?.trim();
+const API_URL = import.meta.env.VITE_AI_API_URL;
 
 export class RemoteAIClient implements AIClient {
-  async complete(request: AIRequest): Promise<AIResponse> {
+  async generate(request: AIRequest): Promise<AIResponse> {
     if (!API_URL) {
-      throw new Error('AI backend is not configured. Set VITE_AI_API_URL on the server-connected build.');
+      throw new Error(
+        'AI API is not configured. Set VITE_AI_API_URL.'
+      );
     }
 
-    const model = getModelForAgent(request.agent);
     const response = await fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         agent: request.agent,
-        model: request.modelId || model.model,
-        messages: [
-          { role: 'system', content: systemPrompt(request.agent, request.locale) },
-          ...request.messages,
-        ],
-        temperature: request.temperature ?? model.temperature,
-        maxOutputTokens: request.maxOutputTokens ?? model.maxOutputTokens,
+        model: request.model,
+        messages: request.messages,
+        temperature: request.temperature,
+        maxOutputTokens: request.maxOutputTokens,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`AI backend returned ${response.status}`);
+      const message = await response.text();
+
+      throw new Error(
+        `AI request failed (${response.status}): ${message}`
+      );
     }
 
-    return (await response.json()) as AIResponse;
+    const data = (await response.json()) as AIResponse;
+
+    if (!data?.content) {
+      throw new Error('AI API returned an invalid response.');
+    }
+
+    return data;
   }
 }
 
