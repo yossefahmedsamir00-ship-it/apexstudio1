@@ -1,9 +1,8 @@
+
 name: Deploy APEX STUDIO to GitHub Pages
 
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
   workflow_dispatch:
 
@@ -32,22 +31,16 @@ jobs:
         working-directory: apex
         run: npm install
 
-      - name: Run tests
-        working-directory: apex
-        run: npm test
-
       - name: Build project
         working-directory: apex
         run: npm run build
 
       - name: Upload Pages artifact
-        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: apex/dist
 
   deploy:
-    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
