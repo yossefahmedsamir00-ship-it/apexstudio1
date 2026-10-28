@@ -135,7 +135,7 @@ function App() {
       <section id="work" className="sectionPad workSection">
         <div className="sectionHeader"><div><div className="eyebrow">02 / {t.selected}</div><h2>{t.selected}</h2><p>{t.selectedBody}</p></div><button className="outlineButton" onClick={() => setCategory('all')}>All work <Plus size={16}/></button></div>
         <div className="filters">{(['all','web','ecommerce','ai','apps'] as ProjectCategory[]).map((c) => <button key={c} className={category === c ? 'filter active' : 'filter'} onClick={() => setCategory(c)}>{c === 'all' ? 'All' : c === 'ecommerce' ? 'Commerce' : c === 'ai' ? 'AI' : c[0].toUpperCase()+c.slice(1)}</button>)}</div>
-        <div className="projectGrid">{visibleProjects.map((p, i) => <article className={`projectCard p${i+1}`} key={p.id} onClick={() => setProject(p)}>
+        <div className="projectGrid">{visibleProjects.map((p, i) => <article className={`projectCard p${i+1}`} key={p.id} role="button" tabIndex={0} aria-label={`${p.title[locale]} — ${isAr ? "عرض تفاصيل المشروع" : "View project details"}`} onClick={() => setProject(p)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setProject(p); } }}>
           <div className="projectArt"><span className="projectIndex">0{i+1}</span><div className="artWindow"><div className="windowTop"><i/><i/><i/></div><div className="artBars"><b/><b/><b/></div><div className="artBlock"/><div className="artBlock smallBlock"/></div><span className="projectKind">{p.kind === 'concept' ? 'APEX EXPERIMENT' : 'CLIENT PROJECT'}</span></div>
           <div className="projectMeta"><div><h3>{p.title[locale]}</h3><p>{p.summary[locale]}</p></div><MoveUpRight size={19}/></div>
         </article>)}</div>
@@ -217,7 +217,7 @@ function AssistantModal({ locale, onClose, onStart }: { locale: Locale; onClose:
   };
 
   return <div className="modalBackdrop" onClick={onClose}><div className="assistantModal" onClick={e=>e.stopPropagation()} dir={ar?'rtl':'ltr'}>
-    <div className="assistantHead"><div><div className="eyebrow">APEX AI / CONCEPT</div><h2>{ar?'اسأل APEX':'Ask APEX'}</h2></div><button className="close" onClick={onClose} aria-label={ar?'إغلاق':'Close'}><X/></button></div>
+    <div className="assistantHead"><div><div className="eyebrow">APEX AI / ASSISTANT</div><h2>{ar?'اسأل APEX':'Ask APEX'}</h2><p className="assistantDisclosure">{ar?'أنت تتحدث مع مساعد ذكاء اصطناعي. قد تحتاج الإجابات إلى مراجعة بشرية، وقد لا تكون الخدمة متاحة إذا لم يتم إعداد الاتصال.':'You are chatting with an AI assistant. Responses may need human confirmation, and the service may be unavailable until its connection is configured.'}</p></div><button className="close" onClick={onClose} aria-label={ar?'إغلاق':'Close'}><X/></button></div>
     <div className="messages" aria-live="polite">{messages.map((m,i)=><div className={m.from==='bot'?'msg bot':'msg user'} key={i}>{m.text}</div>)}{loading&&<div className="msg bot">{ar?'جاري التفكير...':'Thinking...'}</div>}{error&&<div className="msg bot" role="alert">{error}</div>}</div>
     <div className="assistantInput"><input value={value} onChange={e=>setValue(e.target.value)} onKeyDown={e=>{if(e.key==='Enter') void send();}} placeholder={ar?'اكتب فكرتك...':'Describe your idea...'} disabled={loading}/><button onClick={()=>void send()} disabled={loading||!value.trim()} aria-label={ar?'إرسال':'Send'}><Send size={17}/></button></div>
     <button className="briefButton" onClick={onStart}>{ar?'حوّل المحادثة إلى طلب مشروع':'Turn this into a project brief'} <ArrowUpRight size={16}/></button>
