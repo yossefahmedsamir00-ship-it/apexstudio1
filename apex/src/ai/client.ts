@@ -3,21 +3,23 @@ import type {
   AIRequest,
   AIResponse,
 } from './types';
+import { ensureAnonymousSession } from '../lib/supabase';
 
 const API_URL = import.meta.env.VITE_AI_API_URL;
 
 export class RemoteAIClient implements AIClient {
   async generate(request: AIRequest): Promise<AIResponse> {
     if (!API_URL) {
-      throw new Error(
-        'AI API is not configured. Set VITE_AI_API_URL.'
-      );
+      throw new Error('AI API is not configured. Set VITE_AI_API_URL.');
     }
+
+    const accessToken = await ensureAnonymousSession();
 
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         agent: request.agent,
