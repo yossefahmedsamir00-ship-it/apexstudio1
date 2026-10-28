@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
+import { ArrowUpRight, Bot, Check, Globe2, Menu, MoveUpRight, Plus, Send, Sparkles, X, Zap } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
-import { ArrowUpRight, Bot, Check, ChevronDown, ExternalLink, Globe2, Menu, MessageCircle, MoveUpRight, Play, Plus, Send, Sparkles, X, Zap } from 'lucide-react';
 import './styles.css';
 import { aiClient } from './ai/client';
 import { filterProjects, validateProjectRequest, type Locale, type ProjectCategory, type ProjectRequestDraft } from './lib/site';
 import type { ProjectCard } from './lib/site';
+import { APEX_CONTACT } from './contact';
 
 const projects: ProjectCard[] = [
   { id: 'nova', title: { en: 'Nova / Corporate System', ar: 'Nova / نظام شركة' }, summary: { en: 'A sharp digital presence for a technology company.', ar: 'تجربة رقمية حادة لشركة تقنية.' }, category: 'web', kind: 'concept', tags: ['Strategy', 'Web', 'UX'] },
@@ -15,213 +16,55 @@ const projects: ProjectCard[] = [
 ];
 
 const copy = {
-  en: {
-    nav: ['Work', 'Services', 'Process', 'About'],
-    start: 'Start a project',
-    kicker: 'Independent digital studio · Cairo / Remote',
-    hero: 'Ideas deserve\na real digital home.',
-    heroBody: 'APEX STUDIO designs and builds websites, commerce experiences, AI systems and digital products with a clear point of view.',
-    explore: 'Explore selected work',
-    proof: 'No templates. No noise. Just purposeful digital work.',
-    selected: 'Selected work',
-    selectedBody: 'A living shelf of concepts, experiments and shipped ideas.',
-    servicesKicker: 'What we build',
-    servicesTitle: 'From first thought\nto something people can use.',
-    processKicker: 'A simple way of working',
-    processTitle: 'Clarity first. Craft second.\nLaunch with intent.',
-    aboutKicker: 'The studio',
-    aboutTitle: 'Small by design.\nSerious about the outcome.',
-    ctaTitle: 'Have an idea that should exist?',
-    ctaBody: 'Tell us what you are trying to make. We will turn the rough thought into a clearer next step.',
-    ask: 'Ask APEX',
-    request: 'Build my brief',
-    footer: 'Created by Ansta · APEX STUDIO',
-  },
-  ar: {
-    nav: ['الأعمال', 'الخدمات', 'الطريقة', 'عن الاستوديو'],
-    start: 'ابدأ مشروعك',
-    kicker: 'استوديو رقمي مستقل · القاهرة / عن بُعد',
-    hero: 'الفكرة تستحق\nمكانًا رقميًا حقيقيًا.',
-    heroBody: 'APEX STUDIO يصمم ويبني المواقع، تجارب التجارة، أنظمة الذكاء الاصطناعي والمنتجات الرقمية برؤية واضحة.',
-    explore: 'استكشف الأعمال',
-    proof: 'لا قوالب جاهزة. لا ضوضاء. فقط عمل رقمي له هدف.',
-    selected: 'أعمال مختارة',
-    selectedBody: 'مجموعة متحركة من الأفكار والتجارب والمشاريع.',
-    servicesKicker: 'ماذا نبني؟',
-    servicesTitle: 'من أول فكرة\nإلى شيء يستطيع الناس استخدامه.',
-    processKicker: 'طريقة عمل بسيطة',
-    processTitle: 'وضوح أولًا. جودة ثانيًا.\nثم إطلاق له هدف.',
-    aboutKicker: 'الاستوديو',
-    aboutTitle: 'صغير عن قصد.\nجاد في النتيجة.',
-    ctaTitle: 'عندك فكرة تستحق أن توجد؟',
-    ctaBody: 'احكِ لنا ما تريد بناءه، وسنحوّل الفكرة الأولية إلى خطوة تالية أوضح.',
-    ask: 'اسأل APEX',
-    request: 'جهّز طلب المشروع',
-    footer: 'Created by Ansta · APEX STUDIO',
-  },
+  en: { nav: ['Work','Services','Process','About'], start: 'Start a project', kicker: 'Independent digital studio · Cairo / Remote', hero: 'Ideas deserve\na real digital home.', heroBody: 'APEX STUDIO designs and builds websites, commerce experiences, AI systems and digital products with a clear point of view.', explore: 'Explore selected work', proof: 'No templates. No noise. Just purposeful digital work.', selected: 'Selected work', selectedBody: 'A living shelf of concepts, experiments and shipped ideas.', servicesKicker: 'What we build', servicesTitle: 'From first thought\nto something people can use.', processKicker: 'A simple way of working', processTitle: 'Clarity first. Craft second.\nLaunch with intent.', aboutKicker: 'The studio', aboutTitle: 'Small by design.\nSerious about the outcome.', ctaTitle: 'Have an idea that should exist?', ctaBody: 'Tell us what you are trying to make. We will turn the rough thought into a clearer next step.', ask: 'Ask APEX', request: 'Build my brief', footer: 'Created by Ansta · APEX STUDIO' },
+  ar: { nav: ['الأعمال','الخدمات','الطريقة','عن الاستوديو'], start: 'ابدأ مشروعك', kicker: 'استوديو رقمي مستقل · القاهرة / عن بُعد', hero: 'الفكرة تستحق\nمكانًا رقميًا حقيقيًا.', heroBody: 'APEX STUDIO يصمم ويبني المواقع، تجارب التجارة، أنظمة الذكاء الاصطناعي والمنتجات الرقمية برؤية واضحة.', explore: 'استكشف الأعمال', proof: 'لا قوالب جاهزة. لا ضوضاء. فقط عمل رقمي له هدف.', selected: 'أعمال مختارة', selectedBody: 'مجموعة متحركة من الأفكار والتجارب والمشاريع.', servicesKicker: 'ماذا نبني؟', servicesTitle: 'من أول فكرة\nإلى شيء يستطيع الناس استخدامه.', processKicker: 'طريقة عمل بسيطة', processTitle: 'وضوح أولًا. جودة ثانيًا.\nثم إطلاق له هدف.', aboutKicker: 'الاستوديو', aboutTitle: 'صغير عن قصد.\nجاد في النتيجة.', ctaTitle: 'عندك فكرة تستحق أن توجد؟', ctaBody: 'احكِ لنا ما تريد بناءه، وسنحوّل الفكرة الأولية إلى خطوة تالية أوضح.', ask: 'اسأل APEX', request: 'جهّز طلب المشروع', footer: 'Created by Ansta · APEX STUDIO' },
 } as const;
 
 const serviceData = [
-  { id: 'web', no: '01', title: { en: 'Web systems', ar: 'أنظمة الويب' }, body: { en: 'Company sites, landing pages, portals and dashboards.', ar: 'مواقع الشركات، صفحات الهبوط، البوابات ولوحات التحكم.' }, icon: Globe2 },
-  { id: 'commerce', no: '02', title: { en: 'Commerce', ar: 'التجارة الإلكترونية' }, body: { en: 'Stores designed around product discovery, trust and conversion.', ar: 'متاجر مبنية حول اكتشاف المنتج والثقة والتحويل.' }, icon: Zap },
-  { id: 'ai', no: '03', title: { en: 'AI systems', ar: 'أنظمة الذكاء الاصطناعي' }, body: { en: 'Assistants, automation and intelligent workflows.', ar: 'مساعدات، أتمتة وسير عمل ذكي.' }, icon: Bot },
-  { id: 'apps', no: '04', title: { en: 'Digital products', ar: 'المنتجات الرقمية' }, body: { en: 'Focused web and mobile products built around a real use case.', ar: 'منتجات ويب وموبايل مركزة حول استخدام حقيقي.' }, icon: Sparkles },
+  { id:'web',no:'01',title:{en:'Web systems',ar:'أنظمة الويب'},body:{en:'Company sites, landing pages, portals and dashboards.',ar:'مواقع الشركات، صفحات الهبوط، البوابات ولوحات التحكم.'},icon:Globe2 },
+  { id:'commerce',no:'02',title:{en:'Commerce',ar:'التجارة الإلكترونية'},body:{en:'Stores designed around product discovery, trust and conversion.',ar:'متاجر مبنية حول اكتشاف المنتج والثقة والتحويل.'},icon:Zap },
+  { id:'ai',no:'03',title:{en:'AI systems',ar:'أنظمة الذكاء الاصطناعي'},body:{en:'Assistants, automation and intelligent workflows.',ar:'مساعدات، أتمتة وسير عمل ذكي.'},icon:Bot },
+  { id:'apps',no:'04',title:{en:'Digital products',ar:'المنتجات الرقمية'},body:{en:'Focused web and mobile products built around a real use case.',ar:'منتجات ويب وموبايل مركزة حول استخدام حقيقي.'},icon:Sparkles },
 ];
-
 const processData = [
-  { n: '01', title: { en: 'Discover', ar: 'اكتشاف' }, body: { en: 'Understand the goal, audience and constraints.', ar: 'نفهم الهدف والجمهور والقيود.' } },
-  { n: '02', title: { en: 'Define', ar: 'تحديد' }, body: { en: 'Turn the idea into a focused scope and direction.', ar: 'نحوّل الفكرة إلى نطاق واتجاه واضحين.' } },
-  { n: '03', title: { en: 'Design', ar: 'تصميم' }, body: { en: 'Shape the interface, content and interaction.', ar: 'نبني الواجهة والمحتوى والتفاعل.' } },
-  { n: '04', title: { en: 'Build', ar: 'تنفيذ' }, body: { en: 'Develop, test and refine the real product.', ar: 'نطوّر ونختبر ونصقل المنتج الحقيقي.' } },
-  { n: '05', title: { en: 'Launch', ar: 'إطلاق' }, body: { en: 'Ship with a clear handoff and next steps.', ar: 'نطلق المشروع مع تسليم واضح وخطوات تالية.' } },
+  {n:'01',title:{en:'Discover',ar:'اكتشاف'},body:{en:'Understand the goal, audience and constraints.',ar:'نفهم الهدف والجمهور والقيود.'}},
+  {n:'02',title:{en:'Define',ar:'تحديد'},body:{en:'Turn the idea into a focused scope and direction.',ar:'نحوّل الفكرة إلى نطاق واتجاه واضحين.'}},
+  {n:'03',title:{en:'Design',ar:'تصميم'},body:{en:'Shape the interface, content and interaction.',ar:'نبني الواجهة والمحتوى والتفاعل.'}},
+  {n:'04',title:{en:'Build',ar:'تنفيذ'},body:{en:'Develop, test and refine the real product.',ar:'نطوّر ونختبر ونصقل المنتج الحقيقي.'}},
+  {n:'05',title:{en:'Launch',ar:'إطلاق'},body:{en:'Ship with a clear handoff and next steps.',ar:'نطلق المشروع مع تسليم واضح وخطوات تالية.'}},
 ];
 
-function App() {
-  const [locale, setLocale] = useState<Locale>('en');
-  const [menu, setMenu] = useState(false);
-  const [category, setCategory] = useState<ProjectCategory>('all');
-  const [project, setProject] = useState<ProjectCard | null>(null);
-  const [requestOpen, setRequestOpen] = useState(false);
-  const [assistantOpen, setAssistantOpen] = useState(false);
-  const t = copy[locale];
-  const isAr = locale === 'ar';
-  const visibleProjects = useMemo(() => filterProjects(projects, category, '', locale), [category, locale]);
-
-  const scrollTo = (id: string) => {
-    setMenu(false);
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  return <div className={isAr ? 'app rtl' : 'app'} dir={isAr ? 'rtl' : 'ltr'}>
-    <header className="topbar">
-      <button className="brand" onClick={() => scrollTo('home')} aria-label="APEX STUDIO home">
-        <span className="brandMark">A</span><span><b>APEX</b><small>STUDIO</small></span>
-      </button>
-      <nav className={menu ? 'nav open' : 'nav'}>
-        <button onClick={() => scrollTo('work')}>{t.nav[0]}</button>
-        <button onClick={() => scrollTo('services')}>{t.nav[1]}</button>
-        <button onClick={() => scrollTo('process')}>{t.nav[2]}</button>
-        <button onClick={() => scrollTo('about')}>{t.nav[3]}</button>
-      </nav>
-      <div className="topActions">
-        <button className="lang" onClick={() => setLocale(isAr ? 'en' : 'ar')}><Globe2 size={15}/>{isAr ? 'EN' : 'AR'}</button>
-        <button className="primary small" onClick={() => setRequestOpen(true)}>{t.start}<ArrowUpRight size={15}/></button>
-        <button className="iconButton menuButton" onClick={() => setMenu(!menu)} aria-label="Menu">{menu ? <X/> : <Menu/>}</button>
-      </div>
-    </header>
-
-    <main>
-      <section id="home" className="hero sectionPad">
-        <div className="heroCopy">
-          <div className="eyebrow"><span className="dot"/>{t.kicker}</div>
-          <h1>{t.hero}</h1>
-          <p className="heroBody">{t.heroBody}</p>
-          <div className="heroActions">
-            <button className="primary" onClick={() => setRequestOpen(true)}>{t.start}<ArrowUpRight size={18}/></button>
-            <button className="textButton" onClick={() => scrollTo('work')}>{t.explore}<MoveUpRight size={17}/></button>
-          </div>
-        </div>
-        <div className="heroVisual" aria-hidden="true">
-          <div className="orb orbOne"/><div className="orb orbTwo"/>
-          <div className="apexGlyph"><span>A</span></div>
-          <div className="visualLabel top">DIGITAL / 001</div>
-          <div className="visualLabel bottom">IDEA → PRODUCT</div>
-          <div className="line lineA"/><div className="line lineB"/>
-        </div>
-      </section>
-
-      <section className="statement"><div className="sectionPad statementInner"><span>01</span><p>{t.proof}</p><span className="statementArrow">↘</span></div></section>
-
-      <section id="work" className="sectionPad workSection">
-        <div className="sectionHeader"><div><div className="eyebrow">02 / {t.selected}</div><h2>{t.selected}</h2><p>{t.selectedBody}</p></div><button className="outlineButton" onClick={() => setCategory('all')}>All work <Plus size={16}/></button></div>
-        <div className="filters">{(['all','web','ecommerce','ai','apps'] as ProjectCategory[]).map((c) => <button key={c} className={category === c ? 'filter active' : 'filter'} onClick={() => setCategory(c)}>{c === 'all' ? 'All' : c === 'ecommerce' ? 'Commerce' : c === 'ai' ? 'AI' : c[0].toUpperCase()+c.slice(1)}</button>)}</div>
-        <div className="projectGrid">{visibleProjects.map((p, i) => <article className={`projectCard p${i+1}`} key={p.id} role="button" tabIndex={0} aria-label={`${p.title[locale]} — ${isAr ? "عرض تفاصيل المشروع" : "View project details"}`} onClick={() => setProject(p)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setProject(p); } }}>
-          <div className="projectArt"><span className="projectIndex">0{i+1}</span><div className="artWindow"><div className="windowTop"><i/><i/><i/></div><div className="artBars"><b/><b/><b/></div><div className="artBlock"/><div className="artBlock smallBlock"/></div><span className="projectKind">{p.kind === 'concept' ? 'APEX EXPERIMENT' : 'CLIENT PROJECT'}</span></div>
-          <div className="projectMeta"><div><h3>{p.title[locale]}</h3><p>{p.summary[locale]}</p></div><MoveUpRight size={19}/></div>
-        </article>)}</div>
-      </section>
-
-      <section id="services" className="darkSection sectionPad">
-        <div className="sectionHeader servicesHead"><div><div className="eyebrow">03 / {t.servicesKicker}</div><h2>{t.servicesTitle}</h2></div><button className="textButton light" onClick={() => setRequestOpen(true)}>{t.start}<ArrowUpRight size={17}/></button></div>
-        <div className="serviceList">{serviceData.map((s) => { const Icon=s.icon; return <article className="serviceRow" key={s.id}><span className="serviceNo">{s.no}</span><Icon size={22}/><div className="serviceText"><h3>{s.title[locale]}</h3><p>{s.body[locale]}</p></div><ArrowUpRight className="rowArrow" size={21}/></article> })}</div>
-      </section>
-
-      <section id="process" className="sectionPad processSection">
-        <div className="sectionHeader"><div><div className="eyebrow">04 / {t.processKicker}</div><h2>{t.processTitle}</h2></div></div>
-        <div className="processGrid">{processData.map((p) => <article key={p.n}><span>{p.n}</span><h3>{p.title[locale]}</h3><p>{p.body[locale]}</p></article>)}</div>
-      </section>
-
-      <section id="about" className="aboutSection sectionPad">
-        <div className="aboutVisual"><div className="aboutRing"/><span>APEX<br/>STUDIO</span></div>
-        <div className="aboutCopy"><div className="eyebrow">05 / {t.aboutKicker}</div><h2>{t.aboutTitle}</h2><p>{isAr ? 'نحن نبني تجارب رقمية صغيرة في شكلها، دقيقة في تفاصيلها، ومصممة لتخدم هدفًا حقيقيًا. الذكاء الاصطناعي جزء من طريقة عملنا، لكنه ليس هو الهوية.' : 'We build digital experiences that are small in shape, precise in detail and tied to a real outcome. AI is part of how we work — it is not the identity.'}</p><div className="aboutFacts"><div><b>01</b><span>Clear scope</span></div><div><b>02</b><span>Custom direction</span></div><div><b>03</b><span>Built to ship</span></div></div></div>
-      </section>
-
-      <section className="ctaSection sectionPad"><div className="ctaGlow"/><div className="ctaContent"><div className="eyebrow">06 / START SOMETHING</div><h2>{t.ctaTitle}</h2><p>{t.ctaBody}</p><button className="primary" onClick={() => setRequestOpen(true)}>{t.request}<ArrowUpRight size={18}/></button></div></section>
-    </main>
-
-    <footer className="footer sectionPad"><div className="footerBrand"><span className="brandMark">A</span><b>APEX STUDIO</b></div><div className="footerLinks"><button onClick={() => scrollTo('work')}>Work</button><button onClick={() => scrollTo('services')}>Services</button><button onClick={() => setAssistantOpen(true)}>{t.ask}</button></div><p>{t.footer}</p></footer>
-
-    <button className="askFab" onClick={() => setAssistantOpen(true)}><Bot size={18}/>{t.ask}</button>
-
-    {project && <div className="modalBackdrop" onClick={() => setProject(null)}><div className="projectModal" onClick={e => e.stopPropagation()}><button className="close" onClick={() => setProject(null)}><X/></button><div className="modalArt"><span>{project.category.toUpperCase()} / {project.id.toUpperCase()}</span><div className="modalMark">A</div></div><div className="modalBody"><div className="eyebrow">{project.kind === 'concept' ? 'APEX EXPERIMENT' : 'CLIENT PROJECT'}</div><h2>{project.title[locale]}</h2><p>{project.summary[locale]}</p><div className="tagRow">{project.tags.map(tag => <span key={tag}>{tag}</span>)}</div><button className="primary" onClick={() => { setProject(null); setRequestOpen(true); }}>{t.start}<ArrowUpRight size={17}/></button></div></div></div>}
-    {requestOpen && <RequestModal locale={locale} onClose={() => setRequestOpen(false)} />}
-    {assistantOpen && <AssistantModal locale={locale} onClose={() => setAssistantOpen(false)} onStart={() => { setAssistantOpen(false); setRequestOpen(true); }} />}
-  </div>
+function App(){
+ const [locale,setLocale]=useState<Locale>('en'); const [menu,setMenu]=useState(false); const [category,setCategory]=useState<ProjectCategory>('all'); const [project,setProject]=useState<ProjectCard|null>(null); const [requestOpen,setRequestOpen]=useState(false); const [assistantOpen,setAssistantOpen]=useState(false); const t=copy[locale]; const isAr=locale==='ar'; const visibleProjects=useMemo(()=>filterProjects(projects,category,'',locale),[category,locale]);
+ const scrollTo=(id:string)=>{setMenu(false);document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});};
+ return <div className={isAr?'app rtl':'app'} dir={isAr?'rtl':'ltr'}>
+  <header className="topbar"><button className="brand" onClick={()=>scrollTo('home')} aria-label="APEX STUDIO home"><span className="brandMark">A</span><span><b>APEX</b><small>STUDIO</small></span></button><nav className={menu?'nav open':'nav'}><button onClick={()=>scrollTo('work')}>{t.nav[0]}</button><button onClick={()=>scrollTo('services')}>{t.nav[1]}</button><button onClick={()=>scrollTo('process')}>{t.nav[2]}</button><button onClick={()=>scrollTo('about')}>{t.nav[3]}</button></nav><div className="topActions"><button className="lang" onClick={()=>setLocale(isAr?'en':'ar')}><Globe2 size={15}/>{isAr?'EN':'AR'}</button><button className="primary small" onClick={()=>setRequestOpen(true)}>{t.start}<ArrowUpRight size={15}/></button><button className="iconButton menuButton" onClick={()=>setMenu(!menu)} aria-label="Menu">{menu?<X/>:<Menu/>}</button></div></header>
+  <main>
+   <section id="home" className="hero sectionPad"><div className="heroCopy"><div className="eyebrow"><span className="dot"/>{t.kicker}</div><h1>{t.hero}</h1><p className="heroBody">{t.heroBody}</p><div className="heroActions"><button className="primary" onClick={()=>setRequestOpen(true)}>{t.start}<ArrowUpRight size={18}/></button><button className="textButton" onClick={()=>scrollTo('work')}>{t.explore}<MoveUpRight size={17}/></button></div></div><div className="heroVisual" aria-hidden="true"><div className="orb orbOne"/><div className="orb orbTwo"/><div className="apexGlyph"><span>A</span></div><div className="visualLabel top">DIGITAL / 001</div><div className="visualLabel bottom">IDEA → PRODUCT</div><div className="line lineA"/><div className="line lineB"/></div></section>
+   <section className="statement"><div className="sectionPad statementInner"><span>01</span><p>{t.proof}</p><span className="statementArrow">↘</span></div></section>
+   <section id="work" className="sectionPad workSection"><div className="sectionHeader"><div><div className="eyebrow">02 / {t.selected}</div><h2>{t.selected}</h2><p>{t.selectedBody}</p></div><button className="outlineButton" onClick={()=>setCategory('all')}>All work <Plus size={16}/></button></div><div className="filters">{(['all','web','ecommerce','ai','apps'] as ProjectCategory[]).map(c=><button key={c} className={category===c?'filter active':'filter'} onClick={()=>setCategory(c)}>{c==='all'?'All':c==='ecommerce'?'Commerce':c==='ai'?'AI':c[0].toUpperCase()+c.slice(1)}</button>)}</div><div className="projectGrid">{visibleProjects.map((p,i)=><article className={`projectCard p${i+1}`} key={p.id} role="button" tabIndex={0} aria-label={`${p.title[locale]} — ${isAr?'عرض تفاصيل المشروع':'View project details'}`} onClick={()=>setProject(p)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setProject(p);}}}><div className="projectArt"><span className="projectIndex">0{i+1}</span><div className="artWindow"><div className="windowTop"><i/><i/><i/></div><div className="artBars"><b/><b/><b/></div><div className="artBlock"/><div className="artBlock smallBlock"/></div><span className="projectKind">{p.kind==='concept'?'APEX EXPERIMENT':'CLIENT PROJECT'}</span></div><div className="projectMeta"><div><h3>{p.title[locale]}</h3><p>{p.summary[locale]}</p></div><MoveUpRight size={19}/></div></article>)}</div></section>
+   <section id="services" className="darkSection sectionPad"><div className="sectionHeader servicesHead"><div><div className="eyebrow">03 / {t.servicesKicker}</div><h2>{t.servicesTitle}</h2></div><button className="textButton light" onClick={()=>setRequestOpen(true)}>{t.start}<ArrowUpRight size={17}/></button></div><div className="serviceList">{serviceData.map(s=>{const Icon=s.icon;return <article className="serviceRow" key={s.id}><span className="serviceNo">{s.no}</span><Icon size={22}/><div className="serviceText"><h3>{s.title[locale]}</h3><p>{s.body[locale]}</p></div><ArrowUpRight className="rowArrow" size={21}/></article>})}</div></section>
+   <section id="process" className="sectionPad processSection"><div className="sectionHeader"><div><div className="eyebrow">04 / {t.processKicker}</div><h2>{t.processTitle}</h2></div></div><div className="processGrid">{processData.map(p=><article key={p.n}><span>{p.n}</span><h3>{p.title[locale]}</h3><p>{p.body[locale]}</p></article>)}</div></section>
+   <section id="about" className="aboutSection sectionPad"><div className="aboutVisual"><div className="aboutRing"/><span>APEX<br/>STUDIO</span></div><div className="aboutCopy"><div className="eyebrow">05 / {t.aboutKicker}</div><h2>{t.aboutTitle}</h2><p>{isAr?'نبني تجارب رقمية دقيقة ومصممة لخدمة هدف حقيقي. الذكاء الاصطناعي جزء من طريقة عملنا، لكنه ليس الهوية.':'We build precise digital experiences tied to a real outcome. AI is part of how we work — it is not the identity.'}</p><div className="aboutFacts"><div><b>01</b><span>Clear scope</span></div><div><b>02</b><span>Custom direction</span></div><div><b>03</b><span>Built to ship</span></div></div></div></section>
+   <section className="ctaSection sectionPad"><div className="ctaGlow"/><div className="ctaContent"><div className="eyebrow">06 / START SOMETHING</div><h2>{t.ctaTitle}</h2><p>{t.ctaBody}</p><button className="primary" onClick={()=>setRequestOpen(true)}>{t.request}<ArrowUpRight size={18}/></button></div></section>
+  </main>
+  <footer className="footer sectionPad"><div className="footerBrand"><span className="brandMark">A</span><b>APEX STUDIO</b></div><div className="footerLinks"><button onClick={()=>scrollTo('work')}>{t.nav[0]}</button><button onClick={()=>scrollTo('services')}>{t.nav[1]}</button><button onClick={()=>setAssistantOpen(true)}>{t.ask}</button></div><div className="contactBlock"><a href={`mailto:${APEX_CONTACT.email}`}>{APEX_CONTACT.email}</a><a href={`tel:${APEX_CONTACT.phone.replace(/\s/g,'')}`}>{APEX_CONTACT.phone}</a><span>{APEX_CONTACT.name}</span><p>{t.footer} · <a href="/admin.html">Admin</a></p></div></footer>
+  <button className="askFab" onClick={()=>setAssistantOpen(true)}><Bot size={18}/>{t.ask}</button>
+  {project&&<ProjectModal project={project} locale={locale} onClose={()=>setProject(null)} onStart={()=>{setProject(null);setRequestOpen(true)}}/>}{requestOpen&&<RequestModal locale={locale} onClose={()=>setRequestOpen(false)}/>} {assistantOpen&&<AssistantModal locale={locale} onClose={()=>setAssistantOpen(false)} onStart={()=>{setAssistantOpen(false);setRequestOpen(true)}}/>}
+ </div>;
 }
 
-function RequestModal({ locale, onClose }: { locale: Locale; onClose: () => void }) {
-  const [draft, setDraft] = useState<ProjectRequestDraft>({ name:'', email:'', whatsapp:'', serviceType:'website', description:'', budgetRange:'not_sure', timeline:'flexible', consentToContact:false });
-  const [errors, setErrors] = useState<Record<string,string>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const ar = locale === 'ar';
-  const update = (key: keyof ProjectRequestDraft, value: string | boolean) => setDraft(d => ({...d, [key]:value}));
-  const submit = (e: React.FormEvent) => { e.preventDefault(); const e2=validateProjectRequest(draft); setErrors(e2); if (!Object.keys(e2).length) setSubmitted(true); };
-  return <div className="modalBackdrop" onClick={onClose}><div className="requestModal" onClick={e => e.stopPropagation()} dir={ar?'rtl':'ltr'}><button className="close" onClick={onClose}><X/></button>{submitted ? <div className="successState"><div className="successIcon"><Check/></div><div className="eyebrow">APEX / REQUEST RECEIVED</div><h2>{ar?'الفكرة دخلت APEX.':'Your idea has entered APEX.'}</h2><p>{ar?'تم تجهيز الطلب محليًا في هذه النسخة التجريبية. عند ربط Firebase سيتم حفظه وإرساله إلى لوحة الإدارة.':'This prototype has prepared the request locally. Once Firebase is connected, it will be stored and routed to the admin dashboard.'}</p><button className="primary" onClick={onClose}>Close <X size={16}/></button></div> : <form onSubmit={submit}><div className="eyebrow">07 / START A PROJECT</div><h2>{ar?'خلينا نبني شيئًا حقيقيًا.':'Let’s build something real.'}</h2><p className="formIntro">{ar?'أعطنا الصورة الأولى، وسنرتب التفاصيل بعد ذلك.':'Give us the first picture. We can shape the details from there.'}</p><div className="formGrid"><label>Name<input value={draft.name} onChange={e=>update('name',e.target.value)} placeholder="Your name"/>{errors.name&&<small>{errors.name}</small>}</label><label>Email<input value={draft.email} onChange={e=>update('email',e.target.value)} placeholder="you@example.com"/>{errors.email&&<small>{errors.email}</small>}</label><label>Service<select value={draft.serviceType} onChange={e=>update('serviceType',e.target.value)}><option value="website">Website</option><option value="ecommerce">E-commerce</option><option value="ai_solution">AI solution</option><option value="web_app">Web app</option><option value="mobile_app">Mobile app</option><option value="custom_system">Custom system</option><option value="not_sure">Not sure</option></select></label><label>Budget<select value={draft.budgetRange} onChange={e=>update('budgetRange',e.target.value)}><option value="not_sure">Not sure</option><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></label><label className="full">What are you building?<textarea value={draft.description} onChange={e=>update('description',e.target.value)} placeholder="Tell us what you want to make..."/>{errors.description&&<small>{errors.description}</small>}</label><label>Timeline<select value={draft.timeline} onChange={e=>update('timeline',e.target.value)}><option value="asap">ASAP</option><option value="1_2_weeks">1–2 weeks</option><option value="1_month">1 month</option><option value="1_3_months">1–3 months</option><option value="flexible">Flexible</option></select></label><label>WhatsApp<input value={draft.whatsapp} onChange={e=>update('whatsapp',e.target.value)} placeholder="Optional"/></label></div><label className="consent"><input type="checkbox" checked={draft.consentToContact} onChange={e=>update('consentToContact',e.target.checked)}/><span>I agree that APEX STUDIO may contact me about this request.</span></label>{errors.consentToContact&&<small className="consentError">{errors.consentToContact}</small>}<button className="primary submitButton">Send project brief <Send size={17}/></button></form>}</div></div>
+function ProjectModal({project,locale,onClose,onStart}:{project:ProjectCard;locale:Locale;onClose:()=>void;onStart:()=>void}){return <div className="modalBackdrop" onClick={onClose}><div className="projectModal" onClick={e=>e.stopPropagation()}><button className="close" onClick={onClose} aria-label="Close"><X/></button><div className="modalArt"><span>{project.category.toUpperCase()} / {project.id.toUpperCase()}</span><div className="modalMark">A</div></div><div className="modalBody"><div className="eyebrow">APEX EXPERIMENT</div><h2>{project.title[locale]}</h2><p>{project.summary[locale]}</p><div className="tagRow">{project.tags.map(x=><span key={x}>{x}</span>)}</div><button className="primary" onClick={onStart}>{locale==='ar'?'ابدأ مشروعًا مشابهًا':'Start a similar project'}<ArrowUpRight size={17}/></button></div></div></div>}
+
+function RequestModal({locale,onClose}:{locale:Locale;onClose:()=>void}){
+ const ar=locale==='ar'; const [draft,setDraft]=useState<ProjectRequestDraft>({name:'',email:'',whatsapp:'',serviceType:'website',description:'',budgetRange:'not_sure',timeline:'flexible',consentToContact:false}); const [errors,setErrors]=useState<Record<string,string>>({}); const [submitted,setSubmitted]=useState(false); const update=(key:keyof ProjectRequestDraft,value:string|boolean)=>setDraft(d=>({...d,[key]:value})); const submit=(e:React.FormEvent)=>{e.preventDefault();const next=validateProjectRequest(draft);setErrors(next);if(!Object.keys(next).length)setSubmitted(true)};
+ return <div className="modalBackdrop" onClick={onClose}><div className="requestModal" onClick={e=>e.stopPropagation()} dir={ar?'rtl':'ltr'}><button className="close" onClick={onClose} aria-label="Close"><X/></button>{submitted?<div className="successState"><div className="successIcon"><Check/></div><div className="eyebrow">APEX / REQUEST RECEIVED</div><h2>{ar?'الفكرة دخلت APEX.':'Your idea has entered APEX.'}</h2><p>{ar?'تم تجهيز طلب المشروع بنجاح.':'Your project brief has been prepared successfully.'}</p><button className="primary" onClick={onClose}>{ar?'إغلاق':'Close'} <X size={16}/></button></div>:<form onSubmit={submit}><div className="eyebrow">07 / START A PROJECT</div><h2>{ar?'خلينا نبني شيئًا حقيقيًا.':'Let’s build something real.'}</h2><p className="formIntro">{ar?'أعطنا الصورة الأولى، وسنرتب التفاصيل بعد ذلك.':'Give us the first picture. We can shape the details from there.'}</p><div className="formGrid"><label>Name<input required value={draft.name} onChange={e=>update('name',e.target.value)} placeholder="Your name"/>{errors.name&&<small>{errors.name}</small>}</label><label>Email<input required type="email" value={draft.email} onChange={e=>update('email',e.target.value)} placeholder="you@example.com"/>{errors.email&&<small>{errors.email}</small>}</label><label>Service<select value={draft.serviceType} onChange={e=>update('serviceType',e.target.value)}><option value="website">Website</option><option value="ecommerce">E-commerce</option><option value="ai_solution">AI solution</option><option value="web_app">Web app</option><option value="mobile_app">Mobile app</option><option value="custom_system">Custom system</option><option value="not_sure">Not sure</option></select></label><label>Budget<select value={draft.budgetRange} onChange={e=>update('budgetRange',e.target.value)}><option value="not_sure">Not sure</option><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></label><label className="full">What are you building?<textarea required value={draft.description} onChange={e=>update('description',e.target.value)} placeholder="Tell us what you want to make..."/>{errors.description&&<small>{errors.description}</small>}</label><label>Timeline<select value={draft.timeline} onChange={e=>update('timeline',e.target.value)}><option value="asap">ASAP</option><option value="1_2_weeks">1–2 weeks</option><option value="1_month">1 month</option><option value="1_3_months">1–3 months</option><option value="flexible">Flexible</option></select></label><label>WhatsApp<input value={draft.whatsapp} onChange={e=>update('whatsapp',e.target.value)} placeholder="Optional"/></label></div><label className="consent"><input type="checkbox" checked={draft.consentToContact} onChange={e=>update('consentToContact',e.target.checked)}/><span>I agree that APEX STUDIO may contact me about this request.</span></label>{errors.consentToContact&&<small className="consentError">{errors.consentToContact}</small>}<button className="primary submitButton">Send project brief <Send size={17}/></button></form>}</div></div>;
 }
 
-function AssistantModal({ locale, onClose, onStart }: { locale: Locale; onClose: () => void; onStart: () => void }) {
-  const ar = locale === 'ar';
-  const [messages, setMessages] = useState<{from:'bot'|'user'; text:string}[]>([{from:'bot', text: ar ? 'أهلًا. احكيلي في سطر واحد إيه اللي عايز تبنيه، وأنا أساعدك نحدد الاتجاه.' : 'Hey. Tell me in one line what you want to build, and I’ll help you find the right direction.'}]);
-  const [value, setValue] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const send = async () => {
-    const question = value.trim();
-    if (!question || loading) return;
-
-    const history = [...messages, { from: 'user' as const, text: question }];
-    setMessages(history);
-    setValue('');
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await aiClient.generate({
-        agent: 'orchestrator',
-        messages: history.map((message) => ({
-          role: message.from === 'bot' ? 'assistant' as const : 'user' as const,
-          content: message.text,
-        })),
-        temperature: 0.4,
-        maxOutputTokens: 600,
-      });
-      setMessages((current) => [...current, { from: 'bot', text: response.content }]);
-    } catch {
-      setError(ar
-        ? 'تعذر الاتصال بالمساعد الذكي. تأكد من إعداد VITE_AI_API_URL وأن خدمة الذكاء الاصطناعي تعمل، ثم حاول مرة أخرى.'
-        : 'Could not reach the AI assistant. Check VITE_AI_API_URL and make sure the AI service is running, then try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return <div className="modalBackdrop" onClick={onClose}><div className="assistantModal" onClick={e=>e.stopPropagation()} dir={ar?'rtl':'ltr'}>
-    <div className="assistantHead"><div><div className="eyebrow">APEX AI / ASSISTANT</div><h2>{ar?'اسأل APEX':'Ask APEX'}</h2><p className="assistantDisclosure">{ar?'أنت تتحدث مع مساعد ذكاء اصطناعي. قد تحتاج الإجابات إلى مراجعة بشرية، وقد لا تكون الخدمة متاحة إذا لم يتم إعداد الاتصال.':'You are chatting with an AI assistant. Responses may need human confirmation, and the service may be unavailable until its connection is configured.'}</p></div><button className="close" onClick={onClose} aria-label={ar?'إغلاق':'Close'}><X/></button></div>
-    <div className="messages" aria-live="polite">{messages.map((m,i)=><div className={m.from==='bot'?'msg bot':'msg user'} key={i}>{m.text}</div>)}{loading&&<div className="msg bot">{ar?'جاري التفكير...':'Thinking...'}</div>}{error&&<div className="msg bot" role="alert">{error}</div>}</div>
-    <div className="assistantInput"><input value={value} onChange={e=>setValue(e.target.value)} onKeyDown={e=>{if(e.key==='Enter') void send();}} placeholder={ar?'اكتب فكرتك...':'Describe your idea...'} disabled={loading}/><button onClick={()=>void send()} disabled={loading||!value.trim()} aria-label={ar?'إرسال':'Send'}><Send size={17}/></button></div>
-    <button className="briefButton" onClick={onStart}>{ar?'حوّل المحادثة إلى طلب مشروع':'Turn this into a project brief'} <ArrowUpRight size={16}/></button>
-  </div></div>
+function AssistantModal({locale,onClose,onStart}:{locale:Locale;onClose:()=>void;onStart:()=>void}){
+ const ar=locale==='ar'; const [messages,setMessages]=useState<{from:'bot'|'user';text:string}[]>([{from:'bot',text:ar?'أهلًا. احكيلي إيه اللي عايز تبنيه وأنا أساعدك نحوله لطلب واضح.':'Tell me what you want to build and I’ll help turn it into a clear project brief.'}]); const [value,setValue]=useState(''); const [loading,setLoading]=useState(false); const [error,setError]=useState('');
+ const send=async()=>{const q=value.trim();if(!q||loading)return;const history=[...messages,{from:'user' as const,text:q}];setMessages(history);setValue('');setLoading(true);setError('');try{const r=await aiClient.generate({agent:'orchestrator',messages:history.map(m=>({role:m.from==='bot'?'assistant' as const:'user' as const,content:m.text})),temperature:.4,maxOutputTokens:600});setMessages(c=>[...c,{from:'bot',text:r.content}])}catch{setError(ar?'تعذر الاتصال بالمساعد الذكي. حاول مرة أخرى.':'Could not reach the AI assistant. Please try again.')}finally{setLoading(false)}};
+ return <div className="modalBackdrop" onClick={onClose}><div className="assistantModal" onClick={e=>e.stopPropagation()} dir={ar?'rtl':'ltr'}><div className="assistantHead"><div><div className="eyebrow">APEX AI / ASSISTANT</div><h2>{ar?'اسأل APEX':'Ask APEX'}</h2><p className="assistantDisclosure">{ar?'أنت تتحدث مع مساعد ذكاء اصطناعي. راجع التفاصيل المهمة قبل الاعتماد عليها.':'You are chatting with an AI assistant. Review important details before relying on them.'}</p></div><button className="close" onClick={onClose} aria-label="Close"><X/></button></div><div className="messages" aria-live="polite">{messages.map((m,i)=><div className={m.from==='bot'?'msg bot':'msg user'} key={i}>{m.text}</div>)}{loading&&<div className="msg bot">{ar?'جاري التفكير...':'Thinking...'}</div>}{error&&<div className="msg bot" role="alert">{error}</div>}</div><div className="assistantInput"><input value={value} onChange={e=>setValue(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')void send()}} placeholder={ar?'اكتب فكرتك...':'Describe your idea...'} disabled={loading}/><button onClick={()=>void send()} disabled={loading||!value.trim()} aria-label={ar?'إرسال':'Send'}><Send size={17}/></button></div><button className="briefButton" onClick={onStart}>{ar?'حوّل المحادثة إلى طلب مشروع':'Turn this into a project brief'} <ArrowUpRight size={16}/></button></div></div>;
 }
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(document.getElementById('root')!).render(<App/>);
