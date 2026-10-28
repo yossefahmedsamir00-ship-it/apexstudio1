@@ -107,3 +107,4 @@ export function routeAIRequest(
 
   return 'discovery';
 }
+export const routeAgent = routeAIRequest;
