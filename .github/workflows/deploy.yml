@@ -16,6 +16,11 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  VITE_AI_API_URL: https://dyoaiszrmfrdxgouzgzq.supabase.co/functions/v1/apex-ai-gateway
+  VITE_SUPABASE_URL: https://dyoaiszrmfrdxgouzgzq.supabase.co
+  VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_VD3iKy4zbt4pJFfZkO4YFA_rj5sS1Ui
+
 jobs:
   build:
     runs-on: ubuntu-latest
