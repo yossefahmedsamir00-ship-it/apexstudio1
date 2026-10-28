@@ -1,14 +1,500 @@
+```html
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#080909" />
+
     <meta
       name="description"
       content="APEX STUDIO — digital products, websites, commerce and AI systems."
     />
+
+    <meta name="theme-color" content="#080909" />
+
     <title>APEX STUDIO — Digital Products</title>
+
+    <style>
+      :where(button, a, input, textarea, select):focus-visible {
+        outline: 2px solid #e7b86c;
+        outline-offset: 3px;
+      }
+
+      html {
+        scroll-padding-top: 88px;
+      }
+
+      @media (max-width: 1100px) {
+        .topbar {
+          padding-inline: 28px;
+        }
+
+        .sectionPad {
+          padding-inline: 28px;
+        }
+
+        .hero {
+          grid-template-columns: 1fr 0.82fr;
+          gap: 38px;
+        }
+
+        .hero h1 {
+          font-size: clamp(54px, 7vw, 82px);
+        }
+
+        .heroVisual {
+          min-height: 430px;
+        }
+
+        .projectArt {
+          height: 300px;
+        }
+
+        .processGrid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .processGrid article:nth-child(3) {
+          border-right: 0;
+        }
+
+        .processGrid article:nth-child(n + 4) {
+          border-top: 1px solid var(--line);
+        }
+      }
+
+      @media (max-width: 820px) {
+        .topbar {
+          height: 70px;
+          padding-inline: 20px;
+        }
+
+        .sectionPad {
+          padding-inline: 20px;
+        }
+
+        .nav {
+          display: none;
+          position: absolute;
+          left: 12px;
+          right: 12px;
+          top: 78px;
+          margin: 0;
+          padding: 10px;
+          flex-direction: column;
+          gap: 2px;
+          background: rgba(13, 15, 14, 0.98);
+          border: 1px solid var(--line);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        }
+
+        .nav.open {
+          display: flex;
+        }
+
+        .nav button {
+          width: 100%;
+          padding: 14px 12px;
+          text-align: left;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .nav button:last-child {
+          border-bottom: 0;
+        }
+
+        .menuButton {
+          display: flex;
+        }
+
+        .topActions .primary.small {
+          display: none;
+        }
+
+        .hero {
+          min-height: auto;
+          grid-template-columns: 1fr;
+          padding-top: 70px;
+          padding-bottom: 70px;
+          gap: 48px;
+        }
+
+        .hero h1 {
+          font-size: clamp(50px, 11vw, 76px);
+        }
+
+        .heroVisual {
+          height: 480px;
+          min-height: 0;
+        }
+
+        .apexGlyph span {
+          font-size: clamp(130px, 28vw, 190px);
+        }
+
+        .statementInner {
+          grid-template-columns: 40px 1fr 35px;
+          min-height: 105px;
+        }
+
+        .sectionHeader {
+          align-items: flex-start;
+          flex-direction: column;
+          margin-bottom: 34px;
+        }
+
+        .sectionHeader .outlineButton {
+          align-self: flex-start;
+        }
+
+        .workSection,
+        .darkSection,
+        .processSection {
+          padding-top: 90px;
+          padding-bottom: 90px;
+        }
+
+        .projectGrid {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .projectCard,
+        .projectCard:nth-child(2),
+        .projectCard:nth-child(3),
+        .projectCard:nth-child(4),
+        .projectCard:nth-child(5) {
+          grid-column: span 1;
+        }
+
+        .projectArt {
+          height: 300px;
+        }
+
+        .serviceRow {
+          grid-template-columns: 42px 36px 1fr 24px;
+          gap: 12px;
+        }
+
+        .serviceText h3 {
+          font-size: 22px;
+        }
+
+        .processGrid {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .processGrid article:nth-child(3) {
+          border-right: 1px solid var(--line);
+        }
+
+        .processGrid article:nth-child(2n) {
+          border-right: 0;
+          padding-left: 20px;
+        }
+
+        .processGrid article:nth-child(n + 3) {
+          border-top: 1px solid var(--line);
+        }
+
+        .aboutSection {
+          grid-template-columns: 1fr;
+          gap: 55px;
+          padding-top: 80px;
+          padding-bottom: 90px;
+        }
+
+        .aboutVisual {
+          min-height: 390px;
+        }
+
+        .footer {
+          grid-template-columns: 1fr;
+          gap: 22px;
+          padding-top: 34px;
+          padding-bottom: 34px;
+        }
+
+        .footerLinks {
+          justify-content: flex-start;
+          flex-wrap: wrap;
+        }
+
+        .footer > p {
+          text-align: left;
+        }
+
+        .projectModal {
+          grid-template-columns: 1fr;
+        }
+
+        .modalArt {
+          min-height: 330px;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+
+      @media (max-width: 560px) {
+        .sectionPad {
+          padding-inline: 18px;
+        }
+
+        .topbar {
+          padding-inline: 18px;
+        }
+
+        .brand b {
+          font-size: 14px;
+        }
+
+        .brand small {
+          font-size: 7px;
+        }
+
+        .hero {
+          padding-top: 56px;
+          padding-bottom: 58px;
+          gap: 38px;
+        }
+
+        .hero h1 {
+          font-size: clamp(46px, 13vw, 64px);
+          margin-top: 20px;
+          margin-bottom: 24px;
+        }
+
+        .heroBody {
+          font-size: 14px;
+          line-height: 1.7;
+        }
+
+        .heroActions {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .heroVisual {
+          height: 360px;
+        }
+
+        .visualLabel.top {
+          left: 15px;
+          top: 15px;
+        }
+
+        .visualLabel.bottom {
+          right: 15px;
+          bottom: 15px;
+        }
+
+        .orbOne {
+          width: 170px;
+          height: 170px;
+          left: 24%;
+        }
+
+        .orbTwo {
+          width: 120px;
+          height: 120px;
+        }
+
+        .statementInner {
+          grid-template-columns: 25px 1fr;
+          gap: 12px;
+          min-height: 100px;
+        }
+
+        .statementArrow {
+          display: none;
+        }
+
+        .statement p {
+          font-size: 21px;
+          line-height: 1.2;
+        }
+
+        .sectionHeader h2 {
+          font-size: clamp(42px, 12vw, 60px);
+        }
+
+        .workSection,
+        .darkSection,
+        .processSection {
+          padding-top: 72px;
+          padding-bottom: 72px;
+        }
+
+        .filters {
+          margin-right: -18px;
+          padding-right: 18px;
+          padding-bottom: 4px;
+        }
+
+        .projectGrid {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+
+        .projectCard,
+        .projectCard:nth-child(2),
+        .projectCard:nth-child(3),
+        .projectCard:nth-child(4),
+        .projectCard:nth-child(5) {
+          grid-column: auto;
+        }
+
+        .projectArt {
+          height: 300px;
+        }
+
+        .serviceRow {
+          grid-template-columns: 30px 28px 1fr 20px;
+          gap: 10px;
+          padding: 23px 0;
+        }
+
+        .serviceNo {
+          font-size: 9px;
+        }
+
+        .serviceText h3 {
+          font-size: 20px;
+        }
+
+        .serviceText p {
+          font-size: 11px;
+          line-height: 1.55;
+        }
+
+        .processGrid {
+          grid-template-columns: 1fr;
+        }
+
+        .processGrid article,
+        .processGrid article:nth-child(2n),
+        .processGrid article:nth-child(3) {
+          border-right: 0;
+          padding-left: 0;
+          min-height: 0;
+          padding-top: 24px;
+          padding-bottom: 24px;
+        }
+
+        .processGrid article:first-child {
+          border-top: 0;
+        }
+
+        .processGrid article:nth-child(n + 2) {
+          border-top: 1px solid var(--line);
+        }
+
+        .processGrid h3 {
+          margin-top: 28px;
+        }
+
+        .aboutVisual {
+          min-height: 320px;
+        }
+
+        .aboutRing {
+          width: 190px;
+          height: 190px;
+        }
+
+        .aboutCopy h2 {
+          font-size: clamp(44px, 12vw, 62px);
+        }
+
+        .aboutFacts {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+
+        .ctaSection {
+          padding-top: 90px;
+          padding-bottom: 90px;
+        }
+
+        .ctaContent h2 {
+          font-size: clamp(46px, 13vw, 70px);
+        }
+
+        .askFab {
+          right: 16px;
+          bottom: 16px;
+          padding: 11px 13px;
+        }
+
+        .modalBackdrop {
+          padding: 10px;
+        }
+
+        .projectModal,
+        .requestModal,
+        .assistantModal {
+          max-height: 94vh;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .topbar {
+          padding-inline: 14px;
+        }
+
+        .sectionPad {
+          padding-inline: 14px;
+        }
+
+        .brand {
+          gap: 7px;
+        }
+
+        .brandMark {
+          width: 27px;
+          height: 27px;
+        }
+
+        .lang {
+          min-width: 34px;
+        }
+
+        .hero h1 {
+          font-size: 43px;
+        }
+
+        .heroVisual {
+          height: 320px;
+        }
+
+        .projectArt {
+          height: 270px;
+        }
+
+        .primary {
+          max-width: 100%;
+        }
+
+        .askFab {
+          right: 12px;
+          bottom: 12px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
   </head>
 
   <body>
