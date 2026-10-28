@@ -63,3 +63,14 @@ Status: Proposed design for review (not implementation)
 - Configure secrets through Supabase's secure project secrets interface, not in source control or chat.
 - Real-time notifications, AI responses, and payments must be tested in the actual connected environment before they are described as live.
 - Scope includes the APEX STUDIO repository and linked Supabase project only. No destructive tests, denial-of-service, or testing of unrelated systems.
+
+## Visual direction update (approved by owner on 2026-10-28)
+- Combine all three directions into one cohesive system: Digital Luxury + Bold Digital + AI Future.
+- Core identity: near-black surfaces, premium metallic gold, controlled fire-red accents, electric/cool blue accents, oversized editorial typography, cinematic lighting, and selective 3D/abstract imagery.
+- Hero: bold concise value proposition, high-impact art direction, visible primary inquiry CTA and secondary project-exploration CTA.
+- Work/services: expressive project cards and layouts with strong hierarchy; avoid generic template repetition.
+- AI/chat areas: restrained glass-like panels, clear state labels, smooth transitions, and accessible contrast.
+- Motion: purposeful scroll reveals and hover/press feedback; honor prefers-reduced-motion, avoid heavy perpetual animations, and keep mobile performance first-class.
+- Responsive design: design mobile deliberately rather than shrinking desktop; keyboard focus states, semantic structure, readable contrast, and usable touch targets remain required.
+- Do not claim a visual trend is objectively dominant without evidence; use this as the selected creative direction, not a claim about all 2026 websites.
+- Acceptance criteria: design is coherent across hero, project grid, service sections, chat, and mobile; no section uses all accent colors simultaneously; production build remains successful.
