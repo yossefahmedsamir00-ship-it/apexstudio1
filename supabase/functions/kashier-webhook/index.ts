@@ -216,12 +216,11 @@ Deno.serve(async (req: Request) => {
   const capturedMinor = toMinor(providerSession.capturedAmount);
   const refundedMinor = toMinor(providerSession.refundedAmount);
   const providerStatus = String(providerSession.status ?? "").toUpperCase();
-  const referenceReturned = String(paymentParams.order ?? "");
+  // Bind this result to the stored provider session ID, merchant, amount and currency.
   const providerDetailsMatch = sessionIdReturned === sessionId &&
     sessionMerchant === cfg.merchantId &&
     sessionAmount === Number(order.amount_minor) &&
-    sessionCurrency === "EGP" &&
-    referenceReturned === String(order.provider_reference);
+    sessionCurrency === "EGP";
 
   if (!providerDetailsMatch || capturedMinor === null || refundedMinor === null) {
     const { error } = await admin.from("security_events").insert({
@@ -229,52 +228,63 @@ Deno.serve(async (req: Request) => {
       endpoint: "/functions/v1/kashier-webhook", request_id: requestId,
       metadata: { orderId: order.id, sessionId, providerStatus, sessionIdMatches: sessionIdReturned === sessionId,
         merchantMatches: sessionMerchant === cfg.merchantId, amountMatches: sessionAmount === Number(order.amount_minor),
-        currencyMatches: sessionCurrency === "EGP", orderReferenceMatches: referenceReturned === String(order.provider_reference) },
+        currencyMatches: sessionCurrency === "EGP" },
     });
     if (error) console.error("Kashier session mismatch audit write failed", error.code);
     return respond(200);
   }
 
-  let trustedEvent = "unverified";
-  let trustedStatus = "PENDING";
-  let trustedTransactionId: string | null = null;
-  if (["PAID", "CAPTURED", "SUCCESS"].includes(providerStatus) &&
-      capturedMinor === Number(order.amount_minor) && refundedMinor === 0) {
-    trustedEvent = "pay";
-    trustedStatus = "SUCCESS";
-    trustedTransactionId = transactionId;
-  } else if (["FAILED", "FAILURE", "EXPIRED", "ABANDONED", "REJECTED"].includes(providerStatus)) {
-    trustedEvent = "pay";
-    trustedStatus = "FAILURE";
-  } else if (["REFUNDED", "REVERSED", "VOIDED"].includes(providerStatus) || refundedMinor > 0) {
-    trustedEvent = "refund";
-    trustedStatus = "SUCCESS";
+  // Record the HMAC-verified webhook payload. The top-level event label is audit metadata only,
+  // and is never the authority for changing payment state.
+  const signedEventFingerprint = await sha256Hex([signature.toLowerCase(), signaturePayload].join("\n"));
+  const { error: receiptError } = await admin.from("payment_events").insert({
+    provider: "kashier",
+    event_fingerprint: signedEventFingerprint,
+    payment_order_id: order.id,
+    provider_reference: String(order.provider_reference),
+    event_type: (typeof payload.event === "string" ? payload.event.trim() : "webhook").slice(0, 60) || "webhook",
+    provider_status: signedStatus,
+    provider_transaction_id: transactionId,
+    amount_minor: amountMinor,
+    currency,
+    signature_verified: true,
+    verification_method: "webhook_hmac",
+    result: "received",
+    request_id: requestId,
+    metadata: { verificationMethod: "kashier_hmac", sessionStatusFetched: true },
+  });
+  if (receiptError && receiptError.code !== "23505") {
+    console.error("Kashier verified webhook receipt write failed", receiptError.code);
+    return respond(500);
   }
 
-  const fingerprint = await sha256Hex([
-    signature.toLowerCase(), signaturePayload, sessionIdReturned, providerStatus,
-    String(capturedMinor), String(refundedMinor),
+  // Reconcile from the provider's current session state. Do not trust the unsigned event label.
+  const sessionFingerprint = await sha256Hex([
+    "provider-session-status", sessionIdReturned, providerStatus,
+    String(sessionAmount), String(capturedMinor), String(refundedMinor),
   ].join("\n"));
-  const { data: result, error } = await admin.rpc("process_kashier_webhook", {
-    p_fingerprint: fingerprint,
-    p_event_type: trustedEvent,
-    p_provider_status: trustedStatus,
+  const verifiedTransactionId = ["SUCCESS", "PAID", "CAPTURED"].includes(signedStatus) &&
+      ["PAID", "CAPTURED", "SUCCESS"].includes(providerStatus) ? transactionId : null;
+  const { data: result, error } = await admin.rpc("reconcile_kashier_session_status", {
+    p_event_fingerprint: sessionFingerprint,
     p_provider_reference: String(order.provider_reference),
-    p_transaction_id: trustedTransactionId,
-    p_amount_minor: Number(order.amount_minor),
-    p_currency: "EGP",
+    p_provider_session_id: sessionId,
+    p_provider_status: providerStatus,
+    p_amount_minor: sessionAmount,
+    p_captured_minor: capturedMinor,
+    p_refunded_minor: refundedMinor,
+    p_currency: sessionCurrency,
     p_merchant_id: sessionMerchant,
     p_expected_merchant_id: cfg.merchantId,
-    p_method: typeof data.method === "string" ? data.method : null,
-    p_response_code: typeof data.transactionResponseCode === "string" ? data.transactionResponseCode : null,
+    p_provider_transaction_id: verifiedTransactionId,
     p_request_id: requestId,
   });
   if (error || !result || typeof result !== "object") {
-    console.error("Kashier webhook reconciliation ledger failed", error?.code ?? "invalid_rpc_response");
+    console.error("Kashier session reconciliation failed", error?.code ?? "invalid_rpc_response");
     return respond(500);
   }
   const outcome = (result as Record<string, unknown>).result;
-  if (["rejected", "unmatched", "transaction_reused", "invalid_transition", "requires_reconciliation"].includes(String(outcome))) {
+  if (["rejected", "unmatched", "invalid_transition", "requires_reconciliation"].includes(String(outcome))) {
     console.warn("Kashier webhook flagged for review", { outcome, providerStatus, orderId: order.id });
   }
   return respond(200);
