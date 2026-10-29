@@ -56,8 +56,8 @@ function App() {
   const [amount, setAmount] = useState(''); const [description, setDescription] = useState('');
   const [inquiryId, setInquiryId] = useState(''); const [createdLink, setCreatedLink] = useState('');
 
-  const claimOwner = async () => {
-    const { error: claimError } = await supabase.functions.invoke('apex-owner-bootstrap', { body: {} });
+  const claimOwner = async (action:'verify'|'login'='verify') => {
+    const { error: claimError } = await supabase.functions.invoke('apex-owner-bootstrap', { body: { action } });
     if (claimError) throw new Error(await explainFunctionError(claimError));
   };
 
@@ -131,14 +131,14 @@ function App() {
     }
   };
 
-  const verifyOwnerSession = async (id:string):Promise<boolean> => {
+  const verifyOwnerSession = async (id:string,recordLogin=false):Promise<boolean> => {
     try {
       const {data,error:authError}=await supabase.auth.getUser();
       if(authError || !data.user?.email || data.user.id!==id) {
         setUser(null);
         return false;
       }
-      await claimOwner();
+      await claimOwner(recordLogin?'login':'verify');
       setUser(id);
       setError('');
       await load();
@@ -225,7 +225,7 @@ function App() {
           setError('The code could not be verified. Check it and try again, or request a new code.');
           return;
         }
-        const authorized=await verifyOwnerSession(result.data.user.id);
+        const authorized=await verifyOwnerSession(result.data.user.id,true);
         if(authorized) setNotice('Owner access verified.');
         return;
       }
