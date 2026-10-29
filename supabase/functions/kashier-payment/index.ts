@@ -68,7 +68,7 @@ class BodyTooLargeError extends Error {}
 async function readBodyTextLimited(req: Request, maxBytes: number): Promise<string> {
   const declared = req.headers.get("content-length");
   if (declared !== null) {
-    if (!/^\\d+$/.test(declared)) throw new Error("invalid content length");
+    if (!/^\d+$/.test(declared)) throw new Error("invalid content length");
     const declaredBytes = Number(declared);
     if (!Number.isSafeInteger(declaredBytes) || declaredBytes > maxBytes) throw new BodyTooLargeError();
   }
