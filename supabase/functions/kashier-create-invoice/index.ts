@@ -39,6 +39,39 @@ function makeToken() {
   return Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+class BodyTooLargeError extends Error {}
+
+async function readBodyTextLimited(req: Request, maxBytes: number): Promise<string> {
+  const declared = req.headers.get("content-length");
+  if (declared !== null) {
+    if (!/^\\d+$/.test(declared)) throw new Error("invalid content length");
+    const declaredBytes = Number(declared);
+    if (!Number.isSafeInteger(declaredBytes) || declaredBytes > maxBytes) throw new BodyTooLargeError();
+  }
+  if (!req.body) throw new Error("empty body");
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const part = await reader.read();
+      if (part.done) break;
+      if (part.value.byteLength > maxBytes - total) {
+        try { await reader.cancel(); } catch { /* best effort */ }
+        throw new BodyTooLargeError();
+      }
+      total += part.value.byteLength;
+      chunks.push(part.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? "";
   const headers = cors(origin);
@@ -66,13 +99,24 @@ Deno.serve(async (req: Request) => {
   }
 
   let body: Record<string, unknown>;
-  try { body = await req.json(); } catch { return respond({ error: "Invalid JSON." }, 400, headers); }
+  try {
+    const rawBody = await readBodyTextLimited(req, 16 * 1024);
+    const parsed: unknown = JSON.parse(rawBody);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid JSON object");
+    body = parsed as Record<string, unknown>;
+  } catch (error) {
+    return respond(
+      { error: error instanceof BodyTooLargeError ? "Request too large" : "Invalid JSON." },
+      error instanceof BodyTooLargeError ? 413 : 400,
+      headers,
+    );
+  }
   const amount = typeof body.amountEGP === "number" ? body.amountEGP : Number(String(body.amountEGP ?? ""));
   if (!Number.isFinite(amount) || amount < 1 || amount > 1000000) return respond({ error: "Enter an invoice amount from EGP 1 to EGP 1,000,000." }, 400, headers);
   const amountMinor = Math.round(amount * 100);
   if (Math.abs(amount * 100 - amountMinor) > 0.001) return respond({ error: "Amount must have at most two decimal places." }, 400, headers);
   const description = typeof body.description === "string" ? body.description.trim() : "";
-  if (description.length < 3 || description.length > 119) return respond({ error: "Description must be between 3 and 300 characters." }, 400, headers);
+  if (description.length < 3 || description.length > 119) return respond({ error: "Description must be between 3 and 119 characters." }, 400, headers);
   const inquiryId = typeof body.inquiryId === "string" && body.inquiryId.trim() ? body.inquiryId.trim() : null;
   if (inquiryId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(inquiryId)) {
     return respond({ error: "Invalid project inquiry reference." }, 400, headers);
