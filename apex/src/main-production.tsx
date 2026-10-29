@@ -254,7 +254,7 @@ function AssistantModal({locale,onClose,onStart}:{locale:Locale;onClose:()=>void
    void captureEvent({eventName:'ai_message',locale,metadata:{length:q.length}});
    try {
      const {data,error:callError}=await supabase.functions.invoke('apex-client-chat',{
-       body:{action:'send',conversationId,body:q,idempotencyKey:requestKey},
+       body:{action:'send',conversationId,body:q,idempotencyKey:requestKey,agent:assistantMode==='technical'?'technical':'support'},
      });
      if(callError) throw new Error(await chatFunctionError(callError));
      const result=data as ChatApiResponse;
