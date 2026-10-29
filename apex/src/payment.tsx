@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowUpRight, CheckCircle2, Clock3, ShieldCheck, XCircle } from 'lucide-react';
 import './styles.css';
