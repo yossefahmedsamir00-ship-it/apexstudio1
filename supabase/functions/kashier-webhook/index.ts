@@ -2,9 +2,12 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.75.0";
 
 function serviceKey() {
+  // Prefer the legacy service-role JWT so supabase-js does not send a non-JWT sb_secret as Authorization: Bearer.
+  const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (legacy) return legacy;
   const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
-  if (raw) { try { return JSON.parse(raw).default as string | undefined; } catch { /* legacy fallback */ } }
-  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (raw) { try { return JSON.parse(raw).default as string | undefined; } catch { /* ignore malformed secret map */ } }
+  return undefined;
 }
 function kashierConfig() {
   const mode = (Deno.env.get("KASHIER_MODE") ?? "test").trim().toLowerCase();
