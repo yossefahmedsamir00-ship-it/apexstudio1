@@ -137,6 +137,8 @@ async function chatFunctionError(error: { message: string; context?: unknown }) 
 
 function AssistantModal({locale,onClose,onStart}:{locale:Locale;onClose:()=>void;onStart:(transcript?:string,conversationId?:string)=>void}){
  const ar=locale==='ar';
+ const [assistantMode,setAssistantMode]=useState<'guide'|'technical'>('guide');
+ const [copied,setCopied]=useState(false);
  const [messages,setMessages]=useState<ChatMessageView[]>([]);
  const [value,setValue]=useState('');
  const [loading,setLoading]=useState(false);
