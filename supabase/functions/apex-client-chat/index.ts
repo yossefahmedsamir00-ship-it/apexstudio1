@@ -325,6 +325,11 @@ Deno.serve(async (req: Request) => {
       }).eq("id",conversationId);
       await writeAudit(admin,user.id,"client_message_sent","conversation",conversationId,{messageId:clientMessage.id,bodyLength:body.length});
 
+      // Direct owner chat is saved to the same secure inbox, but must never generate an AI reply.
+      if (input.mode === "owner") {
+        return respond({conversation:safeConversation({...conversation,last_client_message_at:now,updated_at:now,status:"waiting_owner"}),messages:[clientMessage],manual:true},200,headers);
+      }
+
       const requestedAgent = clip(input.agent,40) || "support";
       const agent = new Set(["support","technical"]).has(requestedAgent) ? requestedAgent : "support";
       const history = await loadMessages(admin,conversationId,undefined,14);
