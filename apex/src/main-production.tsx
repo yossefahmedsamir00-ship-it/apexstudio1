@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowUpRight, Bot, Check, Globe2, Menu, MoveUpRight, Plus, Send, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowUpRight, Bot, Check, Globe2, Instagram, Facebook, Linkedin, Menu, MoveUpRight, Plus, Send, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
 import './styles.css';
 import './vr-showroom.css';
 import './payment.css';
