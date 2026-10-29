@@ -26,13 +26,11 @@ KASHIER_TEST_SECRET_KEY=...
 APEX_SITE_URL=https://yossefahmedsamir00-ship-it.github.io/apexstudio1/
 ```
 
-If Kashier provides a separate Payment API Key, also set:
+**Required for webhook verification:** set the Payment API Key separately as documented by Kashier. The webhook will fail closed (HTTP 503) until it is configured; it must not silently fall back to the ordinary API key.
 
 ```text
 KASHIER_TEST_PAYMENT_API_KEY=...
 ```
-
-If that key is the same as the test API key, `KASHIER_TEST_PAYMENT_API_KEY` may be omitted. The integration uses the API key to sign/verify webhook events when no separate Payment API Key is set.
 
 The integration uses Supabase's standard `SUPABASE_URL` and server-side secret/service-role environment values supplied to Edge Functions. Do not copy either server credential into the frontend.
 
@@ -66,7 +64,13 @@ KASHIER_LIVE_API_KEY=...
 KASHIER_LIVE_SECRET_KEY=...
 ```
 
-If a separate live Payment API Key is provided, set `KASHIER_LIVE_PAYMENT_API_KEY` as well. Test and live credentials are separate and must not be mixed.
+The live Payment API Key is also required for webhook signature verification:
+
+```text
+KASHIER_LIVE_PAYMENT_API_KEY=...
+```
+
+Test and live credentials are separate and must not be mixed.
 
 **Important:** the site owner is under 18. For real payments, a parent/guardian or legally eligible adult/business representative must own and complete any merchant onboarding if required by Kashier. Do not bypass identity, age, or business verification requirements.
 
