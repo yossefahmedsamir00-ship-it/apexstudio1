@@ -47,3 +47,18 @@
     contain-intrinsic-size: auto 720px;
   }
 }
+/* Professional contact footer */
+.footer{display:grid;grid-template-columns:1.15fr .7fr 1.25fr 1fr;gap:clamp(24px,4vw,58px);padding-top:54px;padding-bottom:24px;border-top:1px solid rgba(0,210,255,.22);background:linear-gradient(180deg,rgba(2,12,27,.65),rgba(2,7,20,.98))}
+.footerIdentity,.footerLinks,.contactBlock,.socialBlock{display:flex;flex-direction:column;align-items:flex-start;gap:13px;min-width:0}
+.footerBrand{display:flex;align-items:center;gap:12px}.footerBrand>div{display:flex;flex-direction:column;gap:6px}.footerBrand b{font-size:14px;letter-spacing:.16em}.footerBrand small{font-size:9px;letter-spacing:.12em;color:#62dff5}
+.footerTagline,.socialBlock>p{max-width:270px;color:#9db3ca;font-size:12px;line-height:1.8;margin:0}
+.footerLabel{color:#47dfff;font-size:10px;letter-spacing:.16em}
+.footerLinks{gap:14px}.footerLinks button{padding:0;text-align:start}
+.contactBlock{width:100%;gap:10px}.contactPerson{font-size:13px;color:#effaff;margin-bottom:2px}
+.contactCard{display:flex;align-items:center;gap:10px;width:100%;min-width:0;padding:10px 11px;border:1px solid rgba(103,197,255,.16);border-radius:12px;background:rgba(4,19,38,.58);color:#e6f8ff;text-decoration:none;transition:border-color .2s,background .2s}
+.contactCard:hover{border-color:rgba(52,222,255,.55);background:rgba(0,126,255,.09)}
+.contactCard>span:nth-child(2){display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}.contactCard small{font-size:8px;letter-spacing:.15em;color:#78cfe9}.contactCard b{font-size:11px;font-weight:600;overflow-wrap:anywhere}.contactIcon{display:grid;place-items:center;flex:0 0 30px;height:30px;border:1px solid rgba(44,213,255,.3);border-radius:9px;color:#42e5ff}
+.socialBlock{gap:12px}.socialLinks{display:flex;flex-direction:column;width:100%;gap:8px}.socialLinks a{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:1px solid rgba(103,197,255,.16);border-radius:12px;color:#d9f6ff;text-decoration:none;font-size:11px;background:rgba(4,19,38,.45);transition:.2s}.socialLinks a:hover{border-color:rgba(52,222,255,.55);transform:translateX(2px)}.socialLinks a span{flex:1}.socialHint{font-size:9px!important;color:#718aa5!important}
+.footerBottom{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:18px;border-top:1px solid rgba(103,197,255,.12);font-size:10px;color:#7790a9}.footerBottom a{color:#54dff7;text-decoration:none}
+@media(max-width:1000px){.footer{grid-template-columns:1fr 1fr}.contactBlock,.socialBlock{max-width:460px}}
+@media(max-width:560px){.footer{grid-template-columns:1fr;padding-top:38px;gap:28px}.contactBlock,.socialBlock{max-width:none}.footerBottom{align-items:flex-start;flex-direction:column}.contactCard b{font-size:12px}}
