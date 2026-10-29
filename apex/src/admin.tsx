@@ -34,7 +34,6 @@ type AuditLog = {
 function App() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [user, setUser] = useState<string | null>(null);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [isOnline, setIsOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [backendStatus,setBackendStatus]=useState<'checking'|'healthy'|'degraded'>('checking');
   const [lastSuccessfulSync,setLastSuccessfulSync]=useState<string|null>(null);
@@ -240,14 +239,8 @@ function App() {
         if(authorized) setNotice('Owner access verified.');
         return;
       }
-      const result = isSignUp
-        ? await supabase.auth.signUp({ email: email.trim(), password })
-        : await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (result.error) { setError(isSignUp ? explainAuthError(result.error) : 'Email or password was not accepted.'); return; }
-      if (isSignUp && !result.data.session) {
-        setNotice('Check your email to confirm the account, then return here and sign in.');
-        return;
-      }
+      const result = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (result.error) { setError(explainAuthError(result.error)); return; }
       if (result.data.session && result.data.user) {
         const authorized=await verifyOwnerSession(result.data.user.id,true);
         if(authorized) setNotice('Owner account verified.');
@@ -294,8 +287,8 @@ function App() {
   if (!user) return <main style={page}>
     <section style={{ ...card, maxWidth: 510, margin: '8vh auto' }}>
       <p style={kicker}>APEX / ADMIN</p>
-      <h1 style={{ marginBottom: 8 }}>{isSignUp ? 'Create owner login' : 'Owner dashboard'}</h1>
-      <p style={muted}>Use the verified APEX contact email to secure the owner account. The first verified owner login can claim the dashboard once.</p>
+      <h1 style={{ marginBottom: 8 }}>Owner dashboard</h1>
+      <p style={muted}>Sign in with the existing verified APEX owner account. New account creation is disabled here.</p>
       <form onSubmit={signIn} style={{ display: 'grid', gap: 12 }}>
         <label style={label}>Owner email
           <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Owner email" style={input} autoComplete="email" disabled={otpRequested && otpMode}/>
@@ -304,14 +297,11 @@ function App() {
           ? <label style={label}>Email verification code
               <input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} value={otpCode} onChange={e=>setOtpCode(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder="6-digit code" style={input}/>
             </label>
-          : !otpMode && <label style={label}>Password<input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" style={input} autoComplete={isSignUp ? 'new-password' : 'current-password'} /></label>}
-        <button disabled={busy || (otpMode && otpRequested && otpCode.length!==6)} style={button}>{busy ? 'Please wait…' : otpMode ? otpRequested ? 'Verify email code' : 'Send email code' : isSignUp ? 'Create account' : 'Sign in'}</button>
+          : !otpMode && <label style={label}>Password<input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" style={input} autoComplete="current-password" /></label>}
+        <button disabled={busy || (otpMode && otpRequested && otpCode.length!==6)} style={button}>{busy ? 'Please wait…' : otpMode ? otpRequested ? 'Verify email code' : 'Send email code' : 'Sign in'}</button>
       </form>
-      {!isSignUp && <button onClick={() => { setOtpMode(v=>!v);setOtpRequested(false);setOtpCode('');setError('');setNotice(''); }} style={linkButton}>{otpMode?'Use password instead':'Sign in with email code (OTP)'}</button>}
+      <button onClick={() => { setOtpMode(v=>!v);setOtpRequested(false);setOtpCode('');setError('');setNotice(''); }} style={linkButton}>{otpMode?'Use password instead':'Sign in with email code (OTP)'}</button>
       {otpMode && otpRequested && <button onClick={()=>{setOtpRequested(false);setOtpCode('');setError('');setNotice('');}} style={linkButton}>Request a new code / change email</button>}
-      <button onClick={() => { setIsSignUp(v => !v);setOtpMode(false);setOtpRequested(false);setOtpCode(''); setError(''); setNotice(''); }} style={linkButton}>
-        {isSignUp ? 'Already have an account? Sign in' : 'First time? Create owner login'}
-      </button>
       {error && <p role="alert" style={errorStyle}>{error}</p>}
       {notice && <p role="status" style={successStyle}>{notice}</p>}
     </section>
