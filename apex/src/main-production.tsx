@@ -287,7 +287,7 @@ function AssistantModal({locale,onClose,onStart}:{locale:Locale;onClose:()=>void
    {!booting&&<div className="suggestedQuestionsRow" aria-label={ar?'أسئلة مقترحة':'Suggested questions'}>{suggestions.map(sendButton)}</div>}
    {error&&<p className="chatError" role="alert">{error}</p>}
    <div className="assistantInput"><input value={value} maxLength={8000} onChange={e=>setValue(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void send()}}} placeholder={ar?'اكتب رسالتك…':'Write your message…'} disabled={loading||booting||!conversationId}/><button onClick={()=>void send()} disabled={loading||booting||!value.trim()||!conversationId} aria-label={ar?'إرسال':'Send'}><Send size={17}/></button></div>
-   <button className="briefButton" onClick={()=>onStart(transcript)} disabled={booting||!messages.length}>{ar?'حوّل المحادثة إلى طلب مشروع':'Turn this conversation into a project brief'} <ArrowUpRight size={16}/></button>
+   <button className="briefButton" onClick={()=>onStart(transcript,conversationId)} disabled={booting||!messages.length}>{ar?'حوّل المحادثة إلى طلب مشروع':'Turn this conversation into a project brief'} <ArrowUpRight size={16}/></button>
    {aiUnavailable&&<p className="chatTinyNotice">{ar?'الرسالة محفوظة في قاعدة البيانات.':'Your message remains saved in the database.'}</p>}
   </div>
  </div>;
