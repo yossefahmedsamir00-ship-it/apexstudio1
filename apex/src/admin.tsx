@@ -384,7 +384,7 @@ function App() {
       <form onSubmit={createInvoice} style={formGrid}>
         <label style={label}>Amount (EGP)<input required type="number" min="1" max="1000000" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 1500.00" style={input} /></label>
         <label style={label}>Attach to project lead<select value={inquiryId} onChange={e => setInquiryId(e.target.value)} style={input}><option value="">No linked lead / custom invoice</option>{inquiries.map(q => <option key={q.id} value={q.id}>{q.client_name} · {q.project_type}</option>)}</select></label>
-        <label style={{ ...label, gridColumn: '1 / -1' }}>Invoice description<input required minLength={3} maxLength={300} value={description} onChange={e => setDescription(e.target.value)} placeholder="e.g. Website project — milestone 1" style={input} /></label>
+        <label style={{ ...label, gridColumn: '1 / -1' }}>Invoice description<input required minLength={3} maxLength={119} value={description} onChange={e => setDescription(e.target.value)} placeholder="e.g. Website project — milestone 1" style={input} /></label>
         <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}><button disabled={invoiceBusy} style={button}>{invoiceBusy ? 'Creating…' : 'Create secure invoice link'}</button><span style={muted}>Link expires after 7 days · EGP only</span></div>
       </form>
       {createdLink && <div style={{ ...linkBox, marginTop: 16 }}><strong>New invoice link — copy it now</strong><input readOnly value={createdLink} onFocus={e => e.currentTarget.select()} style={input} aria-label="New invoice URL" /><button onClick={() => void copyLink()} style={button}>Copy link</button></div>}
