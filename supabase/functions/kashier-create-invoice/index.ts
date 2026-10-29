@@ -55,12 +55,12 @@ Deno.serve(async (req: Request) => {
   const authClient = createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: userData, error: authError } = await authClient.auth.getUser(token);
   if (authError || !userData.user) return respond({ error: "Your session is invalid. Please sign in again." }, 401, headers);
-  const ownerClient = createClient(url, anon, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data: isOwner, error: ownerError } = await ownerClient.rpc("apex_owner_is_configured");
-  if (ownerError || isOwner !== true) return respond({ error: "Owner access is not configured for this account." }, 403, headers);
+  const admin = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data: ownerSetting, error: ownerError } = await admin
+    .from("apex_owner_settings").select("owner_user_id").eq("id", true).maybeSingle();
+  if (ownerError || !ownerSetting || ownerSetting.owner_user_id !== userData.user.id) {
+    return respond({ error: "Owner access is not configured for this account." }, 403, headers);
+  }
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return respond({ error: "Invalid JSON." }, 400, headers); }
@@ -75,7 +75,6 @@ Deno.serve(async (req: Request) => {
     return respond({ error: "Invalid project inquiry reference." }, 400, headers);
   }
 
-  const admin = createClient(url, service, { auth: { persistSession: false, autoRefreshToken: false } });
   if (inquiryId) {
     const { data: inquiry, error } = await admin.from("project_inquiries").select("id,status").eq("id", inquiryId).maybeSingle();
     if (error) return respond({ error: "Could not validate the project inquiry." }, 500, headers);
