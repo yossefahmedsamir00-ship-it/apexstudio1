@@ -72,7 +72,7 @@ Deno.serve(async (req: Request) => {
   const amountMinor = Math.round(amount * 100);
   if (Math.abs(amount * 100 - amountMinor) > 0.001) return respond({ error: "Amount must have at most two decimal places." }, 400, headers);
   const description = typeof body.description === "string" ? body.description.trim() : "";
-  if (description.length < 3 || description.length > 300) return respond({ error: "Description must be between 3 and 300 characters." }, 400, headers);
+  if (description.length < 3 || description.length > 119) return respond({ error: "Description must be between 3 and 300 characters." }, 400, headers);
   const inquiryId = typeof body.inquiryId === "string" && body.inquiryId.trim() ? body.inquiryId.trim() : null;
   if (inquiryId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(inquiryId)) {
     return respond({ error: "Invalid project inquiry reference." }, 400, headers);
