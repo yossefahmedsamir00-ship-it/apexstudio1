@@ -243,7 +243,7 @@ function App() {
       const result = isSignUp
         ? await supabase.auth.signUp({ email: email.trim(), password })
         : await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (result.error) { setError(isSignUp ? 'Account creation failed. Check the form and try again.' : 'Email or password was not accepted.'); return; }
+      if (result.error) { setError(isSignUp ? explainAuthError(result.error) : 'Email or password was not accepted.'); return; }
       if (isSignUp && !result.data.session) {
         setNotice('Check your email to confirm the account, then return here and sign in.');
         return;
@@ -455,6 +455,34 @@ function formatAuditDetails(metadata: Record<string, unknown>) {
   if (typeof metadata.to === 'string' && metadata.to) return `Status → ${metadata.to}`;
   if (typeof metadata.source === 'string' && metadata.source) return metadata.source;
   return '—';
+}
+
+function explainAuthError(error: { message: string; code?: string; status?: number }) {
+  const code = error.code ?? '';
+  switch (code) {
+    case 'signup_disabled':
+      return 'New account creation is disabled in Supabase Auth. Enable signups in Authentication settings, then retry.';
+    case 'email_provider_disabled':
+      return 'Email/password sign-up is disabled in Supabase Auth. Enable the Email provider, then retry.';
+    case 'email_exists':
+    case 'user_already_exists':
+      return 'An account may already exist for this email. Switch to Sign in instead of creating a new account.';
+    case 'weak_password':
+      return 'The password does not meet the current security policy. Use a longer password with a mix of characters.';
+    case 'email_address_invalid':
+      return 'Supabase rejected this email address. Check for typos and use a valid email address.';
+    case 'email_address_not_authorized':
+      return 'Supabase email delivery is not authorized for this address with the current mail setup. Configure a custom SMTP provider for production email.';
+    case 'over_email_send_rate_limit':
+    case 'over_request_rate_limit':
+      return 'Too many authentication requests were made. Wait a few minutes before trying again.';
+    case 'validation_failed':
+      return 'Supabase rejected one or more sign-up fields. Check the email and password requirements.';
+    case 'unexpected_failure':
+      return 'Supabase Auth encountered an internal error. Check Supabase Auth logs; a failing database trigger can cause this.';
+    default:
+      return `Account creation failed${code ? ` (${code})` : error.status ? ` (HTTP ${error.status})` : ''}. ${error.message || 'Check Supabase Auth settings and logs.'}`;
+  }
 }
 
 async function explainFunctionError(error: { message: string; context?: unknown }) {
