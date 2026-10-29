@@ -258,7 +258,7 @@ Deno.serve(async (req: Request) => {
         return respond({conversation:safeConversation(conversation),messages:[clientMessage],aiUnavailable:true},200,headers);
       }
       await admin.from("client_conversations").update({status:"ai_handled",updated_at:new Date().toISOString()}).eq("id",conversationId);
-      await writeAudit(admin,"00000000-0000-4000-8000-000000000000","ai_message_created","conversation",conversationId,{messageId:aiMessage.id});
+      await writeAudit(admin,user.id,"ai_message_created","conversation",conversationId,{messageId:aiMessage.id,actor:"ai"});
       const {data:updatedConversation} = await getConversation(admin,conversationId).then(c=>({data:c}));
       return respond({conversation:safeConversation(updatedConversation ?? conversation),messages:[clientMessage,aiMessage],aiUnavailable:false},200,headers);
     }
