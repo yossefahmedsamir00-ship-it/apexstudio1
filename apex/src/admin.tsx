@@ -2,18 +2,240 @@ import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { supabase } from './lib/supabase';
 
-type Inquiry={id:string;client_name:string;client_email:string;client_phone:string|null;project_type:string;budget_range:string|null;brief:string;status:string;created_at:string};
-type Event={id:string;event_name:string;project_id:string|null;locale:string|null;created_at:string};
+type Inquiry = {
+  id: string; client_name: string; client_email: string; client_phone: string | null;
+  project_type: string; budget_range: string | null; brief: string; status: string; created_at: string;
+};
+type SiteEvent = { id: string; event_name: string; project_id: string | null; locale: string | null; created_at: string };
+type Invoice = {
+  id: string; inquiry_id: string | null; amount_minor: number; currency: string; status: string;
+  description: string; provider: string; provider_reference: string | null; created_at: string;
+};
+type NewInvoiceResponse = { checkoutUrl?: string; invoice?: { id: string; amount_egp: string; description: string }; error?: string };
 
-function Admin(){
- const [email,setEmail]=useState(''); const [password,setPassword]=useState(''); const [user,setUser]=useState<string|null>(null); const [inquiries,setInquiries]=useState<Inquiry[]>([]); const [events,setEvents]=useState<Event[]>([]); const [error,setError]=useState(''); const [busy,setBusy]=useState(false);
- const load=async()=>{setBusy(true);setError('');const [{data:i,error:ie},{data:e,error:ee}]=await Promise.all([supabase.from('project_inquiries').select('*').order('created_at',{ascending:false}).limit(100),supabase.from('site_events').select('id,event_name,project_id,locale,created_at').order('created_at',{ascending:false}).limit(500)]);if(ie||ee)setError(ie?.message||ee?.message||'Owner access is not configured.');setInquiries(i??[]);setEvents(e??[]);setBusy(false)};
- useEffect(()=>{supabase.auth.getSession().then(({data})=>{setUser(data.session?.user.id??null);if(data.session?.user)void load()});const {data}=supabase.auth.onAuthStateChange((_e,s)=>{setUser(s?.user.id??null);if(s?.user)void load()});return()=>data.subscription.unsubscribe()},[]);
- const signIn=async(e:React.FormEvent)=>{e.preventDefault();setBusy(true);setError('');const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)setError(error.message);else setUser(data.user?.id??null);setBusy(false)};
- if(!user)return <main style={{maxWidth:520,margin:'10vh auto',padding:24}}><p style={{letterSpacing:3,color:'#d8ad55'}}>APEX / ADMIN</p><h1>Owner dashboard</h1><p style={{color:'#aaa'}}>Sign in with the configured owner account. RLS keeps client data private.</p><form onSubmit={signIn} style={{display:'grid',gap:12}}><input required type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Owner email" style={input}/><input required type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" style={input}/><button disabled={busy} style={button}>{busy?'Signing in…':'Sign in'}</button></form>{error&&<p style={{color:'#ff6b5e'}}>{error}</p>}</main>;
- return <main style={{maxWidth:1200,margin:'0 auto',padding:32}}><header style={{display:'flex',justifyContent:'space-between',gap:16,alignItems:'center'}}><div><p style={{letterSpacing:3,color:'#d8ad55'}}>APEX / ADMIN</p><h1 style={{marginBottom:4}}>Client pipeline</h1><p style={{color:'#999'}}>Leads and product events, protected by Supabase RLS.</p></div><div style={{display:'flex',gap:8}}><button onClick={()=>void load()} style={button}>{busy?'Refreshing…':'Refresh'}</button><button onClick={()=>void supabase.auth.signOut()} style={button}>Sign out</button></div></header><section style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,margin:'28px 0'}}>{[['Leads',inquiries.length],['Events',events.length],['AI messages',events.filter(e=>e.event_name==='ai_message').length]].map(([a,b])=><div key={String(a)} style={card}><small style={{color:'#999'}}>{a}</small><strong style={{fontSize:32}}>{b}</strong></div>)}</section><section><h2>Leads</h2><div style={{display:'grid',gap:10}}>{inquiries.map(x=><article key={x.id} style={card}><div style={{display:'flex',justifyContent:'space-between',gap:16}}><div><strong>{x.client_name}</strong><div style={{color:'#bbb'}}>{x.client_email}{x.client_phone?` · ${x.client_phone}`:''}</div></div><span>{x.status}</span></div><p><b>{x.project_type}</b>{x.budget_range?` · ${x.budget_range}`:''}</p><p style={{whiteSpace:'pre-wrap',color:'#ddd'}}>{x.brief}</p><small style={{color:'#777'}}>{new Date(x.created_at).toLocaleString()}</small></article>)}{!inquiries.length&&<div style={card}>No leads yet.</div>}</div></section><section style={{marginTop:32}}><h2>Recent events</h2><div style={{...card,overflow:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr><th align="left">Event</th><th align="left">Project</th><th align="left">Locale</th><th align="left">Time</th></tr></thead><tbody>{events.slice(0,100).map(e=><tr key={e.id}><td>{e.event_name}</td><td>{e.project_id||'—'}</td><td>{e.locale||'—'}</td><td>{new Date(e.created_at).toLocaleString()}</td></tr>)}</tbody></table></div></section>{error&&<p style={{color:'#ff6b5e'}}>{error}</p>}</main>
+function App() {
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
+  const [user, setUser] = useState<string | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [events, setEvents] = useState<SiteEvent[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [error, setError] = useState(''); const [notice, setNotice] = useState('');
+  const [busy, setBusy] = useState(false); const [invoiceBusy, setInvoiceBusy] = useState(false);
+  const [amount, setAmount] = useState(''); const [description, setDescription] = useState('');
+  const [inquiryId, setInquiryId] = useState(''); const [createdLink, setCreatedLink] = useState('');
+
+  const claimOwner = async () => {
+    const { error: claimError } = await supabase.functions.invoke('apex-owner-bootstrap', { body: {} });
+    if (claimError) throw new Error(await explainFunctionError(claimError));
+  };
+
+  const load = async () => {
+    setBusy(true); setError('');
+    const [inq, evt, inv] = await Promise.all([
+      supabase.from('project_inquiries').select('*').order('created_at', { ascending: false }).limit(100),
+      supabase.from('site_events').select('id,event_name,project_id,locale,created_at').order('created_at', { ascending: false }).limit(500),
+      supabase.from('payment_orders').select('id,inquiry_id,amount_minor,currency,status,description,provider,provider_reference,created_at').order('created_at', { ascending: false }).limit(100),
+    ]);
+    const firstError = inq.error || evt.error || inv.error;
+    if (firstError) setError(firstError.message || 'Owner access is not configured yet.');
+    setInquiries((inq.data ?? []) as Inquiry[]);
+    setEvents((evt.data ?? []) as SiteEvent[]);
+    setInvoices((inv.data ?? []) as Invoice[]);
+    setBusy(false);
+  };
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      const id = data.session?.user.id ?? null;
+      setUser(id);
+      if (id) void load();
+    });
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user.id ?? null);
+      if (session?.user) void load();
+      else { setInquiries([]); setEvents([]); setInvoices([]); }
+    });
+    return () => { active = false; data.subscription.unsubscribe(); };
+  }, []);
+
+  const signIn = async (e: React.FormEvent) => {
+    e.preventDefault(); setBusy(true); setError(''); setNotice('');
+    const result = isSignUp
+      ? await supabase.auth.signUp({ email: email.trim(), password })
+      : await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (result.error) { setError(result.error.message); setBusy(false); return; }
+    if (isSignUp && !result.data.session) {
+      setNotice('Check your email to confirm the account, then return here and sign in.');
+      setBusy(false); return;
+    }
+    if (result.data.session) {
+      try {
+        await claimOwner();
+        setUser(result.data.user?.id ?? null);
+        setNotice('Owner account verified.');
+        await load();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Owner access could not be configured.');
+      }
+    }
+    setBusy(false);
+  };
+
+  const createInvoice = async (e: React.FormEvent) => {
+    e.preventDefault(); setError(''); setNotice(''); setCreatedLink('');
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount < 1 || numericAmount > 1000000) {
+      setError('Enter an amount from EGP 1 to EGP 1,000,000.'); return;
+    }
+    if (Math.abs(numericAmount * 100 - Math.round(numericAmount * 100)) > 0.001) {
+      setError('The amount can have at most two decimal places.'); return;
+    }
+    if (description.trim().length < 3) { setError('Add a short invoice description.'); return; }
+    setInvoiceBusy(true);
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke('kashier-create-invoice', {
+        body: { amountEGP: numericAmount, description: description.trim(), inquiryId: inquiryId || null },
+      });
+      if (invokeError) throw new Error(await explainFunctionError(invokeError));
+      const created = data as NewInvoiceResponse;
+      if (!created.checkoutUrl || !created.invoice?.id) throw new Error(created.error ?? 'Invoice creation returned an incomplete response.');
+      setCreatedLink(created.checkoutUrl);
+      setAmount(''); setDescription('');
+      setNotice('Invoice created. Copy the link now; the secret link is only shown once.');
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invoice creation failed.');
+    } finally { setInvoiceBusy(false); }
+  };
+
+  const copyLink = async () => {
+    if (!createdLink) return;
+    try { await navigator.clipboard.writeText(createdLink); setNotice('Invoice link copied. Send it privately to the client.'); }
+    catch { setNotice('Copy is unavailable in this browser. Select and copy the link from the field.'); }
+  };
+
+  if (!user) return <main style={page}>
+    <section style={{ ...card, maxWidth: 510, margin: '8vh auto' }}>
+      <p style={kicker}>APEX / ADMIN</p>
+      <h1 style={{ marginBottom: 8 }}>{isSignUp ? 'Create owner login' : 'Owner dashboard'}</h1>
+      <p style={muted}>Use the verified APEX contact email to secure the owner account. The first verified owner login can claim the dashboard once.</p>
+      <form onSubmit={signIn} style={{ display: 'grid', gap: 12 }}>
+        <label style={label}>Email<input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Owner email" style={input} autoComplete="email" /></label>
+        <label style={label}>Password<input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" style={input} autoComplete={isSignUp ? 'new-password' : 'current-password'} /></label>
+        <button disabled={busy} style={button}>{busy ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}</button>
+      </form>
+      <button onClick={() => { setIsSignUp(v => !v); setError(''); setNotice(''); }} style={linkButton}>
+        {isSignUp ? 'Already have an account? Sign in' : 'First time? Create owner login'}
+      </button>
+      {error && <p role="alert" style={errorStyle}>{error}</p>}
+      {notice && <p role="status" style={successStyle}>{notice}</p>}
+    </section>
+  </main>;
+
+  return <main style={page}>
+    <header style={topHeader}>
+      <div><p style={kicker}>APEX / ADMIN</p><h1 style={{ margin: '0 0 6px' }}>Client & payment studio</h1><p style={muted}>Private owner area · inquiries, invoices and site activity</p></div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button onClick={() => void load()} style={secondaryButton}>{busy ? 'Refreshing…' : 'Refresh'}</button>
+        <button onClick={() => void supabase.auth.signOut()} style={secondaryButton}>Sign out</button>
+      </div>
+    </header>
+
+    <section style={statsGrid}>
+      {[
+        ['Client leads', inquiries.length],
+        ['Site events', events.length],
+        ['Invoices', invoices.length],
+        ['Paid', invoices.filter(x => x.status === 'paid').length],
+      ].map(([title, value]) => <div key={String(title)} style={card}><small style={muted}>{title}</small><strong style={{ display: 'block', fontSize: 31, marginTop: 7 }}>{value}</strong></div>)}
+    </section>
+
+    <section style={{ ...card, marginBottom: 26 }}>
+      <p style={kicker}>PAYMENTS / KASHIER</p>
+      <h2 style={{ margin: '0 0 8px' }}>Create a client invoice</h2>
+      <p style={muted}>Set the agreed project amount yourself. Clients cannot change the amount from the payment link.</p>
+      <form onSubmit={createInvoice} style={formGrid}>
+        <label style={label}>Amount (EGP)<input required type="number" min="1" max="1000000" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 1500.00" style={input} /></label>
+        <label style={label}>Attach to project lead<select value={inquiryId} onChange={e => setInquiryId(e.target.value)} style={input}><option value="">No linked lead / custom invoice</option>{inquiries.map(q => <option key={q.id} value={q.id}>{q.client_name} · {q.project_type}</option>)}</select></label>
+        <label style={{ ...label, gridColumn: '1 / -1' }}>Invoice description<input required minLength={3} maxLength={300} value={description} onChange={e => setDescription(e.target.value)} placeholder="e.g. Website project — milestone 1" style={input} /></label>
+        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}><button disabled={invoiceBusy} style={button}>{invoiceBusy ? 'Creating…' : 'Create secure invoice link'}</button><span style={muted}>Link expires after 7 days · EGP only</span></div>
+      </form>
+      {createdLink && <div style={{ ...linkBox, marginTop: 16 }}><strong>New invoice link — copy it now</strong><input readOnly value={createdLink} onFocus={e => e.currentTarget.select()} style={input} aria-label="New invoice URL" /><button onClick={() => void copyLink()} style={button}>Copy link</button></div>}
+      <p style={{ ...muted, fontSize: 12, marginBottom: 0 }}>Checkout uses Kashier-hosted payment pages. The invoice link is private: share it only with the intended customer.</p>
+    </section>
+
+    <section style={{ marginBottom: 28 }}>
+      <h2>Invoices</h2>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {invoices.map(inv => <article key={inv.id} style={card}>
+          <div style={row}>
+            <div><strong>{inv.description}</strong><div style={muted}>{inv.provider.toUpperCase()} · {new Date(inv.created_at).toLocaleString()}</div></div>
+            <span style={statusPill(inv.status)}>{inv.status.replace('_', ' ')}</span>
+          </div>
+          <strong style={{ display: 'block', fontSize: 24, marginTop: 12 }}>{(Number(inv.amount_minor) / 100).toLocaleString('en-EG', { style: 'currency', currency: 'EGP' })}</strong>
+          <small style={muted}>Invoice ID: {inv.id}{inv.inquiry_id ? ' · linked to a client lead' : ''}</small>
+        </article>)}
+        {!invoices.length && <div style={card}>No invoices yet. Create one after you agree on the project scope and amount.</div>}
+      </div>
+    </section>
+
+    <section style={{ marginBottom: 28 }}>
+      <h2>Client leads</h2>
+      <div style={{ display: 'grid', gap: 10 }}>
+        {inquiries.map(q => <article key={q.id} style={card}>
+          <div style={row}><div><strong>{q.client_name}</strong><div style={muted}>{q.client_email}{q.client_phone ? ' · ' + q.client_phone : ''}</div></div><span style={statusPill(q.status)}>{q.status}</span></div>
+          <p><b>{q.project_type}</b>{q.budget_range ? ' · ' + q.budget_range : ''}</p><p style={{ ...muted, whiteSpace: 'pre-wrap' }}>{q.brief}</p><small style={muted}>{new Date(q.created_at).toLocaleString()}</small>
+        </article>)}
+        {!inquiries.length && <div style={card}>No leads yet.</div>}
+      </div>
+    </section>
+
+    <section>
+      <h2>Recent events</h2>
+      <div style={{ ...card, overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}><thead><tr>{['Event', 'Project', 'Locale', 'Time'].map(x => <th key={x} align="left" style={tableHead}>{x}</th>)}</tr></thead>
+          <tbody>{events.slice(0, 100).map(e => <tr key={e.id}><td style={tableCell}>{e.event_name}</td><td style={tableCell}>{e.project_id || '—'}</td><td style={tableCell}>{e.locale || '—'}</td><td style={tableCell}>{new Date(e.created_at).toLocaleString()}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+    {error && <p role="alert" style={errorStyle}>{error}</p>}
+    {notice && <p role="status" style={successStyle}>{notice}</p>}
+  </main>;
 }
-const input={padding:14,borderRadius:10,border:'1px solid #333',background:'#111',color:'#fff'} as React.CSSProperties;
-const button={padding:'12px 16px',borderRadius:10,border:'1px solid #555',background:'#d8ad55',color:'#090909',fontWeight:700,cursor:'pointer'} as React.CSSProperties;
-const card={padding:18,borderRadius:14,border:'1px solid #252525',background:'#0e0e0e'} as React.CSSProperties;
-createRoot(document.getElementById('admin-root')!).render(<Admin/>);
+
+async function explainFunctionError(error: { message: string; context?: unknown }) {
+  const context = error.context;
+  if (context instanceof Response) {
+    try {
+      const body = await context.clone().json();
+      if (typeof body?.error === 'string') return body.error;
+      if (typeof body?.message === 'string') return body.message;
+    } catch { /* use SDK message */ }
+  }
+  return error.message || 'The server rejected the request.';
+}
+
+const page: React.CSSProperties = { maxWidth: 1180, margin: '0 auto', padding: 'clamp(16px,4vw,40px)', minHeight: '100vh', color: '#ecf8ff', background: '#020714', fontFamily: '"DM Sans",system-ui,sans-serif' };
+const topHeader: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap', marginBottom: 24 };
+const kicker: React.CSSProperties = { color: '#25dcff', letterSpacing: 3, fontSize: 10, fontWeight: 700 };
+const muted: React.CSSProperties = { color: '#91a9bf', fontSize: 12, lineHeight: 1.7 };
+const card: React.CSSProperties = { padding: 18, borderRadius: 16, border: '1px solid rgba(0,177,255,.24)', background: 'linear-gradient(145deg,#07182b,#040a16)' };
+const label: React.CSSProperties = { display: 'grid', gap: 7, color: '#b8d6ea', fontSize: 12 };
+const input: React.CSSProperties = { padding: 12, borderRadius: 9, border: '1px solid rgba(0,177,255,.24)', background: '#020a18', color: '#f4fbff', minWidth: 0, width: '100%', boxSizing: 'border-box' };
+const button: React.CSSProperties = { padding: '12px 16px', borderRadius: 999, border: '1px solid rgba(80,238,255,.8)', background: 'linear-gradient(105deg,#007bff,#05dfff)', color: '#00101e', fontWeight: 700, cursor: 'pointer' };
+const secondaryButton: React.CSSProperties = { padding: '11px 14px', borderRadius: 999, border: '1px solid rgba(0,177,255,.4)', background: '#061326', color: '#dcf8ff', cursor: 'pointer' };
+const linkButton: React.CSSProperties = { marginTop: 16, color: '#39ddff', cursor: 'pointer', background: 'transparent', border: 0, padding: 0 };
+const formGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,260px),1fr))', gap: 14, marginTop: 18 };
+const statsGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, margin: '22px 0' };
+const row: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' };
+const linkBox: React.CSSProperties = { display: 'grid', gap: 10, padding: 14, border: '1px solid rgba(0,208,255,.4)', borderRadius: 12, background: '#031327' };
+const tableHead: React.CSSProperties = { padding: 10, borderBottom: '1px solid rgba(0,177,255,.24)', color: '#7fcde7', fontSize: 11 };
+const tableCell: React.CSSProperties = { padding: 10, borderBottom: '1px solid rgba(0,177,255,.12)', fontSize: 11 };
+const errorStyle: React.CSSProperties = { padding: 12, border: '1px solid rgba(255,84,61,.4)', background: 'rgba(255,84,61,.08)', color: '#ffab9a', borderRadius: 10, fontSize: 12 };
+const successStyle: React.CSSProperties = { padding: 12, border: '1px solid rgba(0,213,255,.3)', background: 'rgba(0,135,255,.08)', color: '#b4f5ff', borderRadius: 10, fontSize: 12 };
+const statusPill = (status: string): React.CSSProperties => ({ border: '1px solid rgba(0,190,255,.28)', borderRadius: 999, padding: '5px 9px', color: status === 'paid' || status === 'completed' ? '#80f4cf' : status === 'failed' || status === 'cancelled' ? '#ffab9a' : '#b4eaff', fontSize: 10, textTransform: 'capitalize' });
+
+createRoot(document.getElementById('admin-root')!).render(<App/>);
