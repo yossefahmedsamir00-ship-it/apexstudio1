@@ -65,6 +65,10 @@ jobs:
           }
           NODE
 
+      - name: Enforce dependency security threshold
+        working-directory: apex
+        run: npm audit --audit-level=high
+
       - name: Preserve resolved lockfile and audit report
         if: always()
         working-directory: apex
