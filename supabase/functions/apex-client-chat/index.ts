@@ -39,6 +39,38 @@ async function sha256(v: string) {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
   return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2,"0")).join("");
 }
+class BodyTooLargeError extends Error {}
+
+async function readBoundedText(stream: ReadableStream<Uint8Array> | null, maxBytes: number, declaredLength?: string | null): Promise<string> {
+  if (declaredLength !== null && declaredLength !== undefined) {
+    if (!/^\\d+$/.test(declaredLength)) throw new Error("invalid content length");
+    const length = Number(declaredLength);
+    if (!Number.isSafeInteger(length)) throw new Error("invalid content length");
+    if (length > maxBytes) throw new BodyTooLargeError();
+  }
+  if (!stream) throw new Error("empty body");
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const part = await reader.read();
+      if (part.done) break;
+      if (part.value.byteLength > maxBytes - total) {
+        try { await reader.cancel(); } catch { /* best effort */ }
+        throw new BodyTooLargeError();
+      }
+      total += part.value.byteLength;
+      chunks.push(part.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
 async function writeSecurityEvent(admin: ReturnType<typeof createClient>, req: Request, input: {
   actorUserId?: string | null; eventType: string; severity?: string; endpoint?: string;
   metadata?: Record<string,unknown>;
@@ -145,8 +177,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null,{status:204,headers});
   if (req.method !== "POST") return respond({error:"Method not allowed"},405,headers);
   if (origin && headers["Access-Control-Allow-Origin"] === "null") return respond({error:"Origin not allowed"},403,headers);
-  if (!(req.headers.get("content-type") ?? "").toLowerCase().includes("application/json")) return respond({error:"Content-Type must be application/json"},415,headers);
-  if (Number(req.headers.get("content-length") ?? "0") > 16000) return respond({error:"Request too large"},413,headers);
+  const contentType = (req.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+  if (contentType !== "application/json") return respond({error:"Content-Type must be application/json"},415,headers);
 
   const authHeader = req.headers.get("authorization") ?? "";
   const token = authHeader.match(/^Bearer\s+(.+)$/i)?.[1];
@@ -166,8 +198,11 @@ Deno.serve(async (req: Request) => {
 
   let input: Record<string,unknown>;
   let rawBody: string;
-  try { rawBody = await req.text(); } catch { return respond({error:"Invalid request body."},400,headers); }
-  if (rawBody.length > 16000) return respond({error:"Request too large"},413,headers);
+  try {
+    rawBody = await readBoundedText(req.body, 16 * 1024, req.headers.get("content-length"));
+  } catch (error) {
+    return respond({error:error instanceof BodyTooLargeError ? "Request too large" : "Invalid request body."}, error instanceof BodyTooLargeError ? 413 : 400, headers);
+  }
   try {
     const parsed = JSON.parse(rawBody);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid body");
