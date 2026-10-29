@@ -36,6 +36,8 @@ function App() {
   const [user, setUser] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const [isOnline, setIsOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
+  const [backendStatus,setBackendStatus]=useState<'checking'|'healthy'|'degraded'>('checking');
+  const [lastSuccessfulSync,setLastSuccessfulSync]=useState<string|null>(null);
   const [otpMode,setOtpMode]=useState(false);
   const [otpRequested,setOtpRequested]=useState(false);
   const [otpCode,setOtpCode]=useState('');
@@ -72,7 +74,14 @@ function App() {
       ]);
       const chatData = chat.data as { error?: string; conversations?: Conversation[]; securityEvents?: SecurityEvent[]; auditLogs?: AuditLog[] } | null;
       const firstError = inq.error || evt.error || inv.error || chat.error;
-      if (firstError || chatData?.error) setError(chatData?.error || firstError?.message || 'Owner access is not configured yet.');
+      if (firstError || chatData?.error) {
+        setBackendStatus('degraded');
+        setError('The dashboard could not load all server data. Use Refresh to retry.');
+        console.error('APEX admin data load failed', firstError?.code || (chatData?.error ? 'chat_api_error' : 'unknown'));
+      } else {
+        setBackendStatus('healthy');
+        setLastSuccessfulSync(new Date().toISOString());
+      }
       setInquiries((inq.data ?? []) as Inquiry[]);
       setEvents((evt.data ?? []) as SiteEvent[]);
       setInvoices((inv.data ?? []) as Invoice[]);
@@ -188,7 +197,9 @@ function App() {
       if (!navigator.onLine) return;
       const { data, error: callError } = await supabase.functions.invoke('apex-client-chat', { body: { action: 'owner_list' } });
       const result = data as { error?: string; conversations?: Conversation[]; securityEvents?: SecurityEvent[]; auditLogs?: AuditLog[] } | null;
-      if (callError || result?.error) return;
+      if (callError || result?.error) { setBackendStatus('degraded'); return; }
+      setBackendStatus('healthy');
+      setLastSuccessfulSync(new Date().toISOString());
       setConversations(result?.conversations ?? []);
       setSecurityEvents(result?.securityEvents ?? []);
       setAuditLogs(result?.auditLogs ?? []);
@@ -238,7 +249,7 @@ function App() {
         return;
       }
       if (result.data.session && result.data.user) {
-        const authorized=await verifyOwnerSession(result.data.user.id);
+        const authorized=await verifyOwnerSession(result.data.user.id,true);
         if(authorized) setNotice('Owner account verified.');
       }
     } catch (err) {
@@ -308,7 +319,7 @@ function App() {
 
   return <main style={page}>
     <header style={topHeader}>
-      <div><p style={kicker}>APEX / ADMIN</p><h1 style={{ margin: '0 0 6px' }}>Client & payment studio</h1><p style={muted}>Private owner area · inquiries, invoices and site activity</p><p style={{...muted,color:isOnline?'#80f4cf':'#ffb3a6'}}>{isOnline?'● Online · inbox refreshes every 15 seconds':'● Offline · read-only; server-confirmed actions are disabled'}</p></div>
+      <div><p style={kicker}>APEX / ADMIN</p><h1 style={{ margin: '0 0 6px' }}>Client & payment studio</h1><p style={muted}>Private owner area · inquiries, invoices and site activity</p><p role="status" style={{...muted,color:!isOnline?'#ffb3a6':backendStatus==='healthy'?'#80f4cf':backendStatus==='degraded'?'#ffcc93':'#b4eaff'}}>{!isOnline?'● Offline — cached in-memory data is read-only':backendStatus==='healthy'?'● Backend connected · inbox refreshes every 15 seconds':backendStatus==='degraded'?'● Backend degraded — check connection and refresh':'● Checking backend…'}{lastSuccessfulSync?' · Last sync '+new Date(lastSuccessfulSync).toLocaleTimeString():''}</p></div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button onClick={() => void load()} style={secondaryButton}>{busy ? 'Refreshing…' : 'Refresh'}</button>
         <button onClick={() => void supabase.auth.signOut()} style={secondaryButton}>Sign out</button>
