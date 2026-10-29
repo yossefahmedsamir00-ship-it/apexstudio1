@@ -37,6 +37,34 @@ jobs:
         working-directory: apex
         run: npm install
 
+      - name: Dependency security audit (report-only)
+        working-directory: apex
+        shell: bash
+        run: |
+          npm audit --json > "$RUNNER_TEMP/npm-audit.json" || true
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = process.env.RUNNER_TEMP + '/npm-audit.json';
+          let report;
+          try {
+            report = JSON.parse(fs.readFileSync(path, 'utf8'));
+          } catch {
+            console.log('npm audit report was unavailable; dependency audit is NOT VERIFIED in this run.');
+            process.exit(0);
+          }
+          const summary = report.metadata?.vulnerabilities ?? {};
+          console.log('Dependency audit (report only):', JSON.stringify(summary));
+          for (const [name, vuln] of Object.entries(report.vulnerabilities ?? {})) {
+            const fix = typeof vuln.fixAvailable === 'object'
+              ? JSON.stringify(vuln.fixAvailable)
+              : String(vuln.fixAvailable);
+            console.log(`[${vuln.severity}] ${name} | direct=${vuln.isDirect} | range=${vuln.range} | fixAvailable=${fix}`);
+            for (const item of vuln.via ?? []) {
+              if (typeof item === 'object') console.log(`  - ${item.title ?? item.name ?? 'Advisory'} ${item.url ?? ''}`);
+            }
+          }
+          NODE
+
       - name: Run tests
         working-directory: apex
         run: npm test
