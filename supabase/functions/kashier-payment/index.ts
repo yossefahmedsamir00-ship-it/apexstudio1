@@ -20,9 +20,12 @@ const cors = (origin: string) => {
 const respond = (body: unknown, status: number, headers: Record<string, string>) =>
   new Response(JSON.stringify(body), { status, headers });
 const serviceKey = () => {
+  // Prefer the legacy service-role JWT for compatibility with supabase-js Authorization headers.
+  const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (legacy) return legacy;
   const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
-  if (raw) { try { return JSON.parse(raw).default as string | undefined; } catch { /* legacy fallback */ } }
-  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (raw) { try { return JSON.parse(raw).default as string | undefined; } catch { /* malformed secret map */ } }
+  return undefined;
 };
 async function sha256(value: string) {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
