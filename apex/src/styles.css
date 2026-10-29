@@ -38,3 +38,12 @@
 @media (prefers-reduced-data: reduce) {
   .heroVisual:before, .heroVisual:after, .projectArt:before { display: none; }
 }
+
+/* Skip off-screen section painting until it approaches the viewport. */
+@supports (content-visibility: auto) {
+  .statement, .workSection, .darkSection, .processSection,
+  .aboutSection, .ctaSection, .paymentSection, .footer {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 720px;
+  }
+}
