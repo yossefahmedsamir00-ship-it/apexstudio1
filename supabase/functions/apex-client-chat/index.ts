@@ -165,7 +165,14 @@ Deno.serve(async (req: Request) => {
   const isOwner = !!ownerSettings?.owner_user_id && ownerSettings.owner_user_id === user.id;
 
   let input: Record<string,unknown>;
-  try { input = await req.json(); } catch { return respond({error:"Invalid JSON."},400,headers); }
+  let rawBody: string;
+  try { rawBody = await req.text(); } catch { return respond({error:"Invalid request body."},400,headers); }
+  if (rawBody.length > 16000) return respond({error:"Request too large"},413,headers);
+  try {
+    const parsed = JSON.parse(rawBody);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid body");
+    input = parsed as Record<string,unknown>;
+  } catch { return respond({error:"Invalid JSON."},400,headers); }
   const action = clip(input.action,40);
   const conversationId = isUuid(input.conversationId) ? input.conversationId : null;
   const before = clip(input.before,60);
@@ -203,6 +210,8 @@ Deno.serve(async (req: Request) => {
       if (!conversationId) return respond({error:"Conversation reference is required."},400,headers);
       const conversation = await requireClientConversation(admin,conversationId,user.id,req);
       if (!conversation) return respond({error:"This conversation was not found."},404,headers);
+      const allowed = await consumeRateLimit(admin,req,user.id,"client_chat_history",60);
+      if (!allowed) return respond({error:"Too many history requests. Please wait a moment."},429,headers);
       if (action === "client_read") await markRead(admin,conversationId,"client");
       const messages = await loadMessages(admin,conversationId,before);
       return respond({conversation:safeConversation(conversation),messages},200,headers);
@@ -309,6 +318,8 @@ Deno.serve(async (req: Request) => {
     if (action === "owner_history" || action === "owner_read") {
       if (!isOwner) return respond({error:"Owner access is required."},403,headers);
       if (!conversationId) return respond({error:"Conversation reference is required."},400,headers);
+      const allowed = await consumeRateLimit(admin,req,user.id,"owner_chat_history",60);
+      if (!allowed) return respond({error:"Too many conversation history requests. Please wait."},429,headers);
       const conversation = await getConversation(admin,conversationId);
       if (!conversation) return respond({error:"Conversation not found."},404,headers);
       if (action === "owner_read") await markRead(admin,conversationId,"owner");
