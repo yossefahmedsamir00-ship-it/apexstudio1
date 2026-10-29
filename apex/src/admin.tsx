@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { supabase } from './lib/supabase';
+import { adminSupabase as supabase } from './lib/admin-supabase';
 
 type Inquiry = {
   id: string; client_name: string; client_email: string; client_phone: string | null;
