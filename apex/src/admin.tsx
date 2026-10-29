@@ -35,6 +35,9 @@ function App() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [user, setUser] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [otpMode,setOtpMode]=useState(false);
+  const [otpRequested,setOtpRequested]=useState(false);
+  const [otpCode,setOtpCode]=useState('');
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [events, setEvents] = useState<SiteEvent[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -125,43 +128,76 @@ function App() {
     }
   };
 
+  const verifyOwnerSession = async (id:string) => {
+    try {
+      await claimOwner();
+      setUser(id);
+      setError('');
+      await load();
+    } catch (err) {
+      setUser(null); setInquiries([]); setEvents([]); setInvoices([]); setConversations([]); setSecurityEvents([]); setAuditLogs([]);
+      setError('This account is not authorized for the APEX owner dashboard. Sign in with the verified owner email.');
+      await supabase.auth.signOut();
+    }
+  };
+
   useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       const id = data.session?.user.id ?? null;
-      setUser(id);
-      if (id) void load();
+      if (id) void verifyOwnerSession(id);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user.id ?? null);
-      if (session?.user) void load();
-      else { setInquiries([]); setEvents([]); setInvoices([]); }
+      if (!session?.user) {
+        setUser(null); setInquiries([]); setEvents([]); setInvoices([]); setConversations([]); setSecurityEvents([]); setAuditLogs([]);
+        return;
+      }
+      // Avoid calling Supabase Auth APIs inside its auth-state callback.
+      queueMicrotask(() => { if(active) void verifyOwnerSession(session.user.id); });
     });
     return () => { active = false; data.subscription.unsubscribe(); };
   }, []);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setError(''); setNotice('');
-    const result = isSignUp
-      ? await supabase.auth.signUp({ email: email.trim(), password })
-      : await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (result.error) { setError(result.error.message); setBusy(false); return; }
-    if (isSignUp && !result.data.session) {
-      setNotice('Check your email to confirm the account, then return here and sign in.');
-      setBusy(false); return;
-    }
-    if (result.data.session) {
-      try {
-        await claimOwner();
-        setUser(result.data.user?.id ?? null);
-        setNotice('Owner account verified.');
-        await load();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Owner access could not be configured.');
+    try {
+      if (otpMode && !otpRequested) {
+        // Supabase sends the same neutral UI response so the form does not confirm account existence.
+        await supabase.auth.signInWithOtp({
+          email: email.trim(),
+          options: { shouldCreateUser: false },
+        });
+        setOtpRequested(true);
+        setOtpCode('');
+        setNotice('If this email is eligible, a sign-in code has been sent. Check your inbox and spam folder.');
+        return;
       }
-    }
-    setBusy(false);
+      if (otpMode && otpRequested) {
+        const result = await supabase.auth.verifyOtp({email:email.trim(),token:otpCode.trim(),type:'email'});
+        if(result.error || !result.data.session || !result.data.user) {
+          setError('The code could not be verified. Check it and try again, or request a new code.');
+          return;
+        }
+        await verifyOwnerSession(result.data.user.id);
+        setNotice('Owner access verified.');
+        return;
+      }
+      const result = isSignUp
+        ? await supabase.auth.signUp({ email: email.trim(), password })
+        : await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (result.error) { setError(isSignUp ? 'Account creation failed. Check the form and try again.' : 'Email or password was not accepted.'); return; }
+      if (isSignUp && !result.data.session) {
+        setNotice('Check your email to confirm the account, then return here and sign in.');
+        return;
+      }
+      if (result.data.session && result.data.user) {
+        await verifyOwnerSession(result.data.user.id);
+        if(result.data.user.email?.trim().toLowerCase()==='yossefahmedsamir00@gmail.com') setNotice('Owner account verified.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Authentication could not be completed. Please try again.');
+    } finally { setBusy(false); }
   };
 
   const createInvoice = async (e: React.FormEvent) => {
@@ -203,11 +239,19 @@ function App() {
       <h1 style={{ marginBottom: 8 }}>{isSignUp ? 'Create owner login' : 'Owner dashboard'}</h1>
       <p style={muted}>Use the verified APEX contact email to secure the owner account. The first verified owner login can claim the dashboard once.</p>
       <form onSubmit={signIn} style={{ display: 'grid', gap: 12 }}>
-        <label style={label}>Email<input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Owner email" style={input} autoComplete="email" /></label>
-        <label style={label}>Password<input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" style={input} autoComplete={isSignUp ? 'new-password' : 'current-password'} /></label>
-        <button disabled={busy} style={button}>{busy ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}</button>
+        <label style={label}>Owner email
+          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Owner email" style={input} autoComplete="email" disabled={otpRequested && otpMode}/>
+        </label>
+        {otpMode && otpRequested
+          ? <label style={label}>Email verification code
+              <input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} value={otpCode} onChange={e=>setOtpCode(e.target.value.replace(/\\D/g,'').slice(0,6))} placeholder="6-digit code" style={input}/>
+            </label>
+          : !otpMode && <label style={label}>Password<input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" style={input} autoComplete={isSignUp ? 'new-password' : 'current-password'} /></label>}
+        <button disabled={busy || (otpMode && otpRequested && otpCode.length!==6)} style={button}>{busy ? 'Please wait…' : otpMode ? otpRequested ? 'Verify email code' : 'Send email code' : isSignUp ? 'Create account' : 'Sign in'}</button>
       </form>
-      <button onClick={() => { setIsSignUp(v => !v); setError(''); setNotice(''); }} style={linkButton}>
+      {!isSignUp && <button onClick={() => { setOtpMode(v=>!v);setOtpRequested(false);setOtpCode('');setError('');setNotice(''); }} style={linkButton}>{otpMode?'Use password instead':'Sign in with email code (OTP)'}</button>}
+      {otpMode && otpRequested && <button onClick={()=>{setOtpRequested(false);setOtpCode('');setError('');setNotice('');}} style={linkButton}>Request a new code / change email</button>}
+      <button onClick={() => { setIsSignUp(v => !v);setOtpMode(false);setOtpRequested(false);setOtpCode(''); setError(''); setNotice(''); }} style={linkButton}>
         {isSignUp ? 'Already have an account? Sign in' : 'First time? Create owner login'}
       </button>
       {error && <p role="alert" style={errorStyle}>{error}</p>}
