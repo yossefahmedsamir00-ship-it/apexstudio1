@@ -70,3 +70,5 @@
 .assistantDisclosure{max-width:500px;color:#91a9c3;font-size:11px;line-height:1.7}
 .contactCard,.socialLinks a{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.contactCard,.socialLinks a,.assistantMode,.chatToolButton{transition:none!important}}
+.socialGlyph{display:grid;place-items:center;flex:0 0 22px;height:22px;color:#4be5ff;font-weight:800;font-size:17px;letter-spacing:-.04em}
+.socialLinks a .socialGlyph:nth-child(1){line-height:1}
