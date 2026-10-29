@@ -139,7 +139,7 @@ function AssistantModal({locale,onClose,onStart}:{locale:Locale;onClose:()=>void
  const [hasOlder,setHasOlder]=useState(false);
  const [conversationId,setConversationId]=useState('');
  const [error,setError]=useState('');
- const [aiUnavailable,setAiUnavailable]=useState(false);
+ const [aiUnavailable,setAiUnavailable]=useState(false); const [ownerRequestBusy,setOwnerRequestBusy]=useState(false); const [ownerRequested,setOwnerRequested]=useState(false);
  const greeting: ChatMessageView = {
    id:'welcome',from:'bot',senderType:'system',createdAt:new Date().toISOString(),
    text:ar?'أهلًا بيك في APEX. احكيلي عن فكرتك، والمحادثة هتتحفظ عشان تقدر ترجع لها بعدين.':'Welcome to APEX. Tell me about your idea. This conversation is saved so you can return to it later.',
@@ -288,6 +288,21 @@ function AssistantModal({locale,onClose,onStart}:{locale:Locale;onClose:()=>void
  };
 
  const transcript = messages.filter(m=>m.id!=='welcome').map(m=>(m.from==='user'?(ar?'العميل':'Client'):(m.senderType==='owner'?(ar?'صاحب الموقع':'Owner'):'APEX AI')) + ': ' + m.text).join('\n');
+ const requestOwner = async () => {
+   if(!conversationId || ownerRequestBusy || ownerRequested || booting) return;
+   setOwnerRequestBusy(true);setError('');
+   try {
+     const {data,error:callError}=await supabase.functions.invoke('apex-client-chat',{body:{action:'request_owner',conversationId}});
+     if(callError) throw new Error(await chatFunctionError(callError));
+     const result=data as ChatApiResponse & {requested?:boolean};
+     if(result.error) throw new Error(result.error);
+     setMessages(fromApiMessages(result.messages ?? []));
+     setOwnerRequested(true);
+   } catch(err) {
+     setError(err instanceof Error?err.message:(ar?'تعذر إرسال طلب المتابعة. حاول مرة أخرى.':'Could not request owner follow-up. Please try again.'));
+   } finally {setOwnerRequestBusy(false);}
+ };
+
  const sendButton = (text:string) => <button className="suggestedQuestion" key={text} onClick={()=>void send(text)} disabled={loading||booting}>{text}</button>;
 
  return <div className="modalBackdrop" onClick={onClose}>
@@ -307,6 +322,11 @@ function AssistantModal({locale,onClose,onStart}:{locale:Locale;onClose:()=>void
    {error&&<p className="chatError" role="alert">{error}</p>}
    <div className="assistantInput"><input value={value} maxLength={8000} onChange={e=>setValue(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void send()}}} placeholder={ar?'اكتب رسالتك…':'Write your message…'} disabled={loading||booting||!conversationId}/><button onClick={()=>void send()} disabled={loading||booting||!value.trim()||!conversationId} aria-label={ar?'إرسال':'Send'}><Send size={17}/></button></div>
    <button className="briefButton" onClick={()=>onStart(transcript,conversationId)} disabled={booting||!messages.length}>{ar?'حوّل المحادثة إلى طلب مشروع':'Turn this conversation into a project brief'} <ArrowUpRight size={16}/></button>
+   <button className="ownerChatButton" onClick={()=>void requestOwner()} disabled={booting||ownerRequestBusy||ownerRequested||!conversationId}>
+    {ownerRequestBusy?(ar?'جارٍ إرسال الطلب…':'Sending request…'):ownerRequested?(ar?'تم طلب رد صاحب الموقع':'Owner reply requested'):(ar?'طلب التحدث مع صاحب الموقع':'Request a reply from the owner')}
+    {ownerRequested?<Check size={15}/>:<ArrowUpRight size={15}/>}
+   </button>
+   <p className="ownerChatHint">{ownerRequested?(ar?'تم تسجيل طلبك في صندوق رسائل APEX.':'Your request is now in the APEX owner inbox.'): (ar?'لو محتاج تتكلم مع صاحب الموقع، ابعت طلب وسيظهر في صندوق الرسائل.':'Need to speak with the studio owner? Request a follow-up and it will appear in the owner inbox.')}</p>
    {aiUnavailable&&<p className="chatTinyNotice">{ar?'الرسالة محفوظة في قاعدة البيانات.':'Your message remains saved in the database.'}</p>}
   </div>
  </div>;
