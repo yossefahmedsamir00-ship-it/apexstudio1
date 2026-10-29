@@ -40,6 +40,7 @@ export async function submitProjectInquiry(input: {
   serviceType: string;
   budgetRange?: string;
   description: string;
+  conversationId?: string;
 }) {
   await ensureAnonymousSession();
   const { data, error } = await supabase.rpc('capture_project_inquiry', {
@@ -49,7 +50,7 @@ export async function submitProjectInquiry(input: {
     p_project_type: input.serviceType,
     p_budget_range: input.budgetRange || null,
     p_brief: input.description,
-    p_conversation_id: null,
+    p_conversation_id: input.conversationId || null,
   });
   if (error) throw new Error(error.message);
   return data as string;
