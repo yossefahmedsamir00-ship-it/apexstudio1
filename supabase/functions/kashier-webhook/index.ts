@@ -1,20 +1,17 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.75.0";
+import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 
 function serviceKey() {
-  // Prefer the legacy service-role JWT so supabase-js does not send a non-JWT sb_secret as Authorization: Bearer.
   const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (legacy) return legacy;
   const raw = Deno.env.get("SUPABASE_SECRET_KEYS");
-  if (raw) { try { return JSON.parse(raw).default as string | undefined; } catch { /* ignore malformed secret map */ } }
+  if (raw) { try { return JSON.parse(raw).default as string | undefined; } catch { /* fail closed */ } }
   return undefined;
 }
 function kashierConfig() {
   const mode = (Deno.env.get("KASHIER_MODE") ?? "test").trim().toLowerCase();
   if (mode !== "test" && mode !== "live") return null;
   const prefix = mode === "test" ? "KASHIER_TEST_" : "KASHIER_LIVE_";
-  // Kashier signs payment webhooks with the Payment API Key (not the Secret Key).
-  // Require it explicitly so a configuration mistake fails closed instead of silently using the wrong key.
   const paymentApiKey = Deno.env.get(prefix + "PAYMENT_API_KEY")?.trim();
   const merchantId = Deno.env.get(prefix + "MERCHANT_ID")?.trim();
   if (!paymentApiKey || !merchantId) return null;
@@ -24,6 +21,10 @@ async function hmacHex(secret: string, message: string) {
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
   return Array.from(new Uint8Array(signed), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function sha256Hex(value: string) {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 function equalHex(a: string, b: string) {
   if (!/^[0-9a-f]+$/i.test(a) || !/^[0-9a-f]+$/i.test(b) || a.length !== b.length) return false;
@@ -35,17 +36,15 @@ function toMinor(amount: unknown): number | null {
   const n = typeof amount === "number" ? amount : Number(String(amount ?? ""));
   if (!Number.isFinite(n) || n < 0) return null;
   const minor = Math.round(n * 100);
-  return Math.abs(n * 100 - minor) <= 0.01 ? minor : null;
+  return Number.isSafeInteger(minor) && Math.abs(n * 100 - minor) <= 0.01 ? minor : null;
 }
-
 class BodyTooLargeError extends Error {}
-
 async function readBodyTextLimited(req: Request, maxBytes: number): Promise<string> {
   const declared = req.headers.get("content-length");
   if (declared !== null) {
     if (!/^\d+$/.test(declared)) throw new Error("invalid content length");
-    const declaredBytes = Number(declared);
-    if (!Number.isSafeInteger(declaredBytes) || declaredBytes > maxBytes) throw new BodyTooLargeError();
+    const n = Number(declared);
+    if (!Number.isSafeInteger(n) || n > maxBytes) throw new BodyTooLargeError();
   }
   if (!req.body) throw new Error("empty body");
   const reader = req.body.getReader();
@@ -70,91 +69,100 @@ async function readBodyTextLimited(req: Request, maxBytes: number): Promise<stri
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
   return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
 }
+const respond = (status: number) => new Response(null, {
+  status, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+});
 
 Deno.serve(async (req: Request) => {
-  if (req.method !== "POST") return new Response(null, { status: 405, headers: { "Cache-Control": "no-store" } });
-  if (!(req.headers.get("content-type") ?? "").toLowerCase().includes("application/json")) return new Response(null, { status: 415 });
+  if (req.method !== "POST") return respond(405);
+  if (!(req.headers.get("content-type") ?? "").toLowerCase().includes("application/json")) return respond(415);
+
   const cfg = kashierConfig();
   const url = Deno.env.get("SUPABASE_URL");
   const key = serviceKey();
-  if (!cfg || !url || !key) return new Response(null, { status: 503 });
+  if (!cfg || !url || !key) return respond(503);
+
+  let rawBody: string;
   let payload: Record<string, unknown>;
   try {
-    const rawBody = await readBodyTextLimited(req, 64 * 1024);
+    rawBody = await readBodyTextLimited(req, 64 * 1024);
     const parsed: unknown = JSON.parse(rawBody);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid JSON object");
     payload = parsed as Record<string, unknown>;
   } catch (error) {
-    return new Response(null, { status: error instanceof BodyTooLargeError ? 413 : 400, headers: { "Cache-Control": "no-store" } });
+    return respond(error instanceof BodyTooLargeError ? 413 : 400);
   }
-  const data = payload?.data as Record<string, unknown> | undefined;
-  const signatureKeys = Array.isArray(data?.signatureKeys) ? data!.signatureKeys : Array.isArray(payload.signatureKeys) ? payload.signatureKeys : null;
-  const signature = req.headers.get("x-kashier-signature") ?? (typeof payload.signature === "string" ? payload.signature : "");
-  if (!data || !signatureKeys || signatureKeys.length < 1 || signatureKeys.length > 60 ||
-      signatureKeys.some((k) => typeof k !== "string" || !Object.prototype.hasOwnProperty.call(data, k))) {
-    return new Response(null, { status: 401 });
-  }
-  const sortedKeys = [...signatureKeys as string[]].sort();
-  const signaturePayload = sortedKeys.map((k) => `${k}=${encodeURIComponent(String(data[k]))}`).join("&");
-  const expected = await hmacHex(cfg.paymentApiKey, signaturePayload);
-  if (!equalHex(expected.toLowerCase(), signature.toLowerCase())) {
-    console.warn("Rejected Kashier webhook with invalid signature");
-    return new Response(null, { status: 401 });
-  }
-  if (typeof data.merchantId === "string" && data.merchantId !== cfg.merchantId) return new Response(null, { status: 401 });
 
-  const event = typeof payload.event === "string" ? payload.event : "";
-  const status = String(data.status ?? "").toUpperCase();
-  // The hosted-session `order` value is echoed as orderReference in payment webhook payloads.
-  // merchantOrderId may be a provider-generated identifier and must not take precedence.
-  const merchantReference = typeof data.orderReference === "string" ? data.orderReference :
-    typeof data.merchantOrderId === "string" ? data.merchantOrderId : "";
-  const amountMinor = toMinor(data.amount);
-  const currency = String(data.currency ?? "").toUpperCase();
-  const transactionId = typeof data.transactionId === "string" ? data.transactionId : null;
-  if (!merchantReference) return new Response(null, { status: 400 });
+  const data = payload.data;
+  if (!data || typeof data !== "object" || Array.isArray(data)) return respond(400);
+  const signedData = data as Record<string, unknown>;
+  const signatureKeys = signedData.signatureKeys;
+  const signature = req.headers.get("x-kashier-signature") ?? "";
+  if (!Array.isArray(signatureKeys) || signatureKeys.length < 1 || signatureKeys.length > 60 ||
+      signatureKeys.some((k) => typeof k !== "string" || !Object.prototype.hasOwnProperty.call(signedData, k))) {
+    return respond(401);
+  }
+  const uniqueKeys = new Set(signatureKeys as string[]);
+  if (uniqueKeys.size !== signatureKeys.length) return respond(401);
+  for (const k of signatureKeys as string[]) {
+    const value = signedData[k];
+    if (value === null || value === undefined ||
+        !["string", "number", "boolean"].includes(typeof value)) return respond(401);
+  }
+  // Kashier's payment webhook signature sorts signatureKeys alphabetically and URL-encodes values only.
+  const sortedKeys = [...signatureKeys as string[]].sort();
+  const signaturePayload = sortedKeys.map((k) => k + "=" + encodeURIComponent(String(signedData[k]))).join("&");
+  const expected = await hmacHex(cfg.paymentApiKey, signaturePayload);
+  if (!equalHex(expected, signature)) {
+    console.warn("Rejected Kashier webhook with invalid signature");
+    return respond(401);
+  }
+
+  const merchantId = typeof signedData.merchantId === "string" ? signedData.merchantId.trim() : null;
+  // If supplied, merchantId must match the environment. Order, amount, currency, status and transaction id
+  // are taken only from the signed data fields.
+  if (merchantId && merchantId !== cfg.merchantId) {
+    console.warn("Rejected Kashier webhook for a different merchant");
+    return respond(401);
+  }
+
+  const event = typeof payload.event === "string" ? payload.event.trim().slice(0, 60) : "unknown";
+  const status = String(signedData.status ?? "").toUpperCase();
+  const merchantReference = typeof signedData.orderReference === "string" ? signedData.orderReference.trim()
+    : typeof signedData.merchantOrderId === "string" ? signedData.merchantOrderId.trim() : "";
+  const amountMinor = toMinor(signedData.amount);
+  const currency = String(signedData.currency ?? "").toUpperCase();
+  const transactionId = typeof signedData.transactionId === "string" ? signedData.transactionId.trim().slice(0, 160) : null;
+  if (!merchantReference || merchantReference.length > 160 || amountMinor === null || !currency || currency.length > 8) {
+    return respond(400);
+  }
 
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: order, error } = await admin.from("payment_orders")
-    .select("id,amount_minor,currency,status,provider_reference,provider_transaction_id")
-    .eq("provider", "kashier").eq("provider_reference", merchantReference).maybeSingle();
-  if (error) {
-    console.error("Kashier webhook order lookup failed", error.code);
-    return new Response(null, { status: 500 });
+  const fingerprint = await sha256Hex([signature.toLowerCase(), signaturePayload, event].join("\n"));
+  const { data: result, error } = await admin.rpc("process_kashier_webhook", {
+    p_fingerprint: fingerprint,
+    p_event_type: event,
+    p_provider_status: status,
+    p_provider_reference: merchantReference,
+    p_transaction_id: transactionId,
+    p_amount_minor: amountMinor,
+    p_currency: currency,
+    p_merchant_id: merchantId,
+    p_expected_merchant_id: cfg.merchantId,
+    p_method: typeof signedData.method === "string" ? signedData.method : null,
+    p_response_code: typeof signedData.transactionResponseCode === "string" ? signedData.transactionResponseCode : null,
+    p_request_id: crypto.randomUUID(),
+  });
+  if (error || !result || typeof result !== "object") {
+    console.error("Kashier webhook reconciliation failed", error?.code ?? "invalid_rpc_response");
+    return respond(500);
   }
-  if (!order) {
-    console.warn("Kashier webhook reference not found");
-    return new Response(null, { status: 404 });
+  const outcome = (result as Record<string, unknown>).result;
+  if (outcome === "rejected" || outcome === "unmatched" || outcome === "transaction_reused") {
+    console.warn("Kashier webhook flagged for review", {
+      outcome, event, status, reference: merchantReference.slice(0, 16),
+    });
   }
-  if (amountMinor !== Number(order.amount_minor) || currency !== "EGP" || order.currency !== "EGP") {
-    console.error("Rejected Kashier webhook with mismatched amount or currency", { orderId: order.id });
-    return new Response(null, { status: 400 });
-  }
-  if (event === "pay" && ["SUCCESS", "PAID"].includes(status)) {
-    if (order.status === "paid") return new Response(null, { status: 200 });
-    const { error: updateError } = await admin.from("payment_orders").update({
-      status: "paid",
-      provider_transaction_id: transactionId ?? order.provider_transaction_id,
-      paid_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      provider_payload: { verified_by: "kashier_webhook", event, status, transactionResponseCode: data.transactionResponseCode ?? null, method: data.method ?? null },
-    }).eq("id", order.id).in("status", ["pending", "checkout_created"]);
-    if (updateError) return new Response(null, { status: 500 });
-  } else if (event === "refund" && status === "SUCCESS") {
-    if (order.status !== "paid") return new Response(null, { status: 200 });
-    const { error: updateError } = await admin.from("payment_orders").update({
-      status: "refunded", updated_at: new Date().toISOString(),
-      provider_payload: { verified_by: "kashier_webhook", event, status, transactionResponseCode: data.transactionResponseCode ?? null },
-    }).eq("id", order.id).eq("status", "paid");
-    if (updateError) return new Response(null, { status: 500 });
-  } else if (["pay", "reject"].includes(event) && ["FAILURE", "FAILED", "REJECTED"].includes(status)) {
-    if (order.status !== "paid") {
-      const { error: updateError } = await admin.from("payment_orders").update({
-        status: "failed", updated_at: new Date().toISOString(),
-        provider_payload: { verified_by: "kashier_webhook", event, status, transactionResponseCode: data.transactionResponseCode ?? null },
-      }).eq("id", order.id).in("status", ["pending", "checkout_created"]);
-      if (updateError) return new Response(null, { status: 500 });
-    }
-  }
-  return new Response(null, { status: 200, headers: { "Cache-Control": "no-store" } });
+  // The transaction is durably recorded and deduplicated. Acknowledge it so Kashier does not flood retries.
+  return respond(200);
 });
