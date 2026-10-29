@@ -27,9 +27,9 @@ export async function captureEvent(input: {
       p_path: window.location.pathname,
       p_metadata: input.metadata ?? {},
     });
-    if (error) console.warn('APEX analytics event failed', error.message);
-  } catch (error) {
-    console.warn('APEX analytics unavailable', error);
+    if (error) console.warn('APEX analytics event failed', error.code || 'unknown');
+  } catch {
+    console.warn('APEX analytics unavailable');
   }
 }
 
@@ -52,6 +52,12 @@ export async function submitProjectInquiry(input: {
     p_brief: input.description,
     p_conversation_id: input.conversationId || null,
   });
-  if (error) throw new Error(error.message);
-  return data as string;
+  if (error) {
+    console.error('APEX project inquiry was rejected', error.code || 'unknown');
+    throw new Error('We could not save your request right now. Please try again in a moment.');
+  }
+  if (typeof data !== 'string' || !data) {
+    throw new Error('Too many project requests were received. Please wait a minute and try again.');
+  }
+  return data;
 }
