@@ -62,3 +62,11 @@
 .footerBottom{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:18px;border-top:1px solid rgba(103,197,255,.12);font-size:10px;color:#7790a9}.footerBottom a{color:#54dff7;text-decoration:none}
 @media(max-width:1000px){.footer{grid-template-columns:1fr 1fr}.contactBlock,.socialBlock{max-width:460px}}
 @media(max-width:560px){.footer{grid-template-columns:1fr;padding-top:38px;gap:28px}.contactBlock,.socialBlock{max-width:none}.footerBottom{align-items:flex-start;flex-direction:column}.contactCard b{font-size:12px}}
+/* APEX AI chat usability */
+.assistantTools{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.assistantModes{display:flex;gap:6px;flex-wrap:wrap}.assistantMode,.chatToolButton{border:1px solid rgba(103,197,255,.22);border-radius:999px;padding:8px 12px;color:#a9c4db;font-size:10px;background:rgba(5,22,43,.65)}
+.assistantMode.active{border-color:rgba(49,222,255,.75);color:#4be5ff;background:rgba(0,126,255,.12)}
+.chatToolButton:disabled{opacity:.4}.assistantModeHint{font-size:11px;line-height:1.7;color:#92aac3;padding:9px 12px;margin-bottom:12px;border-inline-start:2px solid rgba(43,218,255,.55);background:rgba(0,128,255,.045)}
+.assistantDisclosure{max-width:500px;color:#91a9c3;font-size:11px;line-height:1.7}
+.contactCard,.socialLinks a{overflow:hidden}
+@media(prefers-reduced-motion:reduce){.contactCard,.socialLinks a,.assistantMode,.chatToolButton{transition:none!important}}
