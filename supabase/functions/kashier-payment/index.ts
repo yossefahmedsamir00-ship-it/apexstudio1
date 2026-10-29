@@ -141,50 +141,112 @@ Deno.serve(async (req: Request) => {
   if (action === "preview") return respond({ invoice: publicOrder(order) }, 200, headers);
 
   if (action === "status") {
-    if (order.status === "paid" || order.status === "refunded" || !order.provider_session_id) {
+    if (order.status === "refunded" || !order.provider_session_id) {
       return respond({ invoice: publicOrder(order) }, 200, headers);
     }
     const cfg = config();
     if (!cfg) return respond({ invoice: publicOrder(order), providerStatus: "not_configured" }, 200, headers);
+
     try {
-      const upstream = await fetch(`${cfg.baseUrl}/v3/payment/sessions/${encodeURIComponent(order.provider_session_id)}/payment`, {
-        method: "GET", headers: { Authorization: cfg.secretKey, Accept: "application/json" }, signal: AbortSignal.timeout(12000),
-      });
+      // Read the current provider session state, not a browser redirect/event name.
+      const upstream = await fetch(
+        `${cfg.baseUrl}/v3/payment/sessions/${encodeURIComponent(order.provider_session_id)}`,
+        { method: "GET", headers: { Accept: "application/json" }, redirect: "error", signal: AbortSignal.timeout(12000) },
+      );
       if (!upstream.ok) return respond({ invoice: publicOrder(order), providerStatus: "pending" }, 200, headers);
-      const raw = await upstream.json();
-      const payment = raw?.data ?? raw;
-      const providerStatus = String(payment?.status ?? "").toUpperCase();
-      const providerOrder = payment?.merchantOrderId ?? payment?.orderReference ?? payment?.order;
-      const providerAmount = toMinor(payment?.amount);
-      const currency = String(payment?.currency ?? "").toUpperCase();
-      const orderMatches = typeof providerOrder === "string" && providerOrder === order.provider_reference;
-      const moneyMatches = providerAmount === Number(order.amount_minor) && currency === "EGP";
-      if (["SUCCESS", "PAID", "CAPTURED"].includes(providerStatus)) {
-        if (!orderMatches || !moneyMatches) {
-          console.error("Kashier status reconciliation mismatch", { orderId, providerStatus });
-          return respond({ invoice: publicOrder(order), providerStatus: "verification_required" }, 200, headers);
-        }
-        const transactionId = typeof payment?.transactionId === "string" ? payment.transactionId : null;
-        const { data: updated } = await admin.from("payment_orders").update({
-          status: "paid", provider_transaction_id: transactionId, paid_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(), provider_payload: { verified_by: "server_status_api", status: providerStatus },
-        }).eq("id", order.id).in("status", ["pending", "checkout_created"]).select("id").maybeSingle();
-        if (updated) {
-          const { data: latest } = await admin.from("payment_orders").select("*").eq("id", order.id).single();
-          return respond({ invoice: publicOrder(latest ?? { ...order, status: "paid" }), providerStatus }, 200, headers);
-        }
-      } else if (["FAILURE", "FAILED", "REJECTED", "EXPIRED", "ABANDONED"].includes(providerStatus) && order.status !== "paid") {
-        if (!orderMatches || (providerAmount !== null && providerAmount !== Number(order.amount_minor)) || (currency && currency !== "EGP")) {
-          return respond({ invoice: publicOrder(order), providerStatus: "verification_required" }, 200, headers);
-        }
-        await admin.from("payment_orders").update({
-          status: "failed", updated_at: new Date().toISOString(),
-          provider_payload: { verified_by: "server_status_api", status: providerStatus },
-        }).eq("id", order.id).in("status", ["pending", "checkout_created"]);
+      const responseText = await readBoundedText(upstream.body, 256 * 1024, upstream.headers.get("content-length"));
+      const parsed: unknown = JSON.parse(responseText);
+      if (!isRecord(parsed)) throw new ProviderFailure("invalid_response");
+
+      const sessionId = String(parsed._id ?? "");
+      const merchantId = String(parsed.merchantId ?? "");
+      const params = isRecord(parsed.paymentParams) ? parsed.paymentParams : {};
+      const providerAmount = toMinor(params.amount);
+      const currency = String(params.currency ?? "").toUpperCase();
+      const capturedMinor = toMinor(parsed.capturedAmount);
+      const refundedMinor = toMinor(parsed.refundedAmount);
+      const providerStatus = String(parsed.status ?? "").toUpperCase();
+      const detailsMatch = sessionId === String(order.provider_session_id) &&
+        merchantId === cfg.merchantId &&
+        providerAmount === Number(order.amount_minor) &&
+        currency === "EGP" &&
+        order.currency === "EGP";
+
+      if (!detailsMatch || capturedMinor === null || refundedMinor === null) {
+        console.error("Kashier session reconciliation mismatch", { orderId: order.id, providerStatus });
+        await admin.from("security_events").insert({
+          actor_user_id: null,
+          event_type: "kashier_session_reconciliation_mismatch",
+          severity: "critical",
+          endpoint: "/functions/v1/kashier-payment",
+          request_id: crypto.randomUUID(),
+          metadata: { orderId: order.id, sessionId, providerStatus, sessionIdMatches: sessionId === String(order.provider_session_id),
+            merchantMatches: merchantId === cfg.merchantId, amountMatches: providerAmount === Number(order.amount_minor), currencyMatches: currency === "EGP" },
+        });
+        return respond({ invoice: publicOrder(order), providerStatus: "verification_required" }, 200, headers);
       }
+
+      const isPaid = ["PAID", "CAPTURED", "SUCCESS"].includes(providerStatus) &&
+        capturedMinor === Number(order.amount_minor) && refundedMinor === 0;
+      const isFullRefund = ["REFUNDED", "REVERSED", "VOIDED"].includes(providerStatus) &&
+        capturedMinor >= Number(order.amount_minor) && refundedMinor >= Number(order.amount_minor);
+      const isFailure = ["FAILED", "FAILURE", "EXPIRED", "ABANDONED", "REJECTED"].includes(providerStatus);
+      let changedTo: string | null = null;
+
+      if (isPaid) {
+        const { data: updated, error: updateError } = await admin.from("payment_orders").update({
+          status: "paid",
+          paid_at: order.paid_at ?? new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          provider_payload: { verified_by: "server_session_status", provider_session_id: sessionId, provider_session_status: providerStatus, captured_minor: capturedMinor, refunded_minor: refundedMinor },
+        }).eq("id", order.id).in("status", ["pending", "checkout_created"]).select("id").maybeSingle();
+        if (updateError) throw new ProviderFailure("network");
+        if (updated) changedTo = "paid";
+      } else if (isFullRefund) {
+        const { data: updated, error: updateError } = await admin.from("payment_orders").update({
+          status: "refunded",
+          paid_at: order.paid_at ?? new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          provider_payload: { verified_by: "server_session_status", provider_session_id: sessionId, provider_session_status: providerStatus, captured_minor: capturedMinor, refunded_minor: refundedMinor },
+        }).eq("id", order.id).in("status", ["pending", "checkout_created", "paid", "failed"]).select("id").maybeSingle();
+        if (updateError) throw new ProviderFailure("network");
+        if (updated) changedTo = "refunded";
+      } else if (isFailure && ["pending", "checkout_created"].includes(String(order.status))) {
+        const { data: updated, error: updateError } = await admin.from("payment_orders").update({
+          status: "failed",
+          updated_at: new Date().toISOString(),
+          provider_payload: { verified_by: "server_session_status", provider_session_id: sessionId, provider_session_status: providerStatus },
+        }).eq("id", order.id).in("status", ["pending", "checkout_created"]).select("id").maybeSingle();
+        if (updateError) throw new ProviderFailure("network");
+        if (updated) changedTo = "failed";
+      } else if (refundedMinor > 0 && !isFullRefund) {
+        await admin.from("security_events").insert({
+          actor_user_id: null,
+          event_type: "kashier_partial_refund_requires_review",
+          severity: "high",
+          endpoint: "/functions/v1/kashier-payment",
+          request_id: crypto.randomUUID(),
+          metadata: { orderId: order.id, capturedMinor, refundedMinor, providerStatus },
+        });
+        const { data: latest } = await admin.from("payment_orders").select("*").eq("id", order.id).single();
+        return respond({ invoice: publicOrder(latest ?? order), providerStatus: "partial_refund_requires_review" }, 200, headers);
+      }
+
+      if (changedTo) {
+        const { error: auditError } = await admin.from("audit_logs").insert({
+          actor_user_id: null,
+          action: "payment_status_reconciled",
+          target_type: "payment_order",
+          target_id: String(order.id),
+          metadata: { verifiedBy: "kashier_session_api", previousStatus: order.status, newStatus: changedTo, providerStatus, capturedMinor, refundedMinor },
+        });
+        if (auditError) console.error("Payment reconciliation audit insert failed", auditError.code);
+      }
+
       const { data: latest } = await admin.from("payment_orders").select("*").eq("id", order.id).single();
       return respond({ invoice: publicOrder(latest ?? order), providerStatus: providerStatus || "pending" }, 200, headers);
-    } catch {
+    } catch (error) {
+      console.error("Kashier session status check failed", error instanceof Error ? error.name : "unknown");
       return respond({ invoice: publicOrder(order), providerStatus: "pending" }, 200, headers);
     }
   }
