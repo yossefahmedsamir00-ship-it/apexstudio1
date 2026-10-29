@@ -105,3 +105,12 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(0,156,255,.2),transpare
  .suggestedQuestion{font-size:9px;padding:7px 9px}
 }
 @media(prefers-reduced-motion:reduce){.chatTypingDots{animation:none}}
+
+/* Cinematic scroll reveals: subtle, staggered, and reduced-motion aware */
+.apex-reveal{opacity:0;transform:translateY(24px);filter:blur(2px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1),filter .8s cubic-bezier(.2,.8,.2,1);transition-delay:var(--apex-reveal-delay,0ms)}
+.apex-reveal.apex-revealed{opacity:1;transform:translateY(0);filter:none}
+.apex-reveal.apex-reveal-left{transform:translateX(-22px)}
+.apex-reveal.apex-reveal-left.apex-revealed{transform:translateX(0)}
+.apex-reveal.apex-reveal-scale{transform:translateY(18px) scale(.98)}
+.apex-reveal.apex-reveal-scale.apex-revealed{transform:translateY(0) scale(1)}
+@media(prefers-reduced-motion:reduce){.apex-reveal,.apex-reveal.apex-reveal-left,.apex-reveal.apex-reveal-scale{opacity:1;transform:none;filter:none;transition:none}}

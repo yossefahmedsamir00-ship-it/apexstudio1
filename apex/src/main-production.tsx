@@ -33,6 +33,25 @@ function App(){
  const [locale,setLocale]=useState<Locale>('en'); const [menu,setMenu]=useState(false); const [category,setCategory]=useState<ProjectCategory>('all'); const [project,setProject]=useState<ProjectCard|null>(null); const [requestOpen,setRequestOpen]=useState(false); const [assistantOpen,setAssistantOpen]=useState(false); const [vrMode,setVrMode]=useState(false); const [prefillBrief,setPrefillBrief]=useState(''); const [prefillConversationId,setPrefillConversationId]=useState<string|undefined>(undefined); const t=copy[locale]; const ar=locale==='ar';
  const visible=useMemo(()=>filterProjects(projects,category,'',locale),[category,locale]);
  useEffect(()=>{document.documentElement.lang=locale; document.documentElement.dir=ar?'rtl':'ltr'; void captureEvent({eventName:'page_view',locale});},[locale,ar]);
+
+ useEffect(()=>{
+  const selectors=['main > section','.heroCopy','.showroomScene','.sectionHeader','.projectCard','.serviceRow','.processGrid article','.aboutVisual','.aboutCopy','.ctaContent','.paymentPanel','.footerBrand','.footerLinks','.contactBlock'];
+  const elements=Array.from(document.querySelectorAll<HTMLElement>(selectors.join(',')));
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  elements.forEach((el,index)=>{
+   el.classList.add('apex-reveal');
+   if(el.matches('.showroomScene,.aboutVisual,.ctaContent')) el.classList.add('apex-reveal-scale');
+   else if(index%3===1) el.classList.add('apex-reveal-left');
+   if(el.matches('.projectCard,.serviceRow,.processGrid article')) el.style.setProperty('--apex-reveal-delay',`${(index%4)*70}ms`);
+  });
+  if(reduced||!('IntersectionObserver' in window)){elements.forEach(el=>el.classList.add('apex-revealed'));return;}
+  const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{
+   if(entry.isIntersecting){entry.target.classList.add('apex-revealed');observer.unobserve(entry.target);}
+  }),{threshold:.12,rootMargin:'0px 0px -32px 0px'});
+  elements.forEach(el=>observer.observe(el));
+  return ()=>observer.disconnect();
+ },[locale]);
+
  const go=(id:string)=>{setMenu(false);document.getElementById(id)?.scrollIntoView({behavior:'smooth'});void captureEvent({eventName:'section_view',locale,metadata:{section:id}})};
  const openRequest=()=>{setRequestOpen(true);void captureEvent({eventName:'cta_click',locale,metadata:{cta:'start_project'}})};
  return <div className={`${ar?'app rtl':'app'} ${vrMode?'vrMode':''}`} dir={ar?'rtl':'ltr'}>
