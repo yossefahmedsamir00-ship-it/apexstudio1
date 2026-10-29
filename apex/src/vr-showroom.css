@@ -114,3 +114,20 @@ body{background:radial-gradient(ellipse at 50% -12%,rgba(0,156,255,.2),transpare
 .apex-reveal.apex-reveal-scale{transform:translateY(18px) scale(.98)}
 .apex-reveal.apex-reveal-scale.apex-revealed{transform:translateY(0) scale(1)}
 @media(prefers-reduced-motion:reduce){.apex-reveal,.apex-reveal.apex-reveal-left,.apex-reveal.apex-reveal-scale{opacity:1;transform:none;filter:none;transition:none}}
+
+/* Low-power mode for older phones, integrated GPUs and data-saving browsers. */
+@media (pointer: coarse), (prefers-reduced-motion: reduce), (prefers-reduced-data: reduce) {
+  .roomSky:before, .scenePlanet, .portalHalo, .showroomScene .apexMark,
+  .vrLaunch:before, .portalOuter, .portalInner { animation: none !important; }
+  .showroomScene, .heroVisual, .projectArt, .aboutVisual, .paymentPanel,
+  .projectModal, .requestModal, .assistantModal { filter: none !important; }
+  .showroomScene { transform: none !important; }
+  .projectArt, .serviceRow { transition: none !important; }
+  .modalBackdrop { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+}
+@media (max-width: 720px) {
+  .showroomScene { box-shadow: inset 0 0 35px rgba(0,0,0,.3) !important; }
+  .showroomScene:before { opacity: .35; }
+  .scenePlanet { filter: none !important; }
+  .portalHalo { box-shadow: none !important; }
+}
