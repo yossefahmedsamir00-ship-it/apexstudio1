@@ -70,16 +70,16 @@ jobs:
         working-directory: apex
         shell: bash
         run: |
-          mkdir -p .ci-artifacts
-          if [ -f package-lock.json ]; then cp package-lock.json .ci-artifacts/package-lock.json; fi
-          if [ -f "$RUNNER_TEMP/npm-audit.json" ]; then cp "$RUNNER_TEMP/npm-audit.json" .ci-artifacts/npm-audit.json; fi
+          mkdir -p ci-artifacts
+          if [ -f package-lock.json ]; then cp package-lock.json ci-artifacts/package-lock.json; fi
+          if [ -f "$RUNNER_TEMP/npm-audit.json" ]; then cp "$RUNNER_TEMP/npm-audit.json" ci-artifacts/npm-audit.json; fi
 
       - name: Upload dependency audit artifact
         if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: apex-dependency-audit-${{ github.run_number }}
-          path: apex/.ci-artifacts/
+          path: apex/ci-artifacts/
           if-no-files-found: warn
           retention-days: 3
 
