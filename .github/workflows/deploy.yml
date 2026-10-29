@@ -23,6 +23,10 @@ env:
 
 jobs:
   build:
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -90,6 +94,20 @@ jobs:
       - name: Build project
         working-directory: apex
         run: npm run build
+
+      - name: Persist dependency lockfile after successful verification
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apex/package-lock.json
+          if git diff --cached --quiet; then
+            echo "Package lockfile is already current."
+          else
+            git commit -m "chore(deps): add verified package lockfile"
+            git push origin HEAD:main
+          fi
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
