@@ -33,6 +33,29 @@ const publishableKey = () => {
   return Deno.env.get("SUPABASE_ANON_KEY");
 };
 
+async function recordOwnerAccess(admin: ReturnType<typeof createClient>, req: Request, userId: string, action: "owner_session_verified" | "owner_account_claimed") {
+  const now = new Date().toISOString();
+  const { error: securityError } = await admin.from("security_events").insert({
+    actor_user_id: userId,
+    event_type: action,
+    severity: "info",
+    endpoint: "/functions/v1/apex-owner-bootstrap",
+    request_id: crypto.randomUUID(),
+    origin: (req.headers.get("origin") ?? "").slice(0,200) || null,
+    user_agent: (req.headers.get("user-agent") ?? "").slice(0,400) || null,
+    metadata: { timestamp: now },
+  });
+  if (securityError) console.error("Owner security event write failed", securityError.code);
+  const { error: auditError } = await admin.from("audit_logs").insert({
+    actor_user_id: userId,
+    action,
+    target_type: "owner_session",
+    target_id: userId,
+    metadata: {},
+  });
+  if (auditError) console.error("Owner audit write failed", auditError.code);
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? "";
   const headers = cors(origin);
@@ -61,7 +84,7 @@ Deno.serve(async (req: Request) => {
     .from("apex_owner_settings").select("id,owner_user_id").eq("id", true).maybeSingle();
   if (readError) return respond({ error: "Could not verify owner setup." }, 500, headers);
   if (current?.owner_user_id) {
-    if (current.owner_user_id === user.id) return respond({ configured: true, message: "Owner account is already configured." }, 200, headers);
+    if (current.owner_user_id === user.id) { await recordOwnerAccess(admin, req, user.id, "owner_session_verified"); return respond({ configured: true, message: "Owner account is already configured." }, 200, headers); }
     return respond({ error: "The APEX owner is already configured." }, 409, headers);
   }
 
@@ -69,13 +92,13 @@ Deno.serve(async (req: Request) => {
     const { data: updated, error } = await admin
       .from("apex_owner_settings").update({ owner_user_id: user.id }).eq("id", true).is("owner_user_id", null).select("owner_user_id").maybeSingle();
     if (error) return respond({ error: "Could not claim owner access." }, 500, headers);
-    if (updated?.owner_user_id === user.id) return respond({ configured: true }, 200, headers);
+    if (updated?.owner_user_id === user.id) { await recordOwnerAccess(admin, req, user.id, "owner_account_claimed"); return respond({ configured: true }, 200, headers); }
   } else {
     const { error } = await admin.from("apex_owner_settings").insert({ id: true, owner_user_id: user.id });
-    if (!error) return respond({ configured: true }, 200, headers);
+    if (!error) { await recordOwnerAccess(admin, req, user.id, "owner_account_claimed"); return respond({ configured: true }, 200, headers); }
   }
 
   const { data: finalRow } = await admin.from("apex_owner_settings").select("owner_user_id").eq("id", true).maybeSingle();
-  if (finalRow?.owner_user_id === user.id) return respond({ configured: true }, 200, headers);
+  if (finalRow?.owner_user_id === user.id) { await recordOwnerAccess(admin, req, user.id, "owner_session_verified"); return respond({ configured: true }, 200, headers); }
   return respond({ error: "Owner setup was claimed by a different account. Contact the configured administrator." }, 409, headers);
 });
