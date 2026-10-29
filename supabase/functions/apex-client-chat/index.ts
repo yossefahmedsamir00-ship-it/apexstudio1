@@ -39,6 +39,17 @@ async function sha256(v: string) {
   const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
   return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2,"0")).join("");
 }
+async function ipRateLimitSubject(req: Request, salt: string): Promise<string | null> {
+  // Cloudflare supplies this header at the edge. Never log the raw address; use a keyed pseudonymous UUID.
+  const ip = (req.headers.get("cf-connecting-ip") ?? "").trim();
+  if (!/^[0-9a-fA-F:.]{3,64}$/.test(ip)) return null;
+  const digest = await sha256(salt + ":apex-ip-limit:" + ip);
+  const chars = digest.slice(0,32).split("");
+  chars[12] = "4";
+  chars[16] = ["8","9","a","b"][parseInt(chars[16],16) & 3];
+  const hex = chars.join("");
+  return hex.slice(0,8)+"-"+hex.slice(8,12)+"-"+hex.slice(12,16)+"-"+hex.slice(16,20)+"-"+hex.slice(20);
+}
 class BodyTooLargeError extends Error {}
 
 async function readBoundedText(stream: ReadableStream<Uint8Array> | null, maxBytes: number, declaredLength?: string | null): Promise<string> {
@@ -93,9 +104,9 @@ async function writeAudit(admin: ReturnType<typeof createClient>, actor: string,
   });
   if (result.error) console.error("APEX audit write failed", result.error.code);
 }
-async function consumeRateLimit(admin: ReturnType<typeof createClient>, req: Request, userId: string, bucket: string, limit: number) {
+async function consumeRateLimit(admin: ReturnType<typeof createClient>, req: Request, userId: string, bucket: string, limit: number, subjectId: string = userId) {
   const { data, error } = await admin.rpc("apex_consume_rate_limit", {
-    p_subject_id: userId, p_bucket: bucket, p_window_seconds: 60, p_limit: limit,
+    p_subject_id: subjectId, p_bucket: bucket, p_window_seconds: 60, p_limit: limit,
   });
   if (error) {
     console.error("APEX rate limiter unavailable", error.code);
@@ -247,6 +258,11 @@ Deno.serve(async (req: Request) => {
       }
       const allowed = await consumeRateLimit(admin,req,user.id,"conversation_open",30);
       if (!allowed) return respond({error:"Too many chat requests. Please wait a moment and try again."},429,headers);
+      const ipSubject = await ipRateLimitSubject(req, adminKey);
+      if (ipSubject) {
+        const ipAllowed = await consumeRateLimit(admin,req,user.id,"conversation_open_ip",20,ipSubject);
+        if (!ipAllowed) return respond({error:"Too many new chats from this network. Please try again later."},429,headers);
+      }
       const ownerId = ownerSettings?.owner_user_id ?? null;
       const insert = await admin.from("client_conversations").insert({
         owner_user_id: ownerId,
@@ -289,6 +305,11 @@ Deno.serve(async (req: Request) => {
       if (existing.data) return respond({conversation:safeConversation(conversation),messages:[existing.data],duplicate:true},200,headers);
       const allowed = await consumeRateLimit(admin,req,user.id,"client_chat_send",10);
       if (!allowed) return respond({error:"You've sent several messages in a short time. Please wait a minute."},429,headers);
+      const ipSubject = await ipRateLimitSubject(req, adminKey);
+      if (ipSubject) {
+        const ipAllowed = await consumeRateLimit(admin,req,user.id,"client_chat_send_ip",30,ipSubject);
+        if (!ipAllowed) return respond({error:"Too many messages from this network. Please wait a minute."},429,headers);
+      }
 
       const {data:clientMessage,error:insertError} = await admin.from("client_messages").insert({
         conversation_id:conversationId,sender_type:"client",sender_user_id:user.id,body,
