@@ -17,6 +17,18 @@ const clientKey = () => {
   if (raw) { try { return JSON.parse(raw).default as string | undefined; } catch { /* ignore malformed map */ } }
   return Deno.env.get("SUPABASE_ANON_KEY");
 };
+async function ipRateLimitSubject(req: Request, salt: string): Promise<string | null> {
+  // Cloudflare supplies this edge header. Hash with a server-side secret; never log/store the raw IP.
+  const ip = (req.headers.get("cf-connecting-ip") ?? "").trim();
+  if (!/^[0-9a-fA-F:.]{3,64}$/.test(ip)) return null;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(salt + ":apex-ip-limit:" + ip));
+  const hexDigest = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2,"0")).join("");
+  const chars = hexDigest.slice(0,32).split("");
+  chars[12] = "4";
+  chars[16] = ["8","9","a","b"][parseInt(chars[16],16) & 3];
+  const hex = chars.join("");
+  return hex.slice(0,8)+"-"+hex.slice(8,12)+"-"+hex.slice(12,16)+"-"+hex.slice(16,20)+"-"+hex.slice(20);
+}
 class BodyTooLargeError extends Error {}
 
 async function readBoundedText(stream: ReadableStream<Uint8Array> | null, maxBytes: number, declaredLength?: string | null): Promise<string> {
@@ -142,6 +154,25 @@ Deno.serve(async (req: Request) => {
     });
     if (eventError) console.error("AI security event write failed",eventError.code);
     return json({error:rateError ? "AI service is temporarily unavailable. Please retry later." : "Too many AI requests. Please wait a minute and try again."},rateError?503:429,headers);
+  }
+
+  // Anonymous Auth users can create new user IDs, so apply a second budget to the platform-attested edge IP.
+  const ipSubject = await ipRateLimitSubject(req, adminKey);
+  if (ipSubject) {
+    const {data:ipAllowed,error:ipRateError} = await admin.rpc("apex_consume_rate_limit", {
+      p_subject_id:ipSubject,p_bucket:"ai_gateway_ip",p_window_seconds:60,p_limit:12,
+    });
+    if (ipRateError || ipAllowed !== true) {
+      const eventType = ipRateError ? "ai_ip_rate_limiter_unavailable" : "ai_ip_rate_limit_exceeded";
+      const {error:eventError} = await admin.from("security_events").insert({
+        actor_user_id:user.id,event_type:eventType,severity:ipRateError?"high":"medium",
+        endpoint:"/functions/v1/apex-ai-gateway",request_id:crypto.randomUUID(),
+        origin:origin.slice(0,200),user_agent:(req.headers.get("user-agent")??"").slice(0,400)||null,
+        metadata:{agent,limit:12,windowSeconds:60},
+      });
+      if (eventError) console.error("AI IP-limit event write failed",eventError.code);
+      return json({error:ipRateError?"AI service is temporarily unavailable. Please retry later.":"Too many AI requests from this network. Please wait and try again."},ipRateError?503:429,headers);
+    }
   }
 
   const apiKey = Deno.env.get("AI_API_KEY")?.trim();
