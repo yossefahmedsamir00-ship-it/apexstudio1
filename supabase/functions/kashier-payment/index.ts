@@ -148,9 +148,9 @@ Deno.serve(async (req: Request) => {
     if (!cfg) return respond({ invoice: publicOrder(order), providerStatus: "not_configured" }, 200, headers);
 
     try {
-      // Read the current provider session state, not a browser redirect/event name.
+      const sessionId = String(order.provider_session_id);
       const upstream = await fetch(
-        `${cfg.baseUrl}/v3/payment/sessions/${encodeURIComponent(order.provider_session_id)}`,
+        cfg.baseUrl + "/v3/payment/sessions/" + encodeURIComponent(sessionId),
         { method: "GET", headers: { Accept: "application/json" }, redirect: "error", signal: AbortSignal.timeout(12000) },
       );
       if (!upstream.ok) return respond({ invoice: publicOrder(order), providerStatus: "pending" }, 200, headers);
@@ -158,21 +158,18 @@ Deno.serve(async (req: Request) => {
       const parsed: unknown = JSON.parse(responseText);
       if (!isRecord(parsed)) throw new ProviderFailure("invalid_response");
 
-      const sessionId = String(parsed._id ?? "");
+      const sessionReturned = String(parsed._id ?? "");
       const merchantId = String(parsed.merchantId ?? "");
       const params = isRecord(parsed.paymentParams) ? parsed.paymentParams : {};
-      const providerAmount = toMinor(params.amount);
+      const amountMinor = toMinor(params.amount);
       const currency = String(params.currency ?? "").toUpperCase();
       const capturedMinor = toMinor(parsed.capturedAmount);
       const refundedMinor = toMinor(parsed.refundedAmount);
       const providerStatus = String(parsed.status ?? "").toUpperCase();
-      const detailsMatch = sessionId === String(order.provider_session_id) &&
-        merchantId === cfg.merchantId &&
-        providerAmount === Number(order.amount_minor) &&
-        currency === "EGP" &&
-        order.currency === "EGP";
 
-      if (!detailsMatch || capturedMinor === null || refundedMinor === null) {
+      if (sessionReturned !== sessionId || merchantId !== cfg.merchantId ||
+          amountMinor !== Number(order.amount_minor) || currency !== "EGP" ||
+          capturedMinor === null || refundedMinor === null) {
         console.error("Kashier session reconciliation mismatch", { orderId: order.id, providerStatus });
         await admin.from("security_events").insert({
           actor_user_id: null,
@@ -180,71 +177,43 @@ Deno.serve(async (req: Request) => {
           severity: "critical",
           endpoint: "/functions/v1/kashier-payment",
           request_id: crypto.randomUUID(),
-          metadata: { orderId: order.id, sessionId, providerStatus, sessionIdMatches: sessionId === String(order.provider_session_id),
-            merchantMatches: merchantId === cfg.merchantId, amountMatches: providerAmount === Number(order.amount_minor), currencyMatches: currency === "EGP" },
+          metadata: { orderId: order.id, sessionId, providerStatus,
+            sessionIdMatches: sessionReturned === sessionId, merchantMatches: merchantId === cfg.merchantId,
+            amountMatches: amountMinor === Number(order.amount_minor), currencyMatches: currency === "EGP" },
         });
         return respond({ invoice: publicOrder(order), providerStatus: "verification_required" }, 200, headers);
       }
 
-      const isPaid = ["PAID", "CAPTURED", "SUCCESS"].includes(providerStatus) &&
-        capturedMinor === Number(order.amount_minor) && refundedMinor === 0;
-      const isFullRefund = ["REFUNDED", "REVERSED", "VOIDED"].includes(providerStatus) &&
-        capturedMinor >= Number(order.amount_minor) && refundedMinor >= Number(order.amount_minor);
-      const isFailure = ["FAILED", "FAILURE", "EXPIRED", "ABANDONED", "REJECTED"].includes(providerStatus);
-      let changedTo: string | null = null;
-
-      if (isPaid) {
-        const { data: updated, error: updateError } = await admin.from("payment_orders").update({
-          status: "paid",
-          paid_at: order.paid_at ?? new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          provider_payload: { verified_by: "server_session_status", provider_session_id: sessionId, provider_session_status: providerStatus, captured_minor: capturedMinor, refunded_minor: refundedMinor },
-        }).eq("id", order.id).in("status", ["pending", "checkout_created"]).select("id").maybeSingle();
-        if (updateError) throw new ProviderFailure("network");
-        if (updated) changedTo = "paid";
-      } else if (isFullRefund) {
-        const { data: updated, error: updateError } = await admin.from("payment_orders").update({
-          status: "refunded",
-          paid_at: order.paid_at ?? new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          provider_payload: { verified_by: "server_session_status", provider_session_id: sessionId, provider_session_status: providerStatus, captured_minor: capturedMinor, refunded_minor: refundedMinor },
-        }).eq("id", order.id).in("status", ["pending", "checkout_created", "paid", "failed"]).select("id").maybeSingle();
-        if (updateError) throw new ProviderFailure("network");
-        if (updated) changedTo = "refunded";
-      } else if (isFailure && ["pending", "checkout_created"].includes(String(order.status))) {
-        const { data: updated, error: updateError } = await admin.from("payment_orders").update({
-          status: "failed",
-          updated_at: new Date().toISOString(),
-          provider_payload: { verified_by: "server_session_status", provider_session_id: sessionId, provider_session_status: providerStatus },
-        }).eq("id", order.id).in("status", ["pending", "checkout_created"]).select("id").maybeSingle();
-        if (updateError) throw new ProviderFailure("network");
-        if (updated) changedTo = "failed";
-      } else if (refundedMinor > 0 && !isFullRefund) {
-        await admin.from("security_events").insert({
-          actor_user_id: null,
-          event_type: "kashier_partial_refund_requires_review",
-          severity: "high",
-          endpoint: "/functions/v1/kashier-payment",
-          request_id: crypto.randomUUID(),
-          metadata: { orderId: order.id, capturedMinor, refundedMinor, providerStatus },
-        });
-        const { data: latest } = await admin.from("payment_orders").select("*").eq("id", order.id).single();
-        return respond({ invoice: publicOrder(latest ?? order), providerStatus: "partial_refund_requires_review" }, 200, headers);
+      const fingerprint = await sha256([
+        "provider-session-status", sessionId, providerStatus, String(amountMinor),
+        String(capturedMinor), String(refundedMinor), String(order.provider_reference),
+      ].join("\n"));
+      const { data: reconciliation, error: reconciliationError } = await admin.rpc("reconcile_kashier_session_status", {
+        p_event_fingerprint: fingerprint,
+        p_provider_reference: String(order.provider_reference),
+        p_provider_session_id: sessionId,
+        p_provider_status: providerStatus,
+        p_amount_minor: amountMinor,
+        p_captured_minor: capturedMinor,
+        p_refunded_minor: refundedMinor,
+        p_currency: currency,
+        p_merchant_id: merchantId,
+        p_expected_merchant_id: cfg.merchantId,
+        p_provider_transaction_id: null,
+        p_request_id: crypto.randomUUID(),
+      });
+      if (reconciliationError || !reconciliation || typeof reconciliation !== "object") {
+        console.error("Kashier status reconciliation failed", reconciliationError?.code ?? "invalid_rpc_response");
+        return respond({ error: "Payment status could not be verified. Please try again." }, 503, headers);
       }
 
-      if (changedTo) {
-        const { error: auditError } = await admin.from("audit_logs").insert({
-          actor_user_id: null,
-          action: "payment_status_reconciled",
-          target_type: "payment_order",
-          target_id: String(order.id),
-          metadata: { verifiedBy: "kashier_session_api", previousStatus: order.status, newStatus: changedTo, providerStatus, capturedMinor, refundedMinor },
-        });
-        if (auditError) console.error("Payment reconciliation audit insert failed", auditError.code);
-      }
-
+      const outcome = String((reconciliation as Record<string, unknown>).result ?? "ignored");
+      const needsReview = ["rejected", "unmatched", "requires_reconciliation", "invalid_transition"].includes(outcome);
       const { data: latest } = await admin.from("payment_orders").select("*").eq("id", order.id).single();
-      return respond({ invoice: publicOrder(latest ?? order), providerStatus: providerStatus || "pending" }, 200, headers);
+      return respond({
+        invoice: publicOrder(latest ?? order),
+        providerStatus: needsReview ? "verification_required" : (providerStatus || "pending"),
+      }, 200, headers);
     } catch (error) {
       console.error("Kashier session status check failed", error instanceof Error ? error.name : "unknown");
       return respond({ invoice: publicOrder(order), providerStatus: "pending" }, 200, headers);
