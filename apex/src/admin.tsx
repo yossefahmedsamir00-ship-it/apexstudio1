@@ -130,15 +130,20 @@ function App() {
 
   const verifyOwnerSession = async (id:string):Promise<boolean> => {
     try {
+      const {data,error:authError}=await supabase.auth.getUser();
+      if(authError || !data.user?.email || data.user.id!==id) {
+        setUser(null);
+        return false;
+      }
       await claimOwner();
       setUser(id);
       setError('');
       await load();
       return true;
-    } catch (err) {
+    } catch {
+      // Keep customer/anonymous sessions intact; simply withhold the owner UI.
       setUser(null); setInquiries([]); setEvents([]); setInvoices([]); setConversations([]); setSecurityEvents([]); setAuditLogs([]);
-      setError('This account is not authorized for the APEX owner dashboard. Sign in with the verified owner email.');
-      await supabase.auth.signOut();
+      setError('This session is not authorized for the APEX owner dashboard. Sign in with the verified owner email.');
       return false;
     }
   };
@@ -248,7 +253,7 @@ function App() {
         </label>
         {otpMode && otpRequested
           ? <label style={label}>Email verification code
-              <input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} value={otpCode} onChange={e=>setOtpCode(e.target.value.replace(/\\D/g,'').slice(0,6))} placeholder="6-digit code" style={input}/>
+              <input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} value={otpCode} onChange={e=>setOtpCode(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder="6-digit code" style={input}/>
             </label>
           : !otpMode && <label style={label}>Password<input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 8 characters" style={input} autoComplete={isSignUp ? 'new-password' : 'current-password'} /></label>}
         <button disabled={busy || (otpMode && otpRequested && otpCode.length!==6)} style={button}>{busy ? 'Please wait…' : otpMode ? otpRequested ? 'Verify email code' : 'Send email code' : isSignUp ? 'Create account' : 'Sign in'}</button>
