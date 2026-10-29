@@ -325,6 +325,8 @@ Deno.serve(async (req: Request) => {
       }).eq("id",conversationId);
       await writeAudit(admin,user.id,"client_message_sent","conversation",conversationId,{messageId:clientMessage.id,bodyLength:body.length});
 
+      const requestedAgent = clip(input.agent,40) || "support";
+      const agent = new Set(["support","technical"]).has(requestedAgent) ? requestedAgent : "support";
       const history = await loadMessages(admin,conversationId,undefined,14);
       const historyCandidates = history
         .filter((m) => ["client","ai","owner"].includes(String(m.sender_type)))
@@ -338,7 +340,7 @@ Deno.serve(async (req: Request) => {
         aiInputChars += message.content.length;
       }
       let aiText: string | null = null;
-      try { aiText = await makeAiReply(req,token,pubKey,aiInput,"support"); }
+      try { aiText = await makeAiReply(req,token,pubKey,aiInput,agent); }
       catch (error) { console.error("APEX chat AI reply failed",error instanceof Error ? error.name : "unknown"); }
       if (!aiText) {
         await writeSecurityEvent(admin,req,{actorUserId:user.id,eventType:"chat_ai_unavailable",severity:"low",metadata:{conversationId}});
