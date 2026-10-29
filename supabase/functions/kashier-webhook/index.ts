@@ -242,7 +242,7 @@ Deno.serve(async (req: Request) => {
     event_fingerprint: signedEventFingerprint,
     payment_order_id: order.id,
     provider_reference: String(order.provider_reference),
-    event_type: (typeof payload.event === "string" ? payload.event.trim() : "webhook").slice(0, 60) || "webhook",
+    event_type: "webhook_received",
     provider_status: signedStatus,
     provider_transaction_id: transactionId,
     amount_minor: amountMinor,
@@ -251,7 +251,11 @@ Deno.serve(async (req: Request) => {
     verification_method: "webhook_hmac",
     result: "received",
     request_id: requestId,
-    metadata: { verificationMethod: "kashier_hmac", sessionStatusFetched: true },
+    metadata: {
+      verificationMethod: "kashier_hmac",
+      sessionStatusFetched: true,
+      reportedEventUntrusted: typeof payload.event === "string" ? payload.event.trim().slice(0,60) : null,
+    },
   });
   if (receiptError && receiptError.code !== "23505") {
     console.error("Kashier verified webhook receipt write failed", receiptError.code);
