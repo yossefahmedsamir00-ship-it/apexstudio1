@@ -150,10 +150,27 @@ async function requireClientConversation(admin: ReturnType<typeof createClient>,
 async function makeAiReply(req: Request, userToken: string, publishable: string, messages: Array<{role:"user"|"assistant";content:string}>, agent: string) {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   if (!supabaseUrl) return null;
-  const url = Deno.env.get("APEX_AI_GATEWAY_URL") ?? `${supabaseUrl.replace(/\/$/,"")}/functions/v1/apex-ai-gateway`;
+
+  const expectedUrl = new URL("/functions/v1/apex-ai-gateway", supabaseUrl);
+  const configuredUrl = Deno.env.get("APEX_AI_GATEWAY_URL")?.trim();
+  if (configuredUrl) {
+    try {
+      const parsed = new URL(configuredUrl);
+      if (parsed.origin !== expectedUrl.origin || parsed.pathname !== expectedUrl.pathname ||
+          parsed.search !== "" || parsed.hash !== "" || parsed.username !== "" || parsed.password !== "") {
+        console.error("APEX AI gateway URL configuration rejected");
+        return null;
+      }
+    } catch {
+      console.error("APEX AI gateway URL configuration rejected");
+      return null;
+    }
+  }
+  const url = expectedUrl.toString();
   const origin = req.headers.get("origin") ?? SITE_ORIGIN;
   const response = await fetch(url,{
     method:"POST",
+    redirect:"error",
     headers:{
       "Content-Type":"application/json",
       "Authorization":`Bearer ${userToken}`,
@@ -167,8 +184,15 @@ async function makeAiReply(req: Request, userToken: string, publishable: string,
     console.error("APEX AI gateway failed", { status: response.status });
     return null;
   }
-  const data = await response.json();
-  return typeof data?.content === "string" && data.content.trim() ? data.content.trim() : null;
+  let bodyText: string;
+  try { bodyText = await readBoundedText(response.body, 512 * 1024, response.headers.get("content-length")); }
+  catch { console.error("APEX AI gateway response rejected"); return null; }
+  try {
+    const data = JSON.parse(bodyText);
+    return typeof data?.content === "string" && data.content.trim() && data.content.length <= 20000
+      ? data.content.trim()
+      : null;
+  } catch { return null; }
 }
 
 Deno.serve(async (req: Request) => {
@@ -281,9 +305,17 @@ Deno.serve(async (req: Request) => {
       await writeAudit(admin,user.id,"client_message_sent","conversation",conversationId,{messageId:clientMessage.id,bodyLength:body.length});
 
       const history = await loadMessages(admin,conversationId,undefined,14);
-      const aiInput = history
+      const historyCandidates = history
         .filter((m) => ["client","ai","owner"].includes(String(m.sender_type)))
-        .map((m) => ({role: m.sender_type === "client" ? "user" as const : "assistant" as const,content:String(m.body)}));
+        .map((m) => ({role: m.sender_type === "client" ? "user" as const : "assistant" as const,content:String(m.body).slice(-4000)}));
+      // Keep only the newest context within the gateway's byte/character budget.
+      const aiInput: Array<{role:"user"|"assistant";content:string}> = [];
+      let aiInputChars = 0;
+      for (const message of [...historyCandidates].reverse()) {
+        if (aiInput.length >= 12 || aiInputChars + message.content.length > 24000) continue;
+        aiInput.unshift(message);
+        aiInputChars += message.content.length;
+      }
       let aiText: string | null = null;
       try { aiText = await makeAiReply(req,token,pubKey,aiInput,"support"); }
       catch (error) { console.error("APEX chat AI reply failed",error instanceof Error ? error.name : "unknown"); }
