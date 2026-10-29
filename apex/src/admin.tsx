@@ -327,7 +327,7 @@ function App() {
       <h2>Security events</h2>
       <div style={{display:'grid',gap:8}}>
         {securityEvents.slice(0,30).map(event=><article key={event.id} style={card}>
-          <div style={{...row,alignItems:'center'}}><strong>{event.event_type.replaceAll('_',' ')}</strong><span style={statusPill(event.severity)}>{event.severity}</span></div>
+          <div style={{...row,alignItems:'center'}}><strong>{event.event_type.replace(/_/g, ' ')}</strong><span style={statusPill(event.severity)}>{event.severity}</span></div>
           <p style={muted}>{event.endpoint || '—'}{event.origin ? ' · '+event.origin : ''}</p>
           <small style={muted}>{new Date(event.created_at).toLocaleString()} · request {event.request_id?.slice(0,8) || 'n/a'}</small>
         </article>)}
@@ -338,13 +338,21 @@ function App() {
       <h2>Audit log</h2>
       <div style={{...card,overflowX:'auto'}}>
         <table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr>{['Action','Target','Details','Time'].map(x=><th key={x} align="left" style={tableHead}>{x}</th>)}</tr></thead><tbody>
-          {auditLogs.slice(0,100).map(event=><tr key={event.id}><td style={tableCell}>{event.action}</td><td style={tableCell}>{event.target_type} · {event.target_id?.slice(0,10)||'—'}</td><td style={tableCell}>{event.metadata?.bodyLength ? event.metadata.bodyLength+' chars' : event.metadata?.to ? 'Status → '+String(event.metadata.to) : event.metadata?.source || '—'}</td><td style={tableCell}>{new Date(event.created_at).toLocaleString()}</td></tr>)}
+          {auditLogs.slice(0,100).map(event=><tr key={event.id}><td style={tableCell}>{event.action}</td><td style={tableCell}>{event.target_type} · {event.target_id?.slice(0,10)||'—'}</td><td style={tableCell}>{formatAuditDetails(event.metadata)}</td><td style={tableCell}>{new Date(event.created_at).toLocaleString()}</td></tr>)}
         </tbody></table>
       </div>
     </section>
     {error && <p role="alert" style={errorStyle}>{error}</p>}
     {notice && <p role="status" style={successStyle}>{notice}</p>}
   </main>;
+}
+
+function formatAuditDetails(metadata: Record<string, unknown>) {
+  const bodyLength = metadata.bodyLength;
+  if (typeof bodyLength === 'number' && Number.isFinite(bodyLength) && bodyLength > 0) return `${bodyLength} chars`;
+  if (typeof metadata.to === 'string' && metadata.to) return `Status → ${metadata.to}`;
+  if (typeof metadata.source === 'string' && metadata.source) return metadata.source;
+  return '—';
 }
 
 async function explainFunctionError(error: { message: string; context?: unknown }) {
