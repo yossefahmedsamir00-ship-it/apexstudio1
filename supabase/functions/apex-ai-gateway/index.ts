@@ -105,6 +105,15 @@ Deno.serve(async (req: Request) => {
   const user = userData.user;
   if (userError || !user) return json({error:"Your session is invalid. Please sign in again."},401,headers);
   const admin = createClient(projectUrl,adminKey,{auth:{persistSession:false,autoRefreshToken:false}});
+  const {data:runtimeControls,error:runtimeControlsError} = await admin
+    .from("apex_runtime_controls").select("emergency_lockdown,lockdown_reason").eq("id",true).maybeSingle();
+  if (runtimeControlsError || !runtimeControls) {
+    console.error("AI runtime controls unavailable",runtimeControlsError?.code ?? "missing_row");
+    return json({error:"AI service is temporarily unavailable. Please retry later."},503,headers);
+  }
+  if (runtimeControls.emergency_lockdown) {
+    return json({error:"APEX is temporarily in emergency mode. Please contact the studio owner."},503,headers);
+  }
 
   let rawBody: string;
   try {
