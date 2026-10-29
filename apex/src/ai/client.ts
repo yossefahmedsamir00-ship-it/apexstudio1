@@ -3,7 +3,7 @@ import type {
   AIRequest,
   AIResponse,
 } from './types';
-import { ensureAnonymousSession } from '../lib/supabase';
+import { ensureAnonymousSession, SUPABASE_PUBLISHABLE_KEY } from '../lib/supabase';
 
 const API_URL = import.meta.env.VITE_AI_API_URL;
 
@@ -17,8 +17,10 @@ export class RemoteAIClient implements AIClient {
 
     const response = await fetch(API_URL, {
       method: 'POST',
+      redirect: 'error',
       headers: {
         'Content-Type': 'application/json',
+        apikey: SUPABASE_PUBLISHABLE_KEY,
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
@@ -31,14 +33,16 @@ export class RemoteAIClient implements AIClient {
     });
 
     if (!response.ok) {
-      const message = await response.text();
-
-      throw new Error(
-        `AI request failed (${response.status}): ${message}`
-      );
+      // Do not forward backend/proxy response bodies to the UI; they may contain internals.
+      throw new Error(`AI request failed (${response.status}). Please retry.`);
     }
 
-    const data = (await response.json()) as AIResponse;
+    let data: AIResponse;
+    try {
+      data = (await response.json()) as AIResponse;
+    } catch {
+      throw new Error('AI service returned an invalid response. Please retry.');
+    }
 
     if (!data?.content) {
       throw new Error('AI API returned an invalid response.');
