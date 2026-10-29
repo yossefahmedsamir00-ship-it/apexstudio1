@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install dependencies
         working-directory: apex
@@ -64,6 +64,24 @@ jobs:
             }
           }
           NODE
+
+      - name: Preserve resolved lockfile and audit report
+        if: always()
+        working-directory: apex
+        shell: bash
+        run: |
+          mkdir -p .ci-artifacts
+          if [ -f package-lock.json ]; then cp package-lock.json .ci-artifacts/package-lock.json; fi
+          if [ -f "$RUNNER_TEMP/npm-audit.json" ]; then cp "$RUNNER_TEMP/npm-audit.json" .ci-artifacts/npm-audit.json; fi
+
+      - name: Upload dependency audit artifact
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-dependency-audit-${{ github.run_number }}
+          path: apex/.ci-artifacts/
+          if-no-files-found: warn
+          retention-days: 3
 
       - name: Run tests
         working-directory: apex
