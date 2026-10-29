@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ArrowUpRight, CheckCircle2, Clock3, ShieldCheck, XCircle } from 'lucide-react';
 import './styles.css';
 import './payment.css';
-import { supabase } from './lib/supabase';
+import { supabase, ensureAnonymousSession } from './lib/supabase';
 import { APEX_CONTACT } from './contact';
 
 type Invoice = {
@@ -32,6 +32,9 @@ function PaymentPage() {
 
   const ar = locale === 'ar';
   const invoke = useCallback(async (action: 'preview' | 'checkout' | 'status') => {
+    // Open invoice links can arrive in a fresh browser with no existing Supabase session.
+    // Establish an anonymous user JWT before invoking the Edge Function.
+    await ensureAnonymousSession();
     const { data, error: functionError } = await supabase.functions.invoke('kashier-payment', {
       body: { action, orderId, token },
     });
