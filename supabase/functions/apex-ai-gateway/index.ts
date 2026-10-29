@@ -21,7 +21,7 @@ class BodyTooLargeError extends Error {}
 
 async function readBoundedText(stream: ReadableStream<Uint8Array> | null, maxBytes: number, declaredLength?: string | null): Promise<string> {
   if (declaredLength !== null && declaredLength !== undefined) {
-    if (!/^\\d+$/.test(declaredLength)) throw new Error("invalid content length");
+    if (!/^\d+$/.test(declaredLength)) throw new Error("invalid content length");
     const length = Number(declaredLength);
     if (!Number.isSafeInteger(length)) throw new Error("invalid content length");
     if (length > maxBytes) throw new BodyTooLargeError();
