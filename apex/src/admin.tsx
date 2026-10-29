@@ -35,6 +35,7 @@ function App() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [user, setUser] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [otpMode,setOtpMode]=useState(false);
   const [otpRequested,setOtpRequested]=useState(false);
   const [otpCode,setOtpCode]=useState('');
@@ -99,6 +100,7 @@ function App() {
     e.preventDefault();
     const body=ownerReply.trim();
     if(!body||!selectedConversation||replyBusy)return;
+    if(!navigator.onLine) { setError('Offline: the reply remains unsent. Reconnect before sending.'); return; }
     setReplyBusy(true);setError('');
     const idempotencyKey='owner_'+crypto.randomUUID().replace(/-/g,'');
     const {data,error:callError}=await supabase.functions.invoke('apex-client-chat',{
@@ -120,6 +122,7 @@ function App() {
   };
 
   const changeConversationStatus = async (id:string,status:string) => {
+    if(!navigator.onLine) { setError('Offline: status changes need server confirmation.'); return; }
     const {data,error:callError}=await supabase.functions.invoke('apex-client-chat',{body:{action:'owner_status',conversationId:id,status}});
     const result=data as {error?:string}|null;
     if(callError||result?.error) setError(result?.error || callError?.message || 'Could not update conversation status.');
@@ -157,7 +160,8 @@ function App() {
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
-        setUser(null); setInquiries([]); setEvents([]); setInvoices([]); setConversations([]); setSecurityEvents([]); setAuditLogs([]);
+        setUser(null); setInquiries([]); setEvents([]); setInvoices([]); setConversations([]);
+        setChatMessages([]); setSecurityEvents([]); setAuditLogs([]);
         return;
       }
       // Avoid calling Supabase Auth APIs inside its auth-state callback.
@@ -165,6 +169,39 @@ function App() {
     });
     return () => { active = false; data.subscription.unsubscribe(); };
   }, []);
+
+  useEffect(() => {
+    const online = () => setIsOnline(true);
+    const offline = () => setIsOnline(false);
+    window.addEventListener('online', online);
+    window.addEventListener('offline', offline);
+    return () => {
+      window.removeEventListener('online', online);
+      window.removeEventListener('offline', offline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    // Refresh owner inbox only; don't repeatedly download every lead and event list.
+    const refreshInbox = async () => {
+      if (!navigator.onLine) return;
+      const { data, error: callError } = await supabase.functions.invoke('apex-client-chat', { body: { action: 'owner_list' } });
+      const result = data as { error?: string; conversations?: Conversation[]; securityEvents?: SecurityEvent[]; auditLogs?: AuditLog[] } | null;
+      if (callError || result?.error) return;
+      setConversations(result?.conversations ?? []);
+      setSecurityEvents(result?.securityEvents ?? []);
+      setAuditLogs(result?.auditLogs ?? []);
+      if (selectedConversation) {
+        const { data: detail, error: detailError } = await supabase.functions.invoke('apex-client-chat', {
+          body: { action: 'owner_history', conversationId: selectedConversation },
+        });
+        if (!detailError && !detail?.error) setChatMessages((detail?.messages ?? []) as ChatMessage[]);
+      }
+    };
+    const timer = window.setInterval(() => void refreshInbox(), 15000);
+    return () => window.clearInterval(timer);
+  }, [user, selectedConversation]);
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setError(''); setNotice('');
@@ -211,6 +248,7 @@ function App() {
 
   const createInvoice = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setNotice(''); setCreatedLink('');
+    if(!navigator.onLine) { setError('Offline: invoice creation needs a live server connection.'); return; }
     const numericAmount = Number(amount);
     if (!Number.isFinite(numericAmount) || numericAmount < 1 || numericAmount > 1000000) {
       setError('Enter an amount from EGP 1 to EGP 1,000,000.'); return;
@@ -270,7 +308,7 @@ function App() {
 
   return <main style={page}>
     <header style={topHeader}>
-      <div><p style={kicker}>APEX / ADMIN</p><h1 style={{ margin: '0 0 6px' }}>Client & payment studio</h1><p style={muted}>Private owner area · inquiries, invoices and site activity</p></div>
+      <div><p style={kicker}>APEX / ADMIN</p><h1 style={{ margin: '0 0 6px' }}>Client & payment studio</h1><p style={muted}>Private owner area · inquiries, invoices and site activity</p><p style={{...muted,color:isOnline?'#80f4cf':'#ffb3a6'}}>{isOnline?'● Online · inbox refreshes every 15 seconds':'● Offline · read-only; server-confirmed actions are disabled'}</p></div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button onClick={() => void load()} style={secondaryButton}>{busy ? 'Refreshing…' : 'Refresh'}</button>
         <button onClick={() => void supabase.auth.signOut()} style={secondaryButton}>Sign out</button>
@@ -361,7 +399,7 @@ function App() {
       <h2>Client leads</h2>
       <div style={{ display: 'grid', gap: 10 }}>
         {inquiries.map(q => <article key={q.id} style={card}>
-          <div style={row}><div><strong>{q.client_name}</strong><div style={muted}>{q.client_email}{q.client_phone ? ' · ' + q.client_phone : ''}</div></div><span style={statusPill(q.status)}>{q.status}</span></div>
+          <div style={row}><div><strong>{q.client_name}</strong><div style={muted}>{q.client_email}{q.client_phone ? ' · ' + q.client_phone : ''}</div>{q.client_phone && <a href={`https://wa.me/${q.client_phone.replace(/\\D/g,'')}`} target="_blank" rel="noopener noreferrer" style={{...muted,display:'inline-flex',alignItems:'center',gap:5,marginTop:6,color:'#48e6c2',textDecoration:'none'}}>WhatsApp ↗</a>}</div><span style={statusPill(q.status)}>{q.status}</span></div>
           <p><b>{q.project_type}</b>{q.budget_range ? ' · ' + q.budget_range : ''}</p><p style={{ ...muted, whiteSpace: 'pre-wrap' }}>{q.brief}</p><small style={muted}>{new Date(q.created_at).toLocaleString()}</small>
         </article>)}
         {!inquiries.length && <div style={card}>No leads yet.</div>}
