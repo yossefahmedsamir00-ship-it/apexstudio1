@@ -128,16 +128,18 @@ function App() {
     }
   };
 
-  const verifyOwnerSession = async (id:string) => {
+  const verifyOwnerSession = async (id:string):Promise<boolean> => {
     try {
       await claimOwner();
       setUser(id);
       setError('');
       await load();
+      return true;
     } catch (err) {
       setUser(null); setInquiries([]); setEvents([]); setInvoices([]); setConversations([]); setSecurityEvents([]); setAuditLogs([]);
       setError('This account is not authorized for the APEX owner dashboard. Sign in with the verified owner email.');
       await supabase.auth.signOut();
+      return false;
     }
   };
 
@@ -164,10 +166,12 @@ function App() {
     try {
       if (otpMode && !otpRequested) {
         // Supabase sends the same neutral UI response so the form does not confirm account existence.
-        await supabase.auth.signInWithOtp({
+        const { error: otpRequestError } = await supabase.auth.signInWithOtp({
           email: email.trim(),
           options: { shouldCreateUser: false },
         });
+        if (otpRequestError) console.warn('Owner OTP request could not be completed.');
+        // Keep the same response for existing and unknown addresses to avoid user enumeration.
         setOtpRequested(true);
         setOtpCode('');
         setNotice('If this email is eligible, a sign-in code has been sent. Check your inbox and spam folder.');
@@ -179,8 +183,8 @@ function App() {
           setError('The code could not be verified. Check it and try again, or request a new code.');
           return;
         }
-        await verifyOwnerSession(result.data.user.id);
-        setNotice('Owner access verified.');
+        const authorized=await verifyOwnerSession(result.data.user.id);
+        if(authorized) setNotice('Owner access verified.');
         return;
       }
       const result = isSignUp
@@ -192,8 +196,8 @@ function App() {
         return;
       }
       if (result.data.session && result.data.user) {
-        await verifyOwnerSession(result.data.user.id);
-        if(result.data.user.email?.trim().toLowerCase()==='yossefahmedsamir00@gmail.com') setNotice('Owner account verified.');
+        const authorized=await verifyOwnerSession(result.data.user.id);
+        if(authorized) setNotice('Owner account verified.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication could not be completed. Please try again.');
