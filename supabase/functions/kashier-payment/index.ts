@@ -63,6 +63,39 @@ const publicOrder = (order: Record<string, unknown>) => ({
   sessionExpiresAt: order.session_expires_at,
 });
 
+class BodyTooLargeError extends Error {}
+
+async function readBodyTextLimited(req: Request, maxBytes: number): Promise<string> {
+  const declared = req.headers.get("content-length");
+  if (declared !== null) {
+    if (!/^\\d+$/.test(declared)) throw new Error("invalid content length");
+    const declaredBytes = Number(declared);
+    if (!Number.isSafeInteger(declaredBytes) || declaredBytes > maxBytes) throw new BodyTooLargeError();
+  }
+  if (!req.body) throw new Error("empty body");
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const part = await reader.read();
+      if (part.done) break;
+      if (part.value.byteLength > maxBytes - total) {
+        try { await reader.cancel(); } catch { /* best effort */ }
+        throw new BodyTooLargeError();
+      }
+      total += part.value.byteLength;
+      chunks.push(part.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? "";
   const headers = cors(origin);
@@ -70,11 +103,19 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return respond({ error: "Method not allowed" }, 405, headers);
   if (origin && headers["Access-Control-Allow-Origin"] === "null") return respond({ error: "Origin not allowed" }, 403, headers);
   if (!(req.headers.get("content-type") ?? "").toLowerCase().includes("application/json")) return respond({ error: "Content-Type must be application/json" }, 415, headers);
-  const declaredLength = Number(req.headers.get("content-length") ?? "0");
-  if (declaredLength > 8000) return respond({ error: "Request too large" }, 413, headers);
-
   let input: Record<string, unknown>;
-  try { input = await req.json(); } catch { return respond({ error: "Invalid JSON" }, 400, headers); }
+  try {
+    const rawBody = await readBodyTextLimited(req, 8 * 1024);
+    const parsed: unknown = JSON.parse(rawBody);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid JSON object");
+    input = parsed as Record<string, unknown>;
+  } catch (error) {
+    return respond(
+      { error: error instanceof BodyTooLargeError ? "Request too large" : "Invalid JSON" },
+      error instanceof BodyTooLargeError ? 413 : 400,
+      headers,
+    );
+  }
   const orderId = typeof input.orderId === "string" ? input.orderId.trim() : "";
   const token = typeof input.token === "string" ? input.token.trim() : "";
   const action = typeof input.action === "string" ? input.action : "preview";
