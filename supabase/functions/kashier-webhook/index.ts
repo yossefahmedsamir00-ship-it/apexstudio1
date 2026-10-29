@@ -13,9 +13,10 @@ function kashierConfig() {
   const mode = (Deno.env.get("KASHIER_MODE") ?? "test").trim().toLowerCase();
   if (mode !== "test" && mode !== "live") return null;
   const prefix = mode === "test" ? "KASHIER_TEST_" : "KASHIER_LIVE_";
-  const apiKey = Deno.env.get(prefix + "API_KEY");
-  const paymentApiKey = Deno.env.get(prefix + "PAYMENT_API_KEY") ?? apiKey;
-  const merchantId = Deno.env.get(prefix + "MERCHANT_ID");
+  // Kashier signs payment webhooks with the Payment API Key (not the Secret Key).
+  // Require it explicitly so a configuration mistake fails closed instead of silently using the wrong key.
+  const paymentApiKey = Deno.env.get(prefix + "PAYMENT_API_KEY")?.trim();
+  const merchantId = Deno.env.get(prefix + "MERCHANT_ID")?.trim();
   if (!paymentApiKey || !merchantId) return null;
   return { mode, paymentApiKey, merchantId };
 }
@@ -37,6 +38,39 @@ function toMinor(amount: unknown): number | null {
   return Math.abs(n * 100 - minor) <= 0.01 ? minor : null;
 }
 
+class BodyTooLargeError extends Error {}
+
+async function readBodyTextLimited(req: Request, maxBytes: number): Promise<string> {
+  const declared = req.headers.get("content-length");
+  if (declared !== null) {
+    if (!/^\d+$/.test(declared)) throw new Error("invalid content length");
+    const declaredBytes = Number(declared);
+    if (!Number.isSafeInteger(declaredBytes) || declaredBytes > maxBytes) throw new BodyTooLargeError();
+  }
+  if (!req.body) throw new Error("empty body");
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const part = await reader.read();
+      if (part.done) break;
+      if (part.value.byteLength > maxBytes - total) {
+        try { await reader.cancel(); } catch { /* best effort */ }
+        throw new BodyTooLargeError();
+      }
+      total += part.value.byteLength;
+      chunks.push(part.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return new Response(null, { status: 405, headers: { "Cache-Control": "no-store" } });
   if (!(req.headers.get("content-type") ?? "").toLowerCase().includes("application/json")) return new Response(null, { status: 415 });
@@ -45,7 +79,14 @@ Deno.serve(async (req: Request) => {
   const key = serviceKey();
   if (!cfg || !url || !key) return new Response(null, { status: 503 });
   let payload: Record<string, unknown>;
-  try { payload = await req.json(); } catch { return new Response(null, { status: 400 }); }
+  try {
+    const rawBody = await readBodyTextLimited(req, 64 * 1024);
+    const parsed: unknown = JSON.parse(rawBody);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid JSON object");
+    payload = parsed as Record<string, unknown>;
+  } catch (error) {
+    return new Response(null, { status: error instanceof BodyTooLargeError ? 413 : 400, headers: { "Cache-Control": "no-store" } });
+  }
   const data = payload?.data as Record<string, unknown> | undefined;
   const signatureKeys = Array.isArray(data?.signatureKeys) ? data!.signatureKeys : Array.isArray(payload.signatureKeys) ? payload.signatureKeys : null;
   const signature = req.headers.get("x-kashier-signature") ?? (typeof payload.signature === "string" ? payload.signature : "");
@@ -64,8 +105,10 @@ Deno.serve(async (req: Request) => {
 
   const event = typeof payload.event === "string" ? payload.event : "";
   const status = String(data.status ?? "").toUpperCase();
-  const merchantReference = typeof data.merchantOrderId === "string" ? data.merchantOrderId :
-    typeof data.orderReference === "string" ? data.orderReference : "";
+  // The hosted-session `order` value is echoed as orderReference in payment webhook payloads.
+  // merchantOrderId may be a provider-generated identifier and must not take precedence.
+  const merchantReference = typeof data.orderReference === "string" ? data.orderReference :
+    typeof data.merchantOrderId === "string" ? data.merchantOrderId : "";
   const amountMinor = toMinor(data.amount);
   const currency = String(data.currency ?? "").toUpperCase();
   const transactionId = typeof data.transactionId === "string" ? data.transactionId : null;
