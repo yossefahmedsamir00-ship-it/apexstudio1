@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowUpRight, Bot, Check, Globe2, Menu, MoveUpRight, Plus, Send, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
+import { ArrowUpRight, Bot, Check, Globe2, Menu, MessageCircle, MoveUpRight, Plus, Send, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
 import './styles.css';
 import './vr-showroom.css';
 import './payment.css';
@@ -30,7 +30,7 @@ const services=[
 const process=[['01','Discover','اكتشاف','Understand the goal, audience and constraints.','نفهم الهدف والجمهور والقيود.'],['02','Define','تحديد','Turn the idea into a focused scope and direction.','نحوّل الفكرة إلى نطاق واتجاه واضحين.'],['03','Design','تصميم','Shape the interface, content and interaction.','نبني الواجهة والمحتوى والتفاعل.'],['04','Build','تنفيذ','Develop, test and refine the real product.','نطوّر ونختبر ونصقل المنتج الحقيقي.'],['05','Launch','إطلاق','Ship with a clear handoff and next steps.','نطلق المشروع مع تسليم واضح وخطوات تالية.']];
 
 function App(){
- const [locale,setLocale]=useState<Locale>('en'); const [menu,setMenu]=useState(false); const [category,setCategory]=useState<ProjectCategory>('all'); const [project,setProject]=useState<ProjectCard|null>(null); const [requestOpen,setRequestOpen]=useState(false); const [assistantOpen,setAssistantOpen]=useState(false); const [vrMode,setVrMode]=useState(false); const [prefillBrief,setPrefillBrief]=useState(''); const [prefillConversationId,setPrefillConversationId]=useState<string|undefined>(undefined); const t=copy[locale]; const ar=locale==='ar';
+ const [locale,setLocale]=useState<Locale>('en'); const [menu,setMenu]=useState(false); const [category,setCategory]=useState<ProjectCategory>('all'); const [project,setProject]=useState<ProjectCard|null>(null); const [requestOpen,setRequestOpen]=useState(false); const [assistantOpen,setAssistantOpen]=useState(false); const [ownerChatOpen,setOwnerChatOpen]=useState(false); const [vrMode,setVrMode]=useState(false); const [prefillBrief,setPrefillBrief]=useState(''); const [prefillConversationId,setPrefillConversationId]=useState<string|undefined>(undefined); const t=copy[locale]; const ar=locale==='ar';
  const visible=useMemo(()=>filterProjects(projects,category,'',locale),[category,locale]);
  useEffect(()=>{document.documentElement.lang=locale; document.documentElement.dir=ar?'rtl':'ltr'; void captureEvent({eventName:'page_view',locale});},[locale,ar]);
 
@@ -74,12 +74,91 @@ function App(){
    <div className="footerBottom"><span>{t.footer}</span><span>© {new Date().getFullYear()} APEX STUDIO</span><a href="./admin.html">Admin ↗</a></div>
   </footer>
   <button className="vrModeFab" onClick={()=>setVrMode(true)} aria-label={ar?"دخول الوضع الغامر":"Enter immersive mode"}>{ar?"وضع VR":"VR MODE"}</button>
-  <button className="askFab" onClick={()=>setAssistantOpen(true)}><Bot size={18}/>{t.ask}</button>
-  {project&&<ProjectModal project={project} locale={locale} onClose={()=>setProject(null)} onStart={openRequest}/>} {requestOpen&&<RequestModal locale={locale} initialBrief={prefillBrief} conversationId={prefillConversationId} onClose={()=>setRequestOpen(false)}/>} {assistantOpen&&<AssistantModal locale={locale} onClose={()=>setAssistantOpen(false)} onStart={(transcript,conversationId)=>{setPrefillBrief(transcript??'');setPrefillConversationId(conversationId);setAssistantOpen(false);openRequest()}}/>}
+  <div className="chatFabStack"><button className="ownerChatFab" onClick={()=>setOwnerChatOpen(true)}><MessageCircle size={18}/>{ar?"كلم صاحب الموقع":"Chat with the owner"}</button><button className="askFab" onClick={()=>setAssistantOpen(true)}><Bot size={18}/>{t.ask}</button></div>
+  {project&&<ProjectModal project={project} locale={locale} onClose={()=>setProject(null)} onStart={openRequest}/>} {requestOpen&&<RequestModal locale={locale} initialBrief={prefillBrief} conversationId={prefillConversationId} onClose={()=>setRequestOpen(false)}/>} {assistantOpen&&<AssistantModal locale={locale} onClose={()=>setAssistantOpen(false)} onStart={(transcript,conversationId)=>{setPrefillBrief(transcript??'');setPrefillConversationId(conversationId);setAssistantOpen(false);openRequest()}}/>} {ownerChatOpen&&<OwnerChatModal locale={locale} onClose={()=>setOwnerChatOpen(false)}/>}
  </div>;
 }
 
 function ProjectModal({project,locale,onClose,onStart}:{project:ProjectCard;locale:Locale;onClose:()=>void;onStart:()=>void}){return <div className="modalBackdrop" onClick={onClose}><div className="projectModal" onClick={e=>e.stopPropagation()}><button className="close" onClick={onClose}><X/></button><div className="modalArt"><span>{project.category.toUpperCase()} / {project.id.toUpperCase()}</span><div className="modalMark">A</div></div><div className="modalBody"><div className="eyebrow">APEX EXPERIMENT</div><h2>{project.title[locale]}</h2><p>{project.summary[locale]}</p><div className="tagRow">{project.tags.map(x=><span key={x}>{x}</span>)}</div><button className="primary" onClick={onStart}>{locale==='ar'?'ابدأ مشروعًا مشابهًا':'Start a similar project'}<ArrowUpRight size={17}/></button></div></div></div>}
+
+function OwnerChatModal({locale,onClose}:{locale:Locale;onClose:()=>void}){
+ const ar=locale==='ar';
+ const [conversationId,setConversationId]=useState('');
+ const [messages,setMessages]=useState<ChatMessageView[]>([]);
+ const [value,setValue]=useState('');
+ const [booting,setBooting]=useState(true);
+ const [sending,setSending]=useState(false);
+ const [error,setError]=useState('');
+ useEffect(()=>{
+  let active=true;
+  const boot=async()=>{
+   try{
+    await ensureAnonymousSession();
+    const {data:userData,error:userError}=await supabase.auth.getUser();
+    if(userError||!userData.user) throw new Error(ar?'تعذر تأكيد الجلسة. حدّث الصفحة وحاول مرة أخرى.':'Could not confirm your session. Reload and try again.');
+    const key='apex_owner_chat_conversation_'+userData.user.id;
+    const cached=localStorage.getItem(key)||'';
+    let result=await supabase.functions.invoke('apex-client-chat',{body:{action:'open',...(cached?{conversationId:cached}:{}),subject:ar?'محادثة مباشرة مع صاحب الموقع':'Direct chat with website owner',locale}});
+    if((result.error||result.data?.error)&&cached){
+     localStorage.removeItem(key);
+     result=await supabase.functions.invoke('apex-client-chat',{body:{action:'open',subject:ar?'محادثة مباشرة مع صاحب الموقع':'Direct chat with website owner',locale}});
+    }
+    if(result.error) throw new Error(await chatFunctionError(result.error));
+    if(result.data?.error) throw new Error(result.data.error);
+    const id=result.data?.conversation?.id;
+    if(!id) throw new Error(ar?'تعذر فتح المحادثة.':'Could not open the conversation.');
+    localStorage.setItem(key,id);
+    if(!active)return;
+    setConversationId(id);
+    setMessages(fromApiMessages(result.data?.messages??[]));
+   }catch(e){if(active)setError(e instanceof Error?e.message:(ar?'حدث خطأ في فتح المحادثة.':'Could not open the chat.'));}
+   finally{if(active)setBooting(false);}
+  };
+  void boot();
+  return()=>{active=false;};
+ },[]);
+ useEffect(()=>{
+  if(!conversationId)return;
+  let active=true;
+  const poll=async()=>{
+   const {data,error:callError}=await supabase.functions.invoke('apex-client-chat',{body:{action:'client_read',conversationId}});
+   if(!active||callError||data?.error)return;
+   setMessages(current=>{
+    const keyed=new Map<string,ChatMessageView>();
+    for(const m of current)keyed.set(m.id,m);
+    for(const m of fromApiMessages(data.messages??[]))keyed.set(m.id,m);
+    return [...keyed.values()].sort((a,b)=>Date.parse(a.createdAt)-Date.parse(b.createdAt));
+   });
+  };
+  const timer=window.setInterval(()=>void poll(),5000);
+  return()=>{active=false;window.clearInterval(timer);};
+ },[conversationId]);
+ const send=async(e:React.FormEvent)=>{
+  e.preventDefault();const body=value.trim();
+  if(!body||!conversationId||sending||booting)return;
+  if(body.length>8000){setError(ar?'الرسالة طويلة جدًا.':'Message is too long.');return;}
+  const key='msg_'+crypto.randomUUID().replace(/-/g,'');
+  setSending(true);setError('');
+  try{
+   const {data,error:callError}=await supabase.functions.invoke('apex-client-chat',{body:{action:'send',conversationId,body,idempotencyKey:key,mode:'owner'}});
+   if(callError)throw new Error(await chatFunctionError(callError));
+   if(data?.error)throw new Error(data.error);
+   setMessages(current=>[...current,...fromApiMessages(data.messages??[])].filter((m,i,a)=>a.findIndex(x=>x.id===m.id)===i).sort((a,b)=>Date.parse(a.createdAt)-Date.parse(b.createdAt)));
+   setValue('');
+  }catch(e){setError(e instanceof Error?e.message:(ar?'تعذر إرسال الرسالة. حاول مرة أخرى.':'Could not send the message. Try again.'));}
+  finally{setSending(false);}
+ };
+ return <div className="modalBackdrop" onClick={onClose}><section className="ownerChatModal" dir={ar?'rtl':'ltr'} onClick={e=>e.stopPropagation()}>
+  <header className="ownerChatHead"><div className="ownerChatAvatar"><MessageCircle size={20}/></div><div><div className="eyebrow">{ar?'تواصل مباشر':'DIRECT CONTACT'}</div><h2>{ar?'كلم صاحب الموقع':'Chat with the owner'}</h2><p>{ar?'رسالتك هتوصل لصاحب APEX STUDIO، والرد هيظهر هنا.':'Your message goes to the APEX STUDIO owner. Replies appear here.'}</p></div><button className="close" onClick={onClose} aria-label={ar?'إغلاق':'Close'}><X/></button></header>
+  <div className="ownerChatStatus"><span className="chatStateDot"/>{booting?(ar?'جارٍ فتح المحادثة…':'Opening conversation…'):(ar?'محادثة مباشرة محفوظة':'Direct conversation saved')}<span className="chatSecureLabel"><ShieldCheck size={13}/>{ar?'محادثة خاصة':'Private chat'}</span></div>
+  <div className="ownerChatMessages" aria-live="polite">
+   {!booting&&!messages.length&&<div className="ownerChatWelcome">{ar?'أهلًا بيك! اكتب رسالتك هنا، وصاحب الموقع هيرد عليك من لوحة التحكم.':'Hello! Leave a message here and the site owner can reply from the admin dashboard.'}</div>}
+   {messages.map(m=><div className={m.senderType==='client'?'ownerChatBubble mine':'ownerChatBubble'} key={m.id}><small>{m.senderType==='client'?(ar?'أنت':'You'):m.senderType==='owner'?(ar?'صاحب الموقع':'Site owner'):m.senderType==='system'?'APEX':(ar?'رسالة النظام':'System')}</small><p>{m.text}</p><time>{new Date(m.createdAt).toLocaleTimeString(ar?'ar-EG':'en-US',{hour:'2-digit',minute:'2-digit'})}</time></div>)}
+  </div>
+  {error&&<p className="ownerChatError" role="alert">{error}</p>}
+  <form className="ownerChatComposer" onSubmit={send}><textarea value={value} onChange={e=>setValue(e.target.value)} maxLength={8000} rows={2} placeholder={ar?'اكتب رسالتك لصاحب الموقع…':'Write a message to the site owner…'} disabled={booting||sending}/><button className="primary" type="submit" disabled={booting||sending||!value.trim()}>{sending?(ar?'إرسال…':'Sending…'):(ar?'إرسال':'Send')}<Send size={16}/></button></form>
+ </section></div>;
+}
 
 function RequestModal({locale,onClose,initialBrief='',conversationId}:{locale:Locale;onClose:()=>void;initialBrief?:string;conversationId?:string}){
  const ar=locale==='ar'; const [draft,setDraft]=useState<ProjectRequestDraft>({name:'',email:'',whatsapp:'',serviceType:'website',description:initialBrief,budgetRange:'not_sure',timeline:'flexible',consentToContact:false}); const [errors,setErrors]=useState<Record<string,string>>({}); const [status,setStatus]=useState<'idle'|'saving'|'success'|'error'>('idle'); const [message,setMessage]=useState('');
