@@ -17,6 +17,48 @@ const clientKey = () => {
   if (raw) { try { return JSON.parse(raw).default as string | undefined; } catch { /* ignore malformed map */ } }
   return Deno.env.get("SUPABASE_ANON_KEY");
 };
+class BodyTooLargeError extends Error {}
+
+async function readBoundedText(stream: ReadableStream<Uint8Array> | null, maxBytes: number, declaredLength?: string | null): Promise<string> {
+  if (declaredLength !== null && declaredLength !== undefined) {
+    if (!/^\\d+$/.test(declaredLength)) throw new Error("invalid content length");
+    const length = Number(declaredLength);
+    if (!Number.isSafeInteger(length)) throw new Error("invalid content length");
+    if (length > maxBytes) throw new BodyTooLargeError();
+  }
+  if (!stream) throw new Error("empty body");
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const part = await reader.read();
+      if (part.done) break;
+      if (part.value.byteLength > maxBytes - total) {
+        try { await reader.cancel(); } catch { /* best effort */ }
+        throw new BodyTooLargeError();
+      }
+      total += part.value.byteLength;
+      chunks.push(part.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+function isConfiguredGroqEndpoint(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" &&
+      parsed.origin === "https://api.groq.com" &&
+      parsed.pathname === "/openai/v1/chat/completions" &&
+      parsed.search === "" && parsed.hash === "" &&
+      parsed.username === "" && parsed.password === "";
+  } catch { return false; }
+}
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get("origin") ?? "";
@@ -36,7 +78,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null,{status:204,headers});
   if (req.method !== "POST") return json({error:"Method not allowed"},405,headers);
   if (!originAllowed) return json({error:"Origin not allowed"},403,headers);
-  if (!(req.headers.get("content-type") ?? "").toLowerCase().includes("application/json")) return json({error:"Content-Type must be application/json"},415,headers);
+  const contentType = (req.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+  if (contentType !== "application/json") return json({error:"Content-Type must be application/json"},415,headers);
 
   const authHeader = req.headers.get("authorization") ?? "";
   const token = authHeader.match(/^Bearer\s+(.+)$/i)?.[1];
@@ -52,8 +95,11 @@ Deno.serve(async (req: Request) => {
   const admin = createClient(projectUrl,adminKey,{auth:{persistSession:false,autoRefreshToken:false}});
 
   let rawBody: string;
-  try { rawBody = await req.text(); } catch { return json({error:"Invalid request body"},400,headers); }
-  if (rawBody.length > 48000) return json({error:"Request too large"},413,headers);
+  try {
+    rawBody = await readBoundedText(req.body, 48 * 1024, req.headers.get("content-length"));
+  } catch (error) {
+    return json({error:error instanceof BodyTooLargeError ? "Request too large" : "Invalid request body"}, error instanceof BodyTooLargeError ? 413 : 400, headers);
+  }
   let input: Record<string,unknown>;
   try {
     const parsed = JSON.parse(rawBody);
@@ -98,10 +144,19 @@ Deno.serve(async (req: Request) => {
     return json({error:rateError ? "AI service is temporarily unavailable. Please retry later." : "Too many AI requests. Please wait a minute and try again."},rateError?503:429,headers);
   }
 
-  const apiKey = Deno.env.get("AI_API_KEY");
+  const apiKey = Deno.env.get("AI_API_KEY")?.trim();
   if (!apiKey) return json({error:"AI service is not configured yet. Please contact the studio directly."},503,headers);
-  const endpoint = Deno.env.get("AI_API_URL") ?? "https://api.groq.com/openai/v1/chat/completions";
-  const model = Deno.env.get("AI_MODEL") ?? "openai/gpt-oss-120b";
+  const endpoint = (Deno.env.get("AI_API_URL") ?? "https://api.groq.com/openai/v1/chat/completions").trim();
+  if (!isConfiguredGroqEndpoint(endpoint)) {
+    console.error("AI provider endpoint configuration rejected");
+    return json({error:"AI service is not configured correctly. Please contact the studio directly."},503,headers);
+  }
+  const model = (Deno.env.get("AI_MODEL") ?? "openai/gpt-oss-120b").trim();
+  const allowedModels = (Deno.env.get("AI_ALLOWED_MODELS") ?? model).split(",").map((value) => value.trim()).filter(Boolean);
+  if (!model || model.length > 128 || !/^[A-Za-z0-9._/-]+$/.test(model) || !allowedModels.includes(model) || allowedModels.length > 32) {
+    console.error("AI model configuration rejected");
+    return json({error:"AI model is not configured correctly. Please contact the studio directly."},503,headers);
+  }
   const systemPrompt = [
     "You are the clearly disclosed AI assistant for APEX STUDIO, a digital studio based in Egypt.",
     "Be helpful, concise, and honest. Never claim to be a human or the studio owner.",
@@ -115,7 +170,8 @@ Deno.serve(async (req: Request) => {
   try {
     const upstream = await fetch(endpoint,{
       method:"POST",
-      headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
+      redirect:"error",
+      headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json","Accept":"application/json"},
       body:JSON.stringify({model,messages:[{role:"system",content:systemPrompt},...messages],temperature:0.4,max_tokens:900}),
       signal:AbortSignal.timeout(25000),
     });
@@ -123,8 +179,24 @@ Deno.serve(async (req: Request) => {
       console.error("AI provider error",{status:upstream.status});
       return json({error:"AI service is temporarily unavailable. Please try again later."},502,headers);
     }
-    const payload = await upstream.json();
-    const content = payload?.choices?.[0]?.message?.content;
+    let providerText: string;
+    try { providerText = await readBoundedText(upstream.body, 1024 * 1024, upstream.headers.get("content-length")); }
+    catch (error) {
+      console.error("AI provider response rejected",{reason:error instanceof BodyTooLargeError ? "too_large" : "unreadable"});
+      return json({error:"AI service returned an invalid response. Please try again later."},502,headers);
+    }
+    let payload: Record<string, unknown>;
+    try {
+      const parsed: unknown = JSON.parse(providerText);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid JSON");
+      payload = parsed as Record<string, unknown>;
+    } catch {
+      return json({error:"AI service returned an invalid response. Please try again later."},502,headers);
+    }
+    const choices = Array.isArray(payload.choices) ? payload.choices : [];
+    const firstChoice = choices[0] && typeof choices[0] === "object" ? choices[0] as Record<string,unknown> : null;
+    const responseMessage = firstChoice?.message && typeof firstChoice.message === "object" ? firstChoice.message as Record<string,unknown> : null;
+    const content = responseMessage?.content;
     if (typeof content !== "string" || !content.trim()) return json({error:"AI provider returned an empty response."},502,headers);
     return json({content:content.trim(),model,provider:"configured-provider"},200,headers);
   } catch (error) {
