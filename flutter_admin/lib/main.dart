@@ -1510,10 +1510,6 @@ class _ErrorState extends StatelessWidget {
       );
 }
 
-List<Map<String, dynamic>> _asRows(dynamic value) {
-  if (value is! List) return [];
-  return value.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList();
-}
 
 Map<String, dynamic> _asMap(dynamic value) {
   if (value is Map) return Map<String, dynamic>.from(value);
