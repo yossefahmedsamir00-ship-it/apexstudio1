@@ -4,6 +4,6 @@ import 'package:apex_studio_admin/main.dart';
 void main() {
   testWidgets('shows configuration screen without build-time Supabase configuration', (tester) async {
     await tester.pumpWidget(const ApexAdminApp());
-    expect(find.text('APEX STUDIO Admin'), findsOneWidget);
+    expect(find.textContaining('Supabase configuration is missing.'), findsOneWidget);
   });
 }
