@@ -4,7 +4,7 @@ Private Flutter application for managing the same APEX STUDIO Supabase project u
 
 ## Connected modules
 
-- Password sign-in and email OTP sign-in.
+- Owner email and password sign-in (OTP login removed by owner request).
 - Server-side owner verification through apex-owner-bootstrap.
 - Project inquiries and lead status updates.
 - Client inbox, conversation history, replies and conversation status.
@@ -28,7 +28,7 @@ Private Flutter application for managing the same APEX STUDIO Supabase project u
 
 The project URL and publishable key have safe client-side defaults in lib/main.dart. They are public client configuration values, not server secrets. Override them for another environment with:
 
-    flutter build apk --release
+    flutter build apk --release \\
       --dart-define=SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
       --dart-define=SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 
@@ -36,14 +36,10 @@ The APK is generated at:
 
     build/app/outputs/flutter-apk/app-release.apk
 
-## Email OTP
-
-The app requests email OTP with account creation disabled. Supabase Auth email must be enabled and the Magic Link email template must contain the six-digit {{ .Token }} variable for code-based delivery. Password login remains available.
-
 ## Owner onboarding
 
 The existing owner account must use the owner email configured in the deployed apex-owner-bootstrap Edge Function and must have a verified email. On the first successful owner login, the Edge Function claims the owner slot if it has not already been claimed. The app does not create owner accounts or allow self-assigned roles.
 
 ## CI
 
-GitHub Actions runs flutter pub get, flutter analyze, flutter test and creates a debug APK artifact.
+GitHub Actions runs flutter pub get, flutter analyze, flutter test and creates a release APK artifact. The APK is installable for device testing; production store signing still requires the owner's private signing key.
