@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { adminSupabase as supabase } from './lib/admin-supabase';
 
@@ -34,6 +34,25 @@ type AuditLog = {
 function App() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [user, setUser] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(() => { try { return localStorage.getItem('apex_admin_sound') !== 'off'; } catch { return true; } });
+  const seenMessageIds = useRef<Set<string> | null>(null);
+  const playNotification = () => {
+    if (!soundEnabled) return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const context = new AudioContextClass();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, context.currentTime);
+      oscillator.frequency.setValueAtTime(660, context.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.28);
+      oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + 0.3);
+      oscillator.onended = () => void context.close();
+    } catch { /* Audio is optional and may be blocked until the user interacts. */ }
+  };
   const [isOnline, setIsOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [backendStatus,setBackendStatus]=useState<'checking'|'healthy'|'degraded'>('checking');
   const [lastSuccessfulSync,setLastSuccessfulSync]=useState<string|null>(null);
@@ -120,6 +139,7 @@ function App() {
         return [...next.values()].sort((a,b)=>Date.parse(a.created_at)-Date.parse(b.created_at)).slice(-100);
       });
       setOwnerReply('');
+      playNotification();
       setConversations(current=>current.map(c=>c.id===selectedConversation?{...c,status:'waiting_client',lastOwnerMessageAt:new Date().toISOString(),updatedAt:new Date().toISOString()}:c));
       void load();
     }
@@ -196,7 +216,13 @@ function App() {
       if (callError || result?.error) { setBackendStatus('degraded'); return; }
       setBackendStatus('healthy');
       setLastSuccessfulSync(new Date().toISOString());
-      setConversations(result?.conversations ?? []);
+      const nextConversations = result?.conversations ?? [];
+      const nextIds = new Set(nextConversations.filter(c => c.lastMessage?.senderType === 'client').map(c => c.id + ':' + (c.lastMessage?.createdAt ?? '')));
+      if (seenMessageIds.current) {
+        for (const id of nextIds) { if (!seenMessageIds.current.has(id)) { playNotification(); break; } }
+      }
+      seenMessageIds.current = nextIds;
+      setConversations(nextConversations);
       setSecurityEvents(result?.securityEvents ?? []);
       setAuditLogs(result?.auditLogs ?? []);
       if (selectedConversation) {
@@ -281,6 +307,7 @@ function App() {
     <header style={topHeader}>
       <div><p style={kicker}>APEX / ADMIN</p><h1 style={{ margin: '0 0 6px' }}>Client & payment studio</h1><p style={muted}>Private owner area · inquiries, invoices and site activity</p><p role="status" style={{...muted,color:!isOnline?'#ffb3a6':backendStatus==='healthy'?'#80f4cf':backendStatus==='degraded'?'#ffcc93':'#b4eaff'}}>{!isOnline?'● Offline — cached in-memory data is read-only':backendStatus==='healthy'?'● Backend connected · inbox refreshes every 15 seconds':backendStatus==='degraded'?'● Backend degraded — check connection and refresh':'● Checking backend…'}{lastSuccessfulSync?' · Last sync '+new Date(lastSuccessfulSync).toLocaleTimeString():''}</p></div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button onClick={() => { const next = !soundEnabled; setSoundEnabled(next); try { localStorage.setItem('apex_admin_sound', next ? 'on' : 'off'); } catch {} if (next) playNotification(); }} style={secondaryButton} aria-pressed={soundEnabled}>{soundEnabled ? '🔔 Sound on' : '🔕 Sound off'}</button>
         <button onClick={() => void load()} style={secondaryButton}>{busy ? 'Refreshing…' : 'Refresh'}</button>
         <button onClick={() => void supabase.auth.signOut()} style={secondaryButton}>Sign out</button>
       </div>
