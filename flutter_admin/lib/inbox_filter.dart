@@ -7,7 +7,8 @@ List<Map<String, dynamic>> filterInbox(
 }) {
   final needle = query.trim().toLowerCase();
   final filtered = conversations.where((item) {
-    final unread = (item['unreadCount'] as num?)?.toInt() ?? int.tryParse('${item['unreadCount']}') ?? 0;
+    final rawUnread = item['unreadCount'];
+    final unread = rawUnread is num ? rawUnread.toInt() : int.tryParse(rawUnread?.toString() ?? '') ?? 0;
     final status = (item['status'] ?? '').toString().toLowerCase();
     final isNew = status == 'new' || item['isNewCustomer'] == true;
     final isImportant = item['important'] == true || status == 'escalated';
