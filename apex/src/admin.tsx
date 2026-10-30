@@ -420,6 +420,10 @@ function formatAuditDetails(metadata: Record<string, unknown>) {
 function explainAuthError(error: { message: string; code?: string; status?: number }) {
   const code = error.code ?? '';
   switch (code) {
+    case 'invalid_credentials':
+      return 'Email or password is incorrect. Check the owner email and password, or use the password-reset email if needed.';
+    case 'email_not_confirmed':
+      return 'Confirm the owner email address before signing in. Check your inbox for the confirmation email.';
     case 'signup_disabled':
       return 'New account creation is disabled in Supabase Auth. Enable signups in Authentication settings, then retry.';
     case 'email_provider_disabled':
@@ -441,7 +445,7 @@ function explainAuthError(error: { message: string; code?: string; status?: numb
     case 'unexpected_failure':
       return 'Supabase Auth encountered an internal error. Check Supabase Auth logs; a failing database trigger can cause this.';
     default:
-      return `Account creation failed${code ? ` (${code})` : error.status ? ` (HTTP ${error.status})` : ''}. ${error.message || 'Check Supabase Auth settings and logs.'}`;
+      return `Sign-in failed${code ? ` (${code})` : error.status ? ` (HTTP ${error.status})` : ''}. ${error.message || 'Check the email, password, and Supabase Auth configuration.'}`;
   }
 }
 
