@@ -28,6 +28,17 @@ jobs:
           cache: true
       - name: Generate Android platform files
         run: flutter create --platforms=android --project-name apex_studio_admin --org com.apexstudio .
+      - name: Ensure Android release internet permission
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          manifest = Path("android/app/src/main/AndroidManifest.xml")
+          content = manifest.read_text()
+          permission = '    <uses-permission android:name="android.permission.INTERNET" />\\n'
+          if 'android.permission.INTERNET' not in content:
+              content = content.replace('    <application', permission + '    <application', 1)
+              manifest.write_text(content)
+          PY
       - name: Pub get
         run: flutter pub get
       - name: Analyze
