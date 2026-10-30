@@ -488,7 +488,7 @@ class AdminRepository {
   }
 
   Future<void> sendReply(String conversationId, String body) async {
-    final key = 'owner_' + DateTime.now().microsecondsSinceEpoch.toString();
+    final key = 'owner_${DateTime.now().microsecondsSinceEpoch}';
     final response = await client.functions.invoke(
       'apex-client-chat',
       body: {
@@ -1679,7 +1679,7 @@ int _integer(dynamic value) {
 
 String _cleanError(Object error) {
   final value = error.toString().replaceFirst('Exception: ', '');
-  return value.length > 420 ? value.substring(0, 420) + '…' : value;
+  return value.length > 420 ? '${value.substring(0, 420)}…' : value;
 }
 
 String _prettyStatus(String value) {
