@@ -1,0 +1,42 @@
+name: Flutter Admin CI
+
+on:
+  push:
+    branches: [feature/flutter-admin-app, main]
+    paths:
+      - 'flutter_admin/**'
+      - '.github/workflows/flutter-admin.yml'
+  pull_request:
+    paths:
+      - 'flutter_admin/**'
+      - '.github/workflows/flutter-admin.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_admin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test
+      - name: Build debug APK
+        run: flutter build apk --debug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-studio-admin-debug-apk
+          path: flutter_admin/build/app/outputs/flutter-apk/app-debug.apk
