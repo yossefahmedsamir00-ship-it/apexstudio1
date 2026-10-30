@@ -76,3 +76,25 @@ alter table public.social_analytics_snapshots
   foreign key (tenant_id,content_item_id)
   references public.social_content_items(tenant_id,id)
   on delete set null (content_item_id);
+
+-- Bind approvals and publish jobs to the exact content item/version, not merely
+-- to records that happen to share a tenant.
+alter table public.social_content_versions
+  add constraint social_content_versions_tenant_item_id_unique
+  unique (tenant_id,content_item_id,id);
+
+alter table public.social_approvals
+  add constraint social_approvals_version_same_item_fk
+  foreign key (tenant_id,content_item_id,content_version_id)
+  references public.social_content_versions(tenant_id,content_item_id,id)
+  on delete restrict;
+
+alter table public.social_approvals
+  add constraint social_approvals_tenant_item_version_id_unique
+  unique (tenant_id,content_item_id,content_version_id,id);
+
+alter table public.social_publish_jobs
+  add constraint social_publish_approval_same_item_version_fk
+  foreign key (tenant_id,content_item_id,content_version_id,approval_id)
+  references public.social_approvals(tenant_id,content_item_id,content_version_id,id)
+  on delete restrict;
