@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'inbox_filter.dart';
 
 const supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
@@ -881,7 +882,7 @@ class _InquiryCard extends StatelessWidget {
   }
 }
 
-class InboxPage extends StatelessWidget {
+class InboxPage extends StatefulWidget {
   const InboxPage({super.key, required this.repository, required this.conversations, required this.onChanged});
 
   final AdminRepository repository;
@@ -889,23 +890,87 @@ class InboxPage extends StatelessWidget {
   final Future<void> Function() onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(18),
-      children: [
-        const _SectionHeading(eyebrow: 'CLIENT COMMUNICATION', title: 'Inbox', subtitle: 'Messages from the website and APEX AI are stored centrally.'),
-        if (conversations.isEmpty)
-          const _EmptyState(icon: Icons.forum_outlined, title: 'No conversations', subtitle: 'New website chats will appear here automatically.'),
-        ...conversations.map((item) => _ConversationCard(
-          item: item,
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ConversationDetailPage(repository: repository, conversation: item, onChanged: onChanged),
-          )),
-        )),
-      ],
-    );
+  State<InboxPage> createState() => _InboxPageState();
+}
+
+class _InboxPageState extends State<InboxPage> {
+  final _search = TextEditingController();
+  InboxFilter _filter = InboxFilter.all;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = filterInbox(widget.conversations, query: _search.text, filter: _filter);
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const _SectionHeading(eyebrow: 'CLIENT COMMUNICATION', title: 'Inbox', subtitle: 'Search and triage private customer conversations.'),
+          TextField(
+            controller: _search,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: 'Search name, email or message',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _search.text.isEmpty ? null : IconButton(
+                tooltip: 'Clear search',
+                onPressed: () { _search.clear(); setState(() {}); },
+                icon: const Icon(Icons.close),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              _inboxFilterChip('All', InboxFilter.all),
+              _inboxFilterChip('Unread', InboxFilter.unread),
+              _inboxFilterChip('New', InboxFilter.newCustomers),
+              _inboxFilterChip('Important', InboxFilter.important),
+            ]),
+          ),
+        ]),
+      ),
+      Expanded(child: visible.isEmpty
+        ? _EmptyState(
+            icon: Icons.forum_outlined,
+            title: widget.conversations.isEmpty ? 'No conversations' : 'No matching conversations',
+            subtitle: widget.conversations.isEmpty ? 'New website chats will appear here automatically.' : 'Try another filter or search term.',
+          )
+        : ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
+            itemCount: visible.length,
+            itemBuilder: (context, index) => _ConversationCard(
+              item: visible[index],
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => ConversationDetailPage(
+                  repository: widget.repository,
+                  conversation: visible[index],
+                  onChanged: widget.onChanged,
+                ),
+              )),
+            ),
+          )),
+    ]);
+  }
+
+  Widget _inboxFilterChip(String label, InboxFilter value) => Padding(
+    padding: const EdgeInsets.only(right: 7),
+    child: ChoiceChip(
+      label: Text(label),
+      selected: _filter == value,
+      onSelected: (_) => setState(() => _filter = value),
+      selectedColor: _gold.withValues(alpha: .2),
+      side: BorderSide(color: _filter == value ? _gold : Colors.white12),
+      labelStyle: TextStyle(color: _filter == value ? _gold : Colors.white70, fontSize: 11, fontWeight: FontWeight.w700),
+    ),
+  );
 }
 
 class _ConversationCard extends StatelessWidget {
