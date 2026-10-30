@@ -37,9 +37,6 @@ function App() {
   const [isOnline, setIsOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [backendStatus,setBackendStatus]=useState<'checking'|'healthy'|'degraded'>('checking');
   const [lastSuccessfulSync,setLastSuccessfulSync]=useState<string|null>(null);
-  const [otpMode,setOtpMode]=useState(false);
-  const [otpRequested,setOtpRequested]=useState(false);
-  const [otpCode,setOtpCode]=useState('');
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [events, setEvents] = useState<SiteEvent[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -216,34 +213,11 @@ function App() {
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setError(''); setNotice('');
     try {
-      if (otpMode && !otpRequested) {
-        // Supabase sends the same neutral UI response so the form does not confirm account existence.
-        const { error: otpRequestError } = await supabase.auth.signInWithOtp({
-          email: email.trim(),
-          options: { shouldCreateUser: false },
-        });
-        if (otpRequestError) console.warn('Owner OTP request could not be completed.');
-        // Keep the same response for existing and unknown addresses to avoid user enumeration.
-        setOtpRequested(true);
-        setOtpCode('');
-        setNotice('If this email is eligible, a sign-in code has been sent. Check your inbox and spam folder.');
-        return;
-      }
-      if (otpMode && otpRequested) {
-        const result = await supabase.auth.verifyOtp({email:email.trim(),token:otpCode.trim(),type:'email'});
-        if(result.error || !result.data.session || !result.data.user) {
-          setError('The code could not be verified. Check it and try again, or request a new code.');
-          return;
-        }
-        const authorized=await verifyOwnerSession(result.data.user.id,true);
-        if(authorized) setNotice('Owner access verified.');
-        return;
-      }
       const result = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (result.error) { setError(explainAuthError(result.error)); return; }
       if (result.data.session && result.data.user) {
-        const authorized=await verifyOwnerSession(result.data.user.id,true);
-        if(authorized) setNotice('Owner account verified.');
+        const authorized = await verifyOwnerSession(result.data.user.id, true);
+        if (authorized) setNotice('Owner account verified.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication could not be completed. Please try again.');
@@ -291,17 +265,13 @@ function App() {
       <p style={muted}>Sign in with the existing verified APEX owner account. New account creation is disabled here.</p>
       <form onSubmit={signIn} style={{ display: 'grid', gap: 12 }}>
         <label style={label}>Owner email
-          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Owner email" style={input} autoComplete="email" disabled={otpRequested && otpMode}/>
+          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Owner email" style={input} autoComplete="email"/>
         </label>
-        {otpMode && otpRequested
-          ? <label style={label}>Email verification code
-              <input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} value={otpCode} onChange={e=>setOtpCode(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder="6-digit code" style={input}/>
-            </label>
-          : !otpMode && <label style={label}>Password<input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" style={input} autoComplete="current-password" /></label>}
-        <button disabled={busy || (otpMode && otpRequested && otpCode.length!==6)} style={button}>{busy ? 'Please wait…' : otpMode ? otpRequested ? 'Verify email code' : 'Send email code' : 'Sign in'}</button>
+        <label style={label}>Password
+          <input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" style={input} autoComplete="current-password"/>
+        </label>
+        <button disabled={busy} style={button}>{busy ? 'Please wait…' : 'Sign in'}</button>
       </form>
-      <button onClick={() => { setOtpMode(v=>!v);setOtpRequested(false);setOtpCode('');setError('');setNotice(''); }} style={linkButton}>{otpMode?'Use password instead':'Sign in with email code (OTP)'}</button>
-      {otpMode && otpRequested && <button onClick={()=>{setOtpRequested(false);setOtpCode('');setError('');setNotice('');}} style={linkButton}>Request a new code / change email</button>}
       {error && <p role="alert" style={errorStyle}>{error}</p>}
       {notice && <p role="status" style={successStyle}>{notice}</p>}
     </section>
