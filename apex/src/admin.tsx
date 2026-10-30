@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { adminSupabase as supabase } from './lib/admin-supabase';
 
@@ -34,12 +34,28 @@ type AuditLog = {
 function App() {
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [user, setUser] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(() => { try { return localStorage.getItem('apex_admin_sound') !== 'off'; } catch { return true; } });
+  const seenMessageIds = useRef<Set<string> | null>(null);
+  const playNotification = () => {
+    if (!soundEnabled) return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const context = new AudioContextClass();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, context.currentTime);
+      oscillator.frequency.setValueAtTime(660, context.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.28);
+      oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + 0.3);
+      oscillator.onended = () => void context.close();
+    } catch { /* Audio is optional and may be blocked until the user interacts. */ }
+  };
   const [isOnline, setIsOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [backendStatus,setBackendStatus]=useState<'checking'|'healthy'|'degraded'>('checking');
   const [lastSuccessfulSync,setLastSuccessfulSync]=useState<string|null>(null);
-  const [otpMode,setOtpMode]=useState(false);
-  const [otpRequested,setOtpRequested]=useState(false);
-  const [otpCode,setOtpCode]=useState('');
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [events, setEvents] = useState<SiteEvent[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -123,6 +139,7 @@ function App() {
         return [...next.values()].sort((a,b)=>Date.parse(a.created_at)-Date.parse(b.created_at)).slice(-100);
       });
       setOwnerReply('');
+      playNotification();
       setConversations(current=>current.map(c=>c.id===selectedConversation?{...c,status:'waiting_client',lastOwnerMessageAt:new Date().toISOString(),updatedAt:new Date().toISOString()}:c));
       void load();
     }
@@ -199,7 +216,13 @@ function App() {
       if (callError || result?.error) { setBackendStatus('degraded'); return; }
       setBackendStatus('healthy');
       setLastSuccessfulSync(new Date().toISOString());
-      setConversations(result?.conversations ?? []);
+      const nextConversations = result?.conversations ?? [];
+      const nextIds = new Set(nextConversations.filter(c => c.lastMessage?.senderType === 'client').map(c => c.id + ':' + (c.lastMessage?.createdAt ?? '')));
+      if (seenMessageIds.current) {
+        for (const id of nextIds) { if (!seenMessageIds.current.has(id)) { playNotification(); break; } }
+      }
+      seenMessageIds.current = nextIds;
+      setConversations(nextConversations);
       setSecurityEvents(result?.securityEvents ?? []);
       setAuditLogs(result?.auditLogs ?? []);
       if (selectedConversation) {
@@ -216,34 +239,11 @@ function App() {
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setError(''); setNotice('');
     try {
-      if (otpMode && !otpRequested) {
-        // Supabase sends the same neutral UI response so the form does not confirm account existence.
-        const { error: otpRequestError } = await supabase.auth.signInWithOtp({
-          email: email.trim(),
-          options: { shouldCreateUser: false },
-        });
-        if (otpRequestError) console.warn('Owner OTP request could not be completed.');
-        // Keep the same response for existing and unknown addresses to avoid user enumeration.
-        setOtpRequested(true);
-        setOtpCode('');
-        setNotice('If this email is eligible, a sign-in code has been sent. Check your inbox and spam folder.');
-        return;
-      }
-      if (otpMode && otpRequested) {
-        const result = await supabase.auth.verifyOtp({email:email.trim(),token:otpCode.trim(),type:'email'});
-        if(result.error || !result.data.session || !result.data.user) {
-          setError('The code could not be verified. Check it and try again, or request a new code.');
-          return;
-        }
-        const authorized=await verifyOwnerSession(result.data.user.id,true);
-        if(authorized) setNotice('Owner access verified.');
-        return;
-      }
       const result = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (result.error) { setError(explainAuthError(result.error)); return; }
       if (result.data.session && result.data.user) {
-        const authorized=await verifyOwnerSession(result.data.user.id,true);
-        if(authorized) setNotice('Owner account verified.');
+        const authorized = await verifyOwnerSession(result.data.user.id, true);
+        if (authorized) setNotice('Owner account verified.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication could not be completed. Please try again.');
@@ -291,17 +291,13 @@ function App() {
       <p style={muted}>Sign in with the existing verified APEX owner account. New account creation is disabled here.</p>
       <form onSubmit={signIn} style={{ display: 'grid', gap: 12 }}>
         <label style={label}>Owner email
-          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Owner email" style={input} autoComplete="email" disabled={otpRequested && otpMode}/>
+          <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Owner email" style={input} autoComplete="email"/>
         </label>
-        {otpMode && otpRequested
-          ? <label style={label}>Email verification code
-              <input required inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} value={otpCode} onChange={e=>setOtpCode(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder="6-digit code" style={input}/>
-            </label>
-          : !otpMode && <label style={label}>Password<input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" style={input} autoComplete="current-password" /></label>}
-        <button disabled={busy || (otpMode && otpRequested && otpCode.length!==6)} style={button}>{busy ? 'Please wait…' : otpMode ? otpRequested ? 'Verify email code' : 'Send email code' : 'Sign in'}</button>
+        <label style={label}>Password
+          <input required type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" style={input} autoComplete="current-password"/>
+        </label>
+        <button disabled={busy} style={button}>{busy ? 'Please wait…' : 'Sign in'}</button>
       </form>
-      <button onClick={() => { setOtpMode(v=>!v);setOtpRequested(false);setOtpCode('');setError('');setNotice(''); }} style={linkButton}>{otpMode?'Use password instead':'Sign in with email code (OTP)'}</button>
-      {otpMode && otpRequested && <button onClick={()=>{setOtpRequested(false);setOtpCode('');setError('');setNotice('');}} style={linkButton}>Request a new code / change email</button>}
       {error && <p role="alert" style={errorStyle}>{error}</p>}
       {notice && <p role="status" style={successStyle}>{notice}</p>}
     </section>
@@ -311,6 +307,7 @@ function App() {
     <header style={topHeader}>
       <div><p style={kicker}>APEX / ADMIN</p><h1 style={{ margin: '0 0 6px' }}>Client & payment studio</h1><p style={muted}>Private owner area · inquiries, invoices and site activity</p><p role="status" style={{...muted,color:!isOnline?'#ffb3a6':backendStatus==='healthy'?'#80f4cf':backendStatus==='degraded'?'#ffcc93':'#b4eaff'}}>{!isOnline?'● Offline — cached in-memory data is read-only':backendStatus==='healthy'?'● Backend connected · inbox refreshes every 15 seconds':backendStatus==='degraded'?'● Backend degraded — check connection and refresh':'● Checking backend…'}{lastSuccessfulSync?' · Last sync '+new Date(lastSuccessfulSync).toLocaleTimeString():''}</p></div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button onClick={() => { const next = !soundEnabled; setSoundEnabled(next); try { localStorage.setItem('apex_admin_sound', next ? 'on' : 'off'); } catch {} if (next) playNotification(); }} style={secondaryButton} aria-pressed={soundEnabled}>{soundEnabled ? '🔔 Sound on' : '🔕 Sound off'}</button>
         <button onClick={() => void load()} style={secondaryButton}>{busy ? 'Refreshing…' : 'Refresh'}</button>
         <button onClick={() => void supabase.auth.signOut()} style={secondaryButton}>Sign out</button>
       </div>
@@ -450,6 +447,10 @@ function formatAuditDetails(metadata: Record<string, unknown>) {
 function explainAuthError(error: { message: string; code?: string; status?: number }) {
   const code = error.code ?? '';
   switch (code) {
+    case 'invalid_credentials':
+      return 'Email or password is incorrect. Check the owner email and password, or use the password-reset email if needed.';
+    case 'email_not_confirmed':
+      return 'Confirm the owner email address before signing in. Check your inbox for the confirmation email.';
     case 'signup_disabled':
       return 'New account creation is disabled in Supabase Auth. Enable signups in Authentication settings, then retry.';
     case 'email_provider_disabled':
@@ -471,7 +472,7 @@ function explainAuthError(error: { message: string; code?: string; status?: numb
     case 'unexpected_failure':
       return 'Supabase Auth encountered an internal error. Check Supabase Auth logs; a failing database trigger can cause this.';
     default:
-      return `Account creation failed${code ? ` (${code})` : error.status ? ` (HTTP ${error.status})` : ''}. ${error.message || 'Check Supabase Auth settings and logs.'}`;
+      return `Sign-in failed${code ? ` (${code})` : error.status ? ` (HTTP ${error.status})` : ''}. ${error.message || 'Check the email, password, and Supabase Auth configuration.'}`;
   }
 }
 
