@@ -1129,7 +1129,7 @@ class PaymentsPage extends StatelessWidget {
   final List<Map<String, dynamic>> inquiries;
   final Future<void> Function() onCreated;
 
-  Future<void> _createInvoice(BuildContext context) async {
+  Future<void> _createInvoice(BuildContext pageContext) async {
     final amount = TextEditingController();
     final description = TextEditingController();
     String? inquiryId;
@@ -1137,9 +1137,9 @@ class PaymentsPage extends StatelessWidget {
     String? error;
 
     await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+      context: pageContext,
+      builder: (invoiceDialogContext) => StatefulBuilder(
+        builder: (stateContext, setDialogState) => AlertDialog(
           title: const Text('Create secure invoice'),
           content: SizedBox(
             width: 440,
@@ -1173,7 +1173,7 @@ class PaymentsPage extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: busy ? null : () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+            TextButton(onPressed: busy ? null : () => Navigator.pop(invoiceDialogContext), child: const Text('Cancel')),
             FilledButton(
               onPressed: busy ? null : () async {
                 final parsed = double.tryParse(amount.text.trim());
@@ -1190,34 +1190,61 @@ class PaymentsPage extends StatelessWidget {
                   busy = true;
                   error = null;
                 });
+
+                Map<String, dynamic> result;
                 try {
-                  final result = await repository.createInvoice(amountEgp: parsed, description: description.text, inquiryId: inquiryId);
-                  if (!dialogContext.mounted) return;
-                  Navigator.pop(dialogContext);
-                  final checkoutUrl = _string(result['checkoutUrl'], '');
-                  await showDialog<void>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Invoice created'),
-                      content: SelectableText(checkoutUrl),
-                      actions: [
-                        TextButton(
-                          onPressed: () async {
-                            await Clipboard.setData(ClipboardData(text: checkoutUrl));
-                            if (context.mounted) Navigator.pop(context);
-                          },
-                          child: const Text('Copy link'),
-                        ),
-                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
-                      ],
-                    ),
+                  result = await repository.createInvoice(
+                    amountEgp: parsed,
+                    description: description.text,
+                    inquiryId: inquiryId,
                   );
+                } catch (failure) {
+                  if (invoiceDialogContext.mounted) {
+                    setDialogState(() => error = _cleanError(failure));
+                    setDialogState(() => busy = false);
+                  }
+                  return;
+                }
+
+                if (!invoiceDialogContext.mounted || !pageContext.mounted) return;
+                Navigator.of(invoiceDialogContext).pop();
+
+                String? refreshWarning;
+                try {
                   await onCreated();
                 } catch (failure) {
-                  if (dialogContext.mounted) setDialogState(() => error = _cleanError(failure));
-                } finally {
-                  if (dialogContext.mounted) setDialogState(() => busy = false);
+                  refreshWarning = 'The invoice was created, but the list could not refresh: ${_cleanError(failure)}';
                 }
+
+                if (!pageContext.mounted) return;
+                final checkoutUrl = _string(result['checkoutUrl'], '');
+                await showDialog<void>(
+                  context: pageContext,
+                  builder: (successDialogContext) => AlertDialog(
+                    title: const Text('Invoice created'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SelectableText(checkoutUrl),
+                        if (refreshWarning != null) ...[
+                          const SizedBox(height: 12),
+                          Text(refreshWarning, style: const TextStyle(color: Colors.orangeAccent)),
+                        ],
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () async {
+                          await Clipboard.setData(ClipboardData(text: checkoutUrl));
+                          if (successDialogContext.mounted) Navigator.pop(successDialogContext);
+                        },
+                        child: const Text('Copy link'),
+                      ),
+                      TextButton(onPressed: () => Navigator.pop(successDialogContext), child: const Text('Close')),
+                    ],
+                  ),
+                );
               },
               child: busy
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
