@@ -10,10 +10,9 @@ on:
     paths:
       - 'flutter_admin/**'
       - '.github/workflows/flutter-admin.yml'
-  workflow_dispatch:
 
 jobs:
-  validate:
+  verify:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,21 +20,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Flutter
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.0'
+          flutter-version: '3.47.5'
           channel: stable
           cache: true
-      - name: Install dependencies
+      - name: Pub get
         run: flutter pub get
       - name: Analyze
         run: flutter analyze
       - name: Test
         run: flutter test
-      - name: Build debug APK
+      - name: Build Android debug APK
         run: flutter build apk --debug
-      - name: Upload debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: apex-studio-admin-debug-apk

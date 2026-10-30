@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+const supabaseKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  if (supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty) {
+    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey);
   }
   runApp(const ApexAdminApp());
 }
@@ -23,34 +23,53 @@ class ApexAdminApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF090A0D),
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFD4AF37), brightness: Brightness.dark),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFD6B56A),
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF111319),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        ),
       ),
-      home: supabaseUrl.isEmpty || supabaseAnonKey.isEmpty
-          ? const ConfigurationScreen()
-          : const AuthGate(),
+      home: const AuthGate(),
     );
   }
 }
 
-class ConfigurationScreen extends StatelessWidget {
-  const ConfigurationScreen({super.key});
-  @override
-  Widget build(BuildContext context) => const Scaffold(
-    body: Center(child: Padding(
-      padding: EdgeInsets.all(28),
-      child: Text('APEX STUDIO Admin\n\nBuild configuration is missing Supabase environment values.', textAlign: TextAlign.center),
-    )),
-  );
-}
-
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final session = Supabase.instance.client.auth.currentSession;
-    return session == null ? const LoginScreen() : const DashboardScreen();
+    if (supabaseUrl.isEmpty || supabaseKey.isEmpty) return const ConfigScreen();
+    final client = Supabase.instance.client;
+    return StreamBuilder<AuthState>(
+      stream: client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session = client.auth.currentSession;
+        return session == null ? const LoginScreen() : const DashboardScreen();
+      },
+    );
   }
+}
+
+class ConfigScreen extends StatelessWidget {
+  const ConfigScreen({super.key});
+  @override
+  Widget build(BuildContext context) => const Scaffold(
+        body: Center(
+          child: Padding(
+            padding: EdgeInsets.all(28),
+            child: Text(
+              'APEX STUDIO Admin\n\nSupabase configuration is missing.\nBuild with SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
 }
 
 class LoginScreen extends StatefulWidget {
@@ -62,80 +81,131 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
-  bool busy = false;
+  bool loading = false;
   String? error;
 
   Future<void> login() async {
-    setState(() { busy = true; error = null; });
+    setState(() { loading = true; error = null; });
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      final auth = Supabase.instance.client.auth;
+      final response = await auth.signInWithPassword(
         email: email.text.trim(),
         password: password.text,
       );
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const DashboardScreen()));
-    } on AuthException catch (e) {
-      if (mounted) setState(() => error = e.message);
+      if (response.user == null) throw const AuthException('Login failed.');
+      await Supabase.instance.client.functions.invoke(
+        'apex-owner-bootstrap',
+        body: {'action': 'login'},
+      );
     } catch (e) {
-      if (mounted) setState(() => error = 'Login failed. Please try again.');
+      await Supabase.instance.client.auth.signOut();
+      setState(() => error = e.toString().replaceFirst('AuthException: ', ''));
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) setState(() => loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(child: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(24), child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 430),
-      child: Card(
-        color: const Color(0xFF111318),
-        child: Padding(padding: const EdgeInsets.all(28), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const Text('APEX STUDIO', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: 2)),
-          const SizedBox(height: 6),
-          const Text('Owner Admin', style: TextStyle(color: Color(0xFFD4AF37))),
-          const SizedBox(height: 28),
-          TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined))),
-          const SizedBox(height: 14),
-          TextField(controller: password, obscureText: true, onSubmitted: (_) => login(), decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline))),
-          if (error != null) ...[
-            const SizedBox(height: 14),
-            Text(error!, style: const TextStyle(color: Color(0xFFFF6B6B))),
-          ],
-          const SizedBox(height: 22),
-          FilledButton(onPressed: busy ? null : login, child: Padding(padding: const EdgeInsets.all(12), child: Text(busy ? 'Signing in…' : 'Sign in'))),
-          const SizedBox(height: 12),
-          const Text('Owner access only. New account creation is intentionally unavailable.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, fontSize: 12)),
-        ])),
-      ),
-    )))),
-  );
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 430),
+                child: Card(
+                  color: const Color(0xFF0F1117),
+                  child: Padding(
+                    padding: const EdgeInsets.all(28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text('APEX STUDIO', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: 2)),
+                        const SizedBox(height: 6),
+                        const Text('Owner Admin', style: TextStyle(color: Color(0xFFD6B56A))),
+                        const SizedBox(height: 28),
+                        TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email')),
+                        const SizedBox(height: 14),
+                        TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
+                        if (error != null) ...[
+                          const SizedBox(height: 14),
+                          Text(error!, style: const TextStyle(color: Colors.redAccent)),
+                        ],
+                        const SizedBox(height: 22),
+                        FilledButton(
+                          onPressed: loading ? null : login,
+                          child: Padding(padding: const EdgeInsets.all(14), child: Text(loading ? 'Signing in…' : 'Sign in as owner')),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
 }
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
+  static const modules = [
+    ('Projects', Icons.work_outline),
+    ('Client Requests', Icons.inbox_outlined),
+    ('Messages', Icons.chat_bubble_outline),
+    ('Orders & Payments', Icons.payments_outlined),
+    ('Files & Media', Icons.folder_outlined),
+    ('Notifications', Icons.notifications_none),
+    ('Analytics', Icons.insights_outlined),
+    ('Audit Log', Icons.security_outlined),
+    ('Settings', Icons.settings_outlined),
+  ];
 
   @override
-  Widget build(BuildContext context) {
-    final modules = const [
-      ('Projects', Icons.work_outline), ('Clients', Icons.people_outline), ('Requests', Icons.inbox_outlined),
-      ('Messages', Icons.chat_bubble_outline), ('Payments', Icons.payments_outlined), ('Files', Icons.folder_outlined),
-      ('Notifications', Icons.notifications_none), ('Analytics', Icons.insights_outlined), ('Audit Log', Icons.security_outlined),
-      ('Settings', Icons.settings_outlined),
-    ];
-    return Scaffold(
-      appBar: AppBar(title: const Text('APEX STUDIO Admin'), actions: [
-        IconButton(onPressed: () async { await Supabase.instance.client.auth.signOut(); if (context.mounted) Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginScreen()), (_) => false); }, icon: const Icon(Icons.logout)),
-      ]),
-      body: ListView(padding: const EdgeInsets.all(18), children: [
-        const Text('Control Center', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 6),
-        const Text('Manage the studio from one secure owner workspace.', style: TextStyle(color: Colors.white60)),
-        const SizedBox(height: 20),
-        GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: modules.length, gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 220, mainAxisExtent: 120, crossAxisSpacing: 12, mainAxisSpacing: 12), itemBuilder: (_, i) {
-          final item = modules[i];
-          return Card(child: InkWell(borderRadius: BorderRadius.circular(12), onTap: () {}, child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(item.$2, color: const Color(0xFFD4AF37)), const Spacer(), Text(item.$1, style: const TextStyle(fontWeight: FontWeight.w700))]))));
-        }),
-      ]),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text('APEX STUDIO'),
+          actions: [
+            IconButton(
+              tooltip: 'Sign out',
+              onPressed: () => Supabase.instance.client.auth.signOut(),
+              icon: const Icon(Icons.logout),
+            ),
+          ],
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            const Text('Owner Dashboard', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 6),
+            const Text('Control the studio from one secure workspace.', style: TextStyle(color: Colors.white60)),
+            const SizedBox(height: 24),
+            Wrap(
+              spacing: 14,
+              runSpacing: 14,
+              children: modules.map((m) => SizedBox(
+                width: 170,
+                height: 125,
+                child: Card(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {},
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(m.$2, color: const Color(0xFFD6B56A), size: 28),
+                          Text(m.$1, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              )).toList(),
+            ),
+          ],
+        ),
+      );
 }

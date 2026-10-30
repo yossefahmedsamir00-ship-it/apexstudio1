@@ -1,17 +1,16 @@
 name: apex_studio_admin
-description: APEX STUDIO owner admin application
+description: APEX STUDIO owner admin application.
 publish_to: "none"
 version: 1.0.0+1
 
 environment:
   sdk: ">=3.9.0 <4.0.0"
-  flutter: ">=3.47.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  supabase_flutter: ^2.10.0
   cupertino_icons: ^1.0.8
+  supabase_flutter: ^2.18.3
 
 dev_dependencies:
   flutter_test:
