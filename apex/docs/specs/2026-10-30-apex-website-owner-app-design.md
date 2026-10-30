@@ -136,3 +136,32 @@ Each slice is delivered and verified independently. No destructive schema change
 - Public exposure of private conversations, customer files, payment payloads, or owner analytics.
 - Replacing the current payment provider or owner authentication without a separate approved design.
 - Claiming background push, SMS verification, or email delivery is operational until the provider is configured and end-to-end tested.
+
+## 11. Owner app Passkey authentication
+
+Add Passkey as a first-class secure sign-in option for the owner-only Flutter application.
+
+### User experience
+- Keep the existing email/password and email OTP recovery/sign-in paths available.
+- Allow the verified owner to register a Passkey from Security Settings after a fresh owner re-authentication.
+- On supported devices, offer the platform Passkey prompt (device PIN, fingerprint, or face unlock as handled by the operating system); do not build or store biometric templates in the app.
+- On later sign-ins, offer “Sign in with Passkey” and allow the user to choose an available credential.
+- Show registered credential/device labels and last-used metadata where safely available; allow revocation of an individual credential after owner re-authentication.
+- Provide a clear fallback if the device, OS, browser/credential provider, or account does not support Passkeys.
+
+### Security and architecture
+- Use a standards-based WebAuthn/FIDO2 challenge-response flow with server-side verification of challenge, origin/RP ID, credential public key, signature, and authenticator counter/backup state as appropriate.
+- Never treat a local biometric success callback or a client-side boolean as authentication.
+- Never store private credential keys, biometric data, or reusable authentication secrets in app preferences or Supabase tables.
+- Bind credentials to the verified owner identity; prevent customer accounts or unverified users from enrolling owner credentials.
+- Protect enrollment, authentication, and revocation endpoints with short-lived single-use challenges, rate limits, replay protection, audit events, and explicit owner authorization.
+- Keep a safe recovery path if the owner loses a device; credential revocation must not lock the owner out of all recovery methods.
+- Review Flutter platform support and maintained packages before choosing an implementation. If the selected Passkey library cannot safely integrate with Supabase sessions, use a small server-mediated WebAuthn authentication broker rather than weakening verification.
+
+### Acceptance criteria
+- A registered owner can sign in with a valid Passkey on a supported device.
+- Invalid, expired, replayed, wrong-origin, or wrong-RP-ID assertions are rejected server-side.
+- A non-owner cannot register or use an owner Passkey.
+- The owner can revoke a lost device credential and still recover access using the configured recovery method.
+- Existing password and email OTP login continue to work.
+- Passkey enrollment, successful/failed authentication, and revocation produce auditable security events without logging secrets.
