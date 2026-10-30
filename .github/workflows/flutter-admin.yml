@@ -29,19 +29,7 @@ jobs:
       - name: Pub get
         run: flutter pub get
       - name: Analyze
-        run: |
-          set +e
-          flutter analyze 2>&1 | tee analyze.log
-          status=${PIPESTATUS[0]}
-          echo "ANALYZE_EXIT_CODE=$status" >> analyze.log
-          exit $status
-      - name: Upload analyzer log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: apex-studio-admin-analyzer-log
-          path: flutter_admin/analyze.log
-          if-no-files-found: ignore
+        run: flutter analyze
       - name: Test
         run: flutter test
       - name: Build Android debug APK
