@@ -19,7 +19,11 @@ declare
     'social_publish_approval_same_tenant_fk',
     'social_attempt_job_same_tenant_fk',
     'social_analytics_account_same_tenant_fk',
-    'social_analytics_item_same_tenant_fk'
+    'social_analytics_item_same_tenant_fk',
+    'social_content_versions_tenant_item_id_unique',
+    'social_approvals_version_same_item_fk',
+    'social_approvals_tenant_item_version_id_unique',
+    'social_publish_approval_same_item_version_fk'
   ];
   constraint_name text;
 begin
