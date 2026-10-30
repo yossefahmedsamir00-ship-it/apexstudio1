@@ -223,73 +223,36 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  final _otp = TextEditingController();
   bool _busy = false;
-  bool _otpMode = false;
-  bool _otpRequested = false;
   String? _error;
-  String? _notice;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
-    _otp.dispose();
     super.dispose();
   }
 
-  Future<void> _run(Future<void> Function() action) async {
+  Future<void> _signIn() async {
     if (_busy) return;
     setState(() {
       _busy = true;
       _error = null;
-      _notice = null;
     });
     try {
-      await action();
+      final email = _email.text.trim();
+      if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
+      if (_password.text.isEmpty) throw Exception('Enter your password.');
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: _password.text,
+      );
+      // OwnerAuthGate verifies owner privileges server-side before showing admin data.
     } catch (error) {
       if (mounted) setState(() => _error = _cleanError(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
-  }
-
-  Future<void> _passwordSignIn() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    if (_password.text.isEmpty) throw Exception('Enter your password.');
-    await Supabase.instance.client.auth.signInWithPassword(
-      email: email,
-      password: _password.text,
-    );
-    // OwnerAuthGate validates the session server-side before rendering the app.
-  }
-
-  Future<void> _requestOtp() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    await Supabase.instance.client.auth.signInWithOtp(
-      email: email,
-      shouldCreateUser: false,
-    );
-    if (!mounted) return;
-    setState(() {
-      _otpRequested = true;
-      _otp.clear();
-      _notice = 'If this email is eligible, a sign-in code has been sent. Check your inbox and spam folder.';
-    });
-  }
-
-  Future<void> _verifyOtp() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    if (_otp.text.trim().length != 6) throw Exception('Enter the 6-digit code from your email.');
-    await Supabase.instance.client.auth.verifyOTP(
-      type: OtpType.email,
-      email: email,
-      token: _otp.text.trim(),
-    );
-    // OwnerAuthGate validates the session server-side before rendering the app.
   }
 
   @override
@@ -323,31 +286,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 28),
                       TextField(
                         controller: _email,
-                        enabled: !_busy && !_otpRequested,
+                        enabled: !_busy,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.username],
                         decoration: const InputDecoration(labelText: 'Owner email', prefixIcon: Icon(Icons.alternate_email)),
                       ),
-                      if (!_otpMode) ...[
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _password,
-                          enabled: !_busy,
-                          obscureText: true,
-                          autofillHints: const [AutofillHints.password],
-                          onSubmitted: (_) => _run(_passwordSignIn),
-                          decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
-                        ),
-                      ] else if (_otpRequested) ...[
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _otp,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.number,
-                          maxLength: 6,
-                          decoration: const InputDecoration(labelText: '6-digit email code', prefixIcon: Icon(Icons.password), counterText: ''),
-                        ),
-                      ],
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _password,
+                        enabled: !_busy,
+                        obscureText: true,
+                        autofillHints: const [AutofillHints.password],
+                        onSubmitted: (_) => _signIn(),
+                        decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
+                      ),
                       if (widget.gateError != null) ...[
                         const SizedBox(height: 14),
                         _MessageBanner(text: widget.gateError!, isError: true),
@@ -356,70 +308,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 14),
                         _MessageBanner(text: _error!, isError: true),
                       ],
-                      if (_notice != null) ...[
-                        const SizedBox(height: 14),
-                        _MessageBanner(text: _notice!, isError: false),
-                      ],
                       const SizedBox(height: 20),
                       FilledButton.icon(
-                        onPressed: _busy
-                            ? null
-                            : () => _run(
-                                  _otpMode
-                                      ? _otpRequested
-                                          ? _verifyOtp
-                                          : _requestOtp
-                                      : _passwordSignIn,
-                                ),
+                        onPressed: _busy ? null : _signIn,
                         icon: _busy
                             ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2))
                             : const Icon(Icons.verified_user_outlined),
                         label: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            _busy
-                                ? 'Please wait…'
-                                : _otpMode
-                                    ? _otpRequested
-                                        ? 'Verify owner code'
-                                        : 'Send owner code'
-                                    : 'Sign in securely',
-                          ),
+                          child: Text(_busy ? 'Please wait…' : 'Sign in securely'),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: _busy
-                            ? null
-                            : () {
-                                setState(() {
-                                  _otpMode = !_otpMode;
-                                  _otpRequested = false;
-                                  _otp.clear();
-                                  _error = null;
-                                  _notice = null;
-                                });
-                              },
-                        child: Text(_otpMode ? 'Use password instead' : 'Use email verification code (OTP)'),
-                      ),
-                      if (_otpMode && _otpRequested)
-                        TextButton(
-                          onPressed: _busy
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _otpRequested = false;
-                                    _otp.clear();
-                                    _notice = null;
-                                    _error = null;
-                                  });
-                                },
-                          child: const Text('Change email / request another code'),
-                        ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Access is granted only after the APEX server confirms the configured owner account.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: _muted, fontSize: 11),
                       ),
                     ],
                   ),
@@ -431,142 +329,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
-
-class AdminRepository {
-  AdminRepository(this.client);
-  final SupabaseClient client;
-
-  Future<DashboardData> loadDashboard() async {
-    final results = await Future.wait<dynamic>([
-      client
-          .from('project_inquiries')
-          .select('id,client_name,client_email,client_phone,project_type,budget_range,brief,status,created_at')
-          .order('created_at', ascending: false)
-          .limit(100),
-      client
-          .from('payment_orders')
-          .select('id,inquiry_id,amount_minor,currency,status,description,provider,provider_reference,created_at,paid_at')
-          .order('created_at', ascending: false)
-          .limit(100),
-      client
-          .from('site_events')
-          .select('id,event_name,project_id,locale,path,created_at')
-          .order('created_at', ascending: false)
-          .limit(500),
-      client.functions.invoke('apex-client-chat', body: {'action': 'owner_list'}),
-      client.rpc('get_apex_runtime_controls'),
-    ]);
-
-    final chatResponse = results[3] as FunctionResponse;
-    final chat = _asMap(chatResponse.data);
-    if (chatResponse.status >= 400 || chat['error'] != null) {
-      throw Exception(_string(chat['error'], 'Could not load the owner inbox.'));
-    }
-
-    return DashboardData(
-      inquiries: _asRows(results[0]),
-      invoices: _asRows(results[1]),
-      events: _asRows(results[2]),
-      conversations: _asRows(chat['conversations']),
-      securityEvents: _asRows(chat['securityEvents']),
-      auditLogs: _asRows(chat['auditLogs']),
-      runtimeControls: _asMap(results[4]),
-      lastSync: DateTime.now(),
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> loadConversation(String id) async {
-    final response = await client.functions.invoke(
-      'apex-client-chat',
-      body: {'action': 'owner_read', 'conversationId': id},
-    );
-    final data = _asMap(response.data);
-    if (response.status >= 400 || data['error'] != null) {
-      throw Exception(_string(data['error'], 'Could not open this conversation.'));
-    }
-    return _asRows(data['messages']);
-  }
-
-  Future<void> sendReply(String conversationId, String body) async {
-    final key = 'owner_${DateTime.now().microsecondsSinceEpoch}';
-    final response = await client.functions.invoke(
-      'apex-client-chat',
-      body: {
-        'action': 'owner_send',
-        'conversationId': conversationId,
-        'body': body.trim(),
-        'idempotencyKey': key,
-      },
-    );
-    final data = _asMap(response.data);
-    if (response.status >= 400 || data['error'] != null) {
-      throw Exception(_string(data['error'], 'Could not send the reply.'));
-    }
-  }
-
-  Future<void> changeConversationStatus(String id, String status) async {
-    final response = await client.functions.invoke(
-      'apex-client-chat',
-      body: {'action': 'owner_status', 'conversationId': id, 'status': status},
-    );
-    final data = _asMap(response.data);
-    if (response.status >= 400 || data['error'] != null) {
-      throw Exception(_string(data['error'], 'Could not update the conversation.'));
-    }
-  }
-
-  Future<void> changeInquiryStatus(String id, String status) async {
-    await client.from('project_inquiries').update({'status': status}).eq('id', id);
-  }
-
-  Future<Map<String, dynamic>> createInvoice({
-    required double amountEgp,
-    required String description,
-    String? inquiryId,
-  }) async {
-    final response = await client.functions.invoke(
-      'kashier-create-invoice',
-      body: {'amountEGP': amountEgp, 'description': description.trim(), 'inquiryId': inquiryId},
-    );
-    final data = _asMap(response.data);
-    if (response.status >= 400 || data['error'] != null) {
-      throw Exception(_string(data['error'], 'Invoice creation failed.'));
-    }
-    if (data['checkoutUrl'] == null || data['invoice'] == null) {
-      throw Exception('The payment service returned an incomplete response.');
-    }
-    return data;
-  }
-
-  Future<void> setEmergencyLockdown({required bool enabled, String? reason}) async {
-    await client.rpc(
-      'set_apex_emergency_lockdown',
-      params: {'p_enabled': enabled, 'p_reason': reason},
-    );
-  }
-}
-
-class DashboardData {
-  const DashboardData({
-    required this.inquiries,
-    required this.invoices,
-    required this.events,
-    required this.conversations,
-    required this.securityEvents,
-    required this.auditLogs,
-    required this.runtimeControls,
-    required this.lastSync,
-  });
-
-  final List<Map<String, dynamic>> inquiries;
-  final List<Map<String, dynamic>> invoices;
-  final List<Map<String, dynamic>> events;
-  final List<Map<String, dynamic>> conversations;
-  final List<Map<String, dynamic>> securityEvents;
-  final List<Map<String, dynamic>> auditLogs;
-  final Map<String, dynamic> runtimeControls;
-  final DateTime lastSync;
 }
 
 class AdminShell extends StatefulWidget {
