@@ -1,0 +1,87 @@
+{
+  "name": "APEX SOCIAL AI — Content Request Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "apex-social/content-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1a3b5c7d-1111-4aaa-8bbb-111111111111",
+      "name": "Content Request Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -500,
+        0
+      ],
+      "webhookId": "apex-social-content-request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const incoming = $input.first()?.json ?? {};\nconst body = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\nconst required = ['brief', 'platforms'];\nconst missing = required.filter((key) => body[key] === undefined || body[key] === null || body[key] === '');\nconst platforms = Array.isArray(body.platforms) ? body.platforms : [body.platforms];\nconst allowed = new Set(['instagram', 'facebook', 'tiktok', 'youtube', 'x', 'linkedin']);\nconst invalidPlatforms = platforms.filter((p) => typeof p !== 'string' || !allowed.has(p.toLowerCase()));\nconst requestId = typeof body.request_id === 'string' && body.request_id.trim() ? body.request_id.trim() : `apex_${Date.now()}`;\nconst brief = typeof body.brief === 'string' ? body.brief : '';\nconst errors = [...missing.map((k) => `Missing required field: ${k}`), ...(brief.trim().length < 10 ? ['brief must contain at least 10 characters'] : []), ...(brief.length > 5000 ? ['brief must be 5000 characters or fewer'] : []), ...(invalidPlatforms.length ? [`Unsupported platforms: ${invalidPlatforms.join(', ')}`] : [])];\nconst valid = errors.length === 0 && platforms.length > 0;\nreturn [{ json: { httpStatus: valid ? 200 : 400, response: valid ? { ok: true, request_id: requestId, stage: 'intake_validated', mode: 'foundation_only', message: 'Request format validated. AI generation and Supabase persistence are not connected in this starter workflow.', received: { platforms: platforms.map((p) => p.toLowerCase()), brief_length: brief.length } } : { ok: false, request_id: requestId, error: 'INVALID_CONTENT_REQUEST', details: errors } } }];"
+      },
+      "id": "2b4c6d8e-2222-4bbb-8ccc-222222222222",
+      "name": "Validate & Normalize Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.response }}",
+        "options": {
+          "responseCode": "={{ $json.httpStatus }}"
+        }
+      },
+      "id": "3c5d7e9f-3333-4ccc-8ddd-333333333333",
+      "name": "Return Validation Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        100,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Content Request Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "active": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
