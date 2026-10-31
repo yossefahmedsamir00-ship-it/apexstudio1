@@ -129,11 +129,15 @@ export interface FlowApprovalActionSnapshot {
 export interface FlowPublishingDraft {
   id: string;
   ownerUserId: string;
+  operationId: string;
   platform: 'instagram' | 'facebook' | 'x' | 'tiktok' | 'youtube' | 'other';
   title: string;
   body: string;
+  contentHash: string;
   revision: number;
   status: FlowPublishingStatus;
+  scheduledAt?: string | null;
+  publishedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
