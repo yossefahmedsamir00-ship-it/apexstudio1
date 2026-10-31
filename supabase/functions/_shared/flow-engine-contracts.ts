@@ -31,41 +31,47 @@ export class FlowRequestError extends Error {
   }
 }
 
+const PREVIEW_ORIGINS = [
+  "https://yossefahmedsamir00-ship-it.github.io",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+];
+
+function allowedOrigins(): Set<string> {
+  const extras = (Deno.env.get("APEX_ALLOWED_ORIGINS") ?? "")
+    .split(",").map((value) => value.trim()).filter(Boolean);
+  return new Set([...PREVIEW_ORIGINS, ...extras]);
+}
+
+export function corsHeaders(request: Request): Record<string, string> {
+  const origin = request.headers.get("origin") ?? "";
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Cache-Control": "no-store",
+    "Vary": "Origin",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+  };
+  if (origin && allowedOrigins().has(origin)) headers["Access-Control-Allow-Origin"] = origin;
+  return headers;
+}
+
 export function jsonResponse(
   request: Request,
   body: unknown,
   status = 200,
 ): Response {
-  const origin = request.headers.get("origin") ?? "";
-  const extras = (Deno.env.get("APEX_ALLOWED_ORIGINS") ?? "")
-    .split(",").map((value) => value.trim()).filter(Boolean);
-  const allowed = new Set([
-    "https://yossefahmedsamir00-ship-it.github.io",
-    ...extras,
-  ]);
-  const headers: Record<string, string> = {
-    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Cache-Control": "no-store",
-    "Content-Type": "application/json; charset=utf-8",
-    "Vary": "Origin",
-    "X-Content-Type-Options": "nosniff",
-    "Referrer-Policy": "no-referrer",
-  };
-  if (origin && allowed.has(origin)) headers["Access-Control-Allow-Origin"] = origin;
-  return new Response(JSON.stringify(body), { status, headers });
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders(request), "Content-Type": "application/json; charset=utf-8" },
+  });
 }
 
 export function assertAllowedOrigin(request: Request): void {
   const origin = request.headers.get("origin");
   if (!origin) return; // Native Flutter clients do not send browser origins.
-  const extras = (Deno.env.get("APEX_ALLOWED_ORIGINS") ?? "")
-    .split(",").map((value) => value.trim()).filter(Boolean);
-  const allowed = new Set([
-    "https://yossefahmedsamir00-ship-it.github.io",
-    ...extras,
-  ]);
-  if (!allowed.has(origin)) throw new FlowRequestError("forbidden", 403);
+  if (!allowedOrigins().has(origin)) throw new FlowRequestError("forbidden", 403);
 }
 
 export async function readJsonBody(
