@@ -1,0 +1,87 @@
+{
+  "name": "APEX SOCIAL AI — Content Request Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "apex-social/content-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1a3b5c7d-1111-4aaa-8bbb-111111111111",
+      "name": "Content Request Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -500,
+        0
+      ],
+      "webhookId": "apex-social-content-request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const item = $input.first() ?? { json: {}, binary: {} };\nconst incoming = item.json ?? {};\nlet payload = incoming.body && typeof incoming.body === 'object' ? incoming.body : incoming;\n\n// Some clients/proxies may send the JSON document as a binary upload.\n// If the parsed body is empty, safely try known raw-body/binary representations.\nconst hasRequestFields = (value) => value && typeof value === 'object' && ('brief' in value || 'platforms' in value);\nif (!hasRequestFields(payload) && typeof incoming.rawBody === 'string') {\n  try { payload = JSON.parse(incoming.rawBody); } catch {}\n}\nif (!hasRequestFields(payload) && item.binary && Object.keys(item.binary).length) {\n  const binaryProperty = Object.keys(item.binary)[0];\n  const buffer = await this.helpers.getBinaryDataBuffer(0, binaryProperty);\n  const raw = buffer.toString('utf8').replace(/^\\uFEFF/, '').trim();\n  try { payload = JSON.parse(raw); } catch {\n    payload = {};\n  }\n}\n\nif (!payload || typeof payload !== 'object' || Array.isArray(payload)) payload = {};\nconst brief = typeof payload.brief === 'string' ? payload.brief.trim() : '';\nconst allowed = new Set(['instagram', 'facebook', 'tiktok', 'youtube', 'x', 'linkedin']);\nconst requestedPlatforms = Array.isArray(payload.platforms)\n  ? payload.platforms\n  : (typeof payload.platforms === 'string' ? [payload.platforms] : []);\nconst platforms = requestedPlatforms\n  .filter((p) => typeof p === 'string')\n  .map((p) => p.trim().toLowerCase())\n  .filter((p) => allowed.has(p));\nconst errors = [];\nif (!brief) errors.push('Missing required field: brief');\nif (requestedPlatforms.length === 0) errors.push('Missing required field: platforms');\nif (brief.length < 10) errors.push('brief must contain at least 10 characters');\nif (brief.length > 5000) errors.push('brief must be 5000 characters or fewer');\nif (platforms.length !== requestedPlatforms.length) errors.push('Unsupported or invalid platforms detected');\nconst requestId = typeof payload.request_id === 'string' && payload.request_id.trim()\n  ? payload.request_id.trim()\n  : `apex_${Date.now()}`;\nconst valid = errors.length === 0;\nreturn [{\n  json: {\n    httpStatus: valid ? 200 : 400,\n    response: valid\n      ? {\n          ok: true,\n          request_id: requestId,\n          stage: 'intake_validated',\n          mode: 'foundation_only',\n          approval_required: true,\n          message: 'Request format validated. AI generation and Supabase persistence are not connected in this starter workflow.',\n          received: { platforms, brief_length: brief.length }\n        }\n      : { ok: false, request_id: requestId, error: 'INVALID_CONTENT_REQUEST', details: errors }\n  }\n}];"
+      },
+      "id": "2b4c6d8e-2222-4bbb-8ccc-222222222222",
+      "name": "Validate & Normalize Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.response }}",
+        "options": {
+          "responseCode": "={{ $json.httpStatus }}"
+        }
+      },
+      "id": "3c5d7e9f-3333-4ccc-8ddd-333333333333",
+      "name": "Return Validation Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        100,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Content Request Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "active": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
