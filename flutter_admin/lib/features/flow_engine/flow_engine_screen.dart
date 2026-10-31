@@ -326,6 +326,7 @@ class _FlowEngineScreenState extends State<FlowEngineScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               TextField(
                 controller: _prompt,
+                onChanged: (_) => setState(() {}),
                 minLines: 3,
                 maxLines: 6,
                 maxLength: 8000,
