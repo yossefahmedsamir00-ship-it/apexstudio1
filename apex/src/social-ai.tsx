@@ -18,6 +18,19 @@ const nav: Array<{id:View; label:string; icon:React.ElementType}> = [
 
 const platformIcons: Record<string, React.ElementType> = { instagram: Instagram, youtube: Youtube, tiktok: Sparkles, x: Search };
 
+const DEMO_OVERVIEW: Overview = {
+  content: { draft: 3, in_review: 1, approved: 2 },
+  connected_accounts: 0,
+  pending_approvals: 1,
+  analytics_last_synced_at: null,
+};
+
+const DEMO_CONTENT: ContentItem[] = [
+  { id:'demo-1', title:'APEX STUDIO — Brand Introduction', status:'draft', platform:'instagram' },
+  { id:'demo-2', title:'Founder POV — Building better digital products', status:'in_review', platform:'x' },
+  { id:'demo-3', title:'Before / After Website Transformation', status:'approved', platform:'tiktok' },
+];
+
 function Stat({label,value,detail}:{label:string;value:string|number;detail:string}) {
   return <div className="stat-card"><span>{label}</span><strong>{value}</strong><small>{detail}</small></div>;
 }
@@ -28,6 +41,7 @@ function App() {
   const [content,setContent]=useState<ContentItem[]>([]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
+  const [demoMode,setDemoMode]=useState(false);
   const [brief,setBrief]=useState('');
   const [generated,setGenerated]=useState('');
   const [busy,setBusy]=useState(false);
@@ -45,8 +59,12 @@ function App() {
       const [o,c] = await Promise.all([callSocial({ method:'overview' }), callSocial({ method:'content', limit:25 })]);
       setOverview((o.data || {}) as Overview);
       setContent((((c.data || {}) as {items?:ContentItem[]}).items) || []);
+      setDemoMode(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load Social AI data.');
+      setOverview(DEMO_OVERVIEW);
+      setContent(DEMO_CONTENT);
+      setDemoMode(true);
+      setError('Social API is not deployed yet. Showing safe demo data — no real accounts, posts, analytics or ad spend are connected.');
     } finally { setLoading(false); }
   };
 
@@ -56,6 +74,21 @@ function App() {
     if (!brief.trim() || busy) return;
     setBusy(true); setError('');
     try {
+      if (demoMode) {
+        const cleanBrief = brief.trim();
+        setGenerated(JSON.stringify({
+          mode:'demo',
+          approval_required:true,
+          brief:cleanBrief,
+          variants:{
+            instagram:{hook:`${cleanBrief} — بصوت APEX STUDIO`,caption:'Draft concept: hook + value + proof + CTA. Replace placeholders with verified brand facts before publishing.',cta:'Send us your idea'},
+            x:{hook:`${cleanBrief}`,body:'Short-form draft for X. Verify every factual claim before publishing.',cta:'Tell us what you are building.'},
+            tiktok:{hook:`Stop scrolling: ${cleanBrief}`,scenes:['Hook','Problem','Visual demonstration','Result','CTA'],cta:'Follow for more builds'},
+            youtube:{title:`${cleanBrief} | APEX STUDIO`,outline:['Opening hook','Context','Main value','Demonstration','Proof','CTA']}
+          }
+        }, null, 2));
+        return;
+      }
       const data = await callSocial({ method:'generate-content', brief:brief.trim(), platforms:['instagram','x','tiktok','youtube'] });
       setGenerated(JSON.stringify(data.data || data, null, 2));
     } catch (e) {
@@ -74,11 +107,11 @@ function App() {
       <div className="guard"><ShieldCheck size={16}/><div><b>Human approval</b><small>Publishing and ad spend stay owner-controlled.</small></div></div>
     </aside>
     <main className="social-main">
-      <header className="topbar"><div><span className="eyebrow">APEX STUDIO / GROWTH</span><h1>{nav.find(n=>n.id===view)?.label}</h1></div><div className="top-actions"><span className="live"><i/> Owner mode</span><button onClick={()=>void load()} className="ghost">Refresh</button></div></header>
+      <header className="topbar"><div><span className="eyebrow">APEX STUDIO / GROWTH</span><h1>{nav.find(n=>n.id===view)?.label}</h1></div><div className="top-actions"><span className="live"><i/> {demoMode ? 'Demo mode' : 'Owner mode'}</span><button onClick={()=>void load()} className="ghost">Refresh</button></div></header>
       {error && <div className="error"><ShieldCheck size={16}/>{error}<button onClick={()=>setError('')}>×</button></div>}
       {loading ? <div className="loading">Loading your growth workspace…</div> : <>
         {view==='overview' && <section className="page">
-          <div className="hero"><div><span className="eyebrow">GROWTH COMMAND CENTER</span><h2>Turn brand knowledge into measurable content.</h2><p>One workspace for strategy, production, approvals, publishing and learning — with real provider data only.</p></div><div className="hero-icon"><Bot size={38}/></div></div>
+          <div className="hero"><div><span className="eyebrow">GROWTH COMMAND CENTER</span><h2>Turn brand knowledge into measurable content.</h2><p>One workspace for strategy, production, approvals, publishing and learning — with real provider data only when connected.</p></div><div className="hero-icon"><Bot size={38}/></div></div>
           <div className="stats"><Stat label="Drafts" value={counts.draft ?? 0} detail="Content in production"/><Stat label="In review" value={counts.in_review ?? 0} detail="Waiting for you"/><Stat label="Approved" value={counts.approved ?? 0} detail="Ready for scheduling"/><Stat label="Accounts" value={overview.connected_accounts ?? 0} detail="Official connectors"/></div>
           <div className="grid-2"><div className="panel"><div className="panel-head"><div><span className="eyebrow">CONTENT QUEUE</span><h3>Latest work</h3></div><CalendarDays size={18}/></div>{current.length ? current.map(item=><div className="content-row" key={item.id}><div><b>{item.title || 'Untitled content'}</b><small>{item.platform || 'multi-platform'} · {item.status}</small></div><span className="status">{item.status}</span></div>) : <div className="empty">No content returned by the Social API yet.</div>}</div>
           <div className="panel"><div className="panel-head"><div><span className="eyebrow">LEARNING LOOP</span><h3>Signal integrity</h3></div><BarChart3 size={18}/></div><div className="signal"><CheckCircle2/><div><b>Source-backed analytics</b><p>{overview.analytics_last_synced_at ? `Last synced ${new Date(overview.analytics_last_synced_at).toLocaleString()}` : 'No provider analytics have been synced yet.'}</p></div></div><div className="signal"><ShieldCheck/><div><b>{overview.pending_approvals ?? 0} approvals waiting</b><p>AI cannot approve its own work.</p></div></div></div></div>
