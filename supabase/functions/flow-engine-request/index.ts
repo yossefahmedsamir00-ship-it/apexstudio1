@@ -69,7 +69,12 @@ async function createRequest(
   const idempotencyKey = requireString(body.idempotencyKey, "idempotencyKey", 160, 8);
 
   const existing = await findExisting(context, idempotencyKey);
-  if (existing) return existing;
+  if (existing) {
+    if (existing.request.prompt !== prompt || existing.request.locale !== locale) {
+      throw new FlowRequestError("conflict", 409);
+    }
+    return existing;
+  }
 
   const { data: requestRow, error: requestError } = await context.admin
     .from("flow_requests")
