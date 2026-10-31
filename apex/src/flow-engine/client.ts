@@ -1,0 +1,217 @@
+import type {
+  FlowApproval,
+  FlowFinancialEntry,
+  FlowOperation,
+  FlowRequest,
+  FlowScene,
+  FlowVideoProject,
+} from './domain';
+import { isFlowApiEnvelope, type FlowApiErrorCode } from './api';
+
+export interface FlowInvokeOptions {
+  body: Record<string, unknown>;
+}
+
+export interface FlowFunctionInvoker {
+  invoke(
+    functionName: string,
+    options: FlowInvokeOptions,
+  ): Promise<{ data: unknown; error: unknown | null }>;
+}
+
+export class FlowApiClientError extends Error {
+  readonly code: FlowApiErrorCode;
+  readonly correlationId?: string;
+
+  constructor(code: FlowApiErrorCode, message: string, correlationId?: string) {
+    super(message);
+    this.name = 'FlowApiClientError';
+    this.code = code;
+    this.correlationId = correlationId;
+  }
+}
+
+export interface CreateFlowRequestInput {
+  prompt: string;
+  locale: 'ar' | 'en';
+  idempotencyKey: string;
+}
+
+export interface CreatedFlowRequest {
+  request: FlowRequest;
+  operation: FlowOperation;
+}
+
+export interface CreateFlowProjectInput {
+  operationId: string;
+  title: string;
+  brief?: string;
+}
+
+export interface CreateFlowSceneInput {
+  projectId: string;
+  title: string;
+  brief?: string;
+  script?: string;
+  visualDirection?: string;
+  sortOrder?: number;
+}
+
+export interface UpdateFlowSceneInput {
+  sceneId: string;
+  title?: string;
+  brief?: string;
+  script?: string;
+  visualDirection?: string;
+  status?: FlowScene['status'];
+}
+
+export interface CreateFlowFinancialEntryInput {
+  operationId?: string;
+  entryType: FlowFinancialEntry['entryType'];
+  amountMinor: number;
+  currency: string;
+  source: FlowFinancialEntry['source'];
+  status: FlowFinancialEntry['status'];
+  evidenceReference?: string;
+  occurredAt?: string;
+}
+
+export class FlowEngineClient {
+  constructor(private readonly functions: FlowFunctionInvoker) {}
+
+  private async invoke<T>(
+    functionName: string,
+    body: Record<string, unknown>,
+  ): Promise<T> {
+    let response: { data: unknown; error: unknown | null };
+
+    try {
+      response = await this.functions.invoke(functionName, { body });
+    } catch {
+      throw new FlowApiClientError('provider_error', 'The Flow Engine service could not be reached.');
+    }
+
+    if (response.error) {
+      throw new FlowApiClientError('provider_error', 'The Flow Engine service could not be reached.');
+    }
+
+    if (!isFlowApiEnvelope<T>(response.data)) {
+      throw new FlowApiClientError('internal_error', 'The Flow Engine returned an invalid response.');
+    }
+
+    if (!response.data.ok) {
+      throw new FlowApiClientError(
+        response.data.error.code,
+        response.data.error.message,
+        response.data.error.correlationId,
+      );
+    }
+
+    return response.data.data;
+  }
+
+  createRequest(input: CreateFlowRequestInput): Promise<CreatedFlowRequest> {
+    return this.invoke('flow-engine-request', {
+      action: 'create',
+      prompt: input.prompt,
+      locale: input.locale,
+      idempotencyKey: input.idempotencyKey,
+    });
+  }
+
+  async listRequests(): Promise<FlowRequest[]> {
+    const result = await this.invoke<{ requests: FlowRequest[] }>(
+      'flow-engine-request',
+      { action: 'list' },
+    );
+    return result.requests;
+  }
+
+  getRequest(requestId: string): Promise<{ request: FlowRequest; operation: FlowOperation | null }> {
+    return this.invoke('flow-engine-request', { action: 'get', requestId });
+  }
+
+  async listOperations(): Promise<FlowOperation[]> {
+    const result = await this.invoke<{ operations: FlowOperation[] }>(
+      'flow-engine-operation',
+      { action: 'list' },
+    );
+    return result.operations;
+  }
+
+  getOperation(operationId: string): Promise<{
+    operation: FlowOperation;
+    steps: Array<Record<string, unknown>>;
+  }> {
+    return this.invoke('flow-engine-operation', { action: 'get', operationId });
+  }
+
+  createProject(input: CreateFlowProjectInput): Promise<FlowVideoProject> {
+    return this.invoke('flow-engine-operation', {
+      action: 'project.create',
+      ...input,
+    });
+  }
+
+  createScene(input: CreateFlowSceneInput): Promise<FlowScene> {
+    return this.invoke('flow-engine-operation', {
+      action: 'scene.create',
+      ...input,
+    });
+  }
+
+  updateScene(input: UpdateFlowSceneInput): Promise<FlowScene> {
+    return this.invoke('flow-engine-operation', {
+      action: 'scene.update',
+      ...input,
+    });
+  }
+
+  async listApprovals(): Promise<FlowApproval[]> {
+    const result = await this.invoke<{ approvals: FlowApproval[] }>(
+      'flow-engine-approval',
+      { action: 'list' },
+    );
+    return result.approvals;
+  }
+
+  requestApproval(input: {
+    operationId: string;
+    targetType: 'scene' | 'publishing_draft' | 'operation';
+    targetId: string;
+    action: 'publish' | 'send' | 'execute' | 'approve_scene';
+    target: string;
+  }): Promise<FlowApproval> {
+    return this.invoke('flow-engine-approval', {
+      action: 'request',
+      ...input,
+    });
+  }
+
+  decideApproval(input: {
+    approvalId: string;
+    decision: 'approved' | 'rejected';
+    comment?: string;
+  }): Promise<FlowApproval> {
+    return this.invoke('flow-engine-approval', {
+      action: 'decide',
+      ...input,
+    });
+  }
+
+  async listFinancialEntries(): Promise<FlowFinancialEntry[]> {
+    const result = await this.invoke<{ entries: FlowFinancialEntry[] }>(
+      'flow-engine-finance',
+      { action: 'list' },
+    );
+    return result.entries;
+  }
+
+  createFinancialEntry(input: CreateFlowFinancialEntryInput): Promise<FlowFinancialEntry> {
+    return this.invoke('flow-engine-finance', {
+      action: 'create',
+      ...input,
+    });
+  }
+}
