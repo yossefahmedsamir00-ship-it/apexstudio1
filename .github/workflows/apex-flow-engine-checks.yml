@@ -1,0 +1,48 @@
+name: APEX FLOW ENGINE Checks
+
+on:
+  push:
+    branches:
+      - docs/apex-flow-engine-design
+    paths:
+      - 'apex/src/flow-engine/**'
+      - 'apex/package.json'
+      - 'apex/package-lock.json'
+      - 'apex/tsconfig.json'
+      - 'apex/vite.config.ts'
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+      - '.github/workflows/apex-flow-engine-checks.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'apex/src/flow-engine/**'
+      - 'apex/package.json'
+      - 'apex/package-lock.json'
+      - 'apex/tsconfig.json'
+      - 'apex/vite.config.ts'
+      - 'supabase/migrations/**'
+      - 'supabase/tests/**'
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apex
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apex/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Run focused Flow Engine contracts
+        run: npm test -- src/flow-engine/domain.test.ts src/flow-engine/api.test.ts
+      - name: Run complete web test suite
+        run: npm test
+      - name: Build all web entries
+        run: npm run build
