@@ -150,7 +150,7 @@ function errorMessage(error: unknown, locale: Locale): string {
 }
 
 function Status({ value, locale }: { value: string; locale: Locale }) {
-  const label = copy[locale][value as keyof typeof copy.en] ?? value.replaceAll('_', ' ');
+  const label = copy[locale][value as keyof typeof copy.en] ?? value.replace(/_/g, ' ');
   return <span className={`flow-status ${statusTone[value] ?? 'muted'}`}>{label}</span>;
 }
 
@@ -651,7 +651,7 @@ function FlowWorkspace({
     <div className="flow-approval-list">{approvals.length === 0 ? <Empty>{t.noApprovalHistory}</Empty> :
       approvals.map(approval => <div className="flow-approval-card" key={approval.id}>
         <div className="flow-approval-head"><span className="flow-approval-icon"><ShieldCheck/></span><Status value={approval.decision} locale={locale}/></div>
-        <h3>{approval.action.replaceAll('_', ' ')}</h3>
+        <h3>{approval.action.replace(/_/g, ' ')}</h3>
         <div className="flow-detail-grid"><span>{t.target}</span><b>{approval.target}</b><span>{t.contentRevision}</span><b>#{approval.contentRevision}</b><span>SHA-256</span><code>{approval.contentHash.slice(0, 16)}…</code></div>
         {approval.decision === 'pending' && <div className="flow-inline-actions"><button className="flow-button primary" onClick={() => void decideApproval(approval.id, 'approved')} disabled={busy}><Check size={15}/>{t.approve}</button><button className="flow-button danger" onClick={() => void decideApproval(approval.id, 'rejected')} disabled={busy}><X size={15}/>{t.reject}</button></div>}
       </div>)}</div>
