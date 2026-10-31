@@ -85,6 +85,20 @@ describe("validateWorkflow", () => {
     });
   });
 
+  it("rejects cyclic graphs before they can execute", () => {
+    const input = {
+      ...validWorkflow,
+      edges: [
+        validWorkflow.edges[0],
+        { id: "edge-2", source: "transform", source_handle: "success", target: "start", target_handle: "input" }
+      ]
+    };
+    expect(validateWorkflow(input).issues).toContainEqual({
+      code: "WORKFLOW_CYCLE_NOT_SUPPORTED",
+      path: "edges"
+    });
+  });
+
   it("rejects malformed input without throwing", () => {
     const result = validateWorkflow(null);
     expect(result.valid).toBe(false);
