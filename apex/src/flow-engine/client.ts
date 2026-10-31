@@ -185,7 +185,11 @@ export class FlowEngineClient {
   }): Promise<FlowApproval> {
     return this.invoke('flow-engine-approval', {
       action: 'request',
-      ...input,
+      operationAction: input.action,
+      operationId: input.operationId,
+      targetType: input.targetType,
+      targetId: input.targetId,
+      target: input.target,
     });
   }
 
