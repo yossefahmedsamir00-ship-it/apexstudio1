@@ -72,12 +72,16 @@ describe('Flow Engine domain contracts', () => {
     const approval = {
       id: 'approval-1',
       ownerUserId: 'owner-1',
+      operationId: 'operation-1',
       action: 'publish' as const,
+      targetType: 'publishing_draft' as const,
+      targetId: 'draft-1',
       contentRevision: 3,
       target: 'instagram:apex-studio',
       contentHash: 'a'.repeat(64),
       decision: 'approved' as const,
       decidedAt: '2026-10-31T10:00:00.000Z',
+      createdAt: '2026-10-31T09:55:00.000Z',
     };
 
     expect(
