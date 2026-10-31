@@ -317,6 +317,7 @@ function FlowWorkspace({
   const [sceneEdit, setSceneEdit] = useState(false);
   const [draftTitle, setDraftTitle] = useState('');
   const [draftBody, setDraftBody] = useState('');
+  const [editingDraftId, setEditingDraftId] = useState('');
   const [draftPlatform, setDraftPlatform] = useState<FlowPublishingDraft['platform']>('instagram');
   const [financeType, setFinanceType] = useState<FlowFinancialEntry['entryType']>('income');
   const [financeAmount, setFinanceAmount] = useState('');
@@ -473,15 +474,32 @@ function FlowWorkspace({
     event.preventDefault();
     if (!selectedOperation) { setError(t.noOpsSelected); return; }
     await runBusy(async () => {
-      await client.createPublishingDraft({
-        operationId: selectedOperation,
-        platform: draftPlatform,
-        title: draftTitle,
-        body: draftBody,
-      });
+      if (editingDraftId) {
+        await client.updatePublishingDraft({
+          draftId: editingDraftId,
+          title: draftTitle,
+          body: draftBody,
+        });
+      } else {
+        await client.createPublishingDraft({
+          operationId: selectedOperation,
+          platform: draftPlatform,
+          title: draftTitle,
+          body: draftBody,
+        });
+      }
       setDraftTitle('');
       setDraftBody('');
+      setEditingDraftId('');
     }, t.saved);
+  };
+
+  const editPublishingDraft = (draft: FlowPublishingDraft) => {
+    setEditingDraftId(draft.id);
+    setDraftTitle(draft.title);
+    setDraftBody(draft.body);
+    setDraftPlatform(draft.platform);
+    setSelectedOperation(draft.operationId);
   };
 
   const requestDraftApproval = async (draft: FlowPublishingDraft) => {
@@ -671,7 +689,9 @@ function FlowWorkspace({
           </select></label>
           <label>{t.projectTitle}<input value={draftTitle} onChange={e => setDraftTitle(e.target.value)} maxLength={300}/></label>
           <label>{t.body}<textarea value={draftBody} onChange={e => setDraftBody(e.target.value)} rows={5} maxLength={12000} required/></label>
-          <button className="flow-button primary" disabled={busy || !operations.length}><Plus size={16}/>{t.createDraft}</button>
+          <div className="flow-inline-actions"><button className="flow-button primary" disabled={busy || !operations.length}><Plus size={16}/>{editingDraftId ? t.save : t.createDraft}</button>
+            {editingDraftId && <button type="button" className="flow-button subtle" onClick={() => {setEditingDraftId('');setDraftTitle('');setDraftBody('');}}>{t.cancel}</button>}
+          </div>
         </form>
       </section>
       <section className="flow-panel"><PanelTitle title={t.publishingDrafts} icon={<Megaphone/>}/>
@@ -680,7 +700,10 @@ function FlowWorkspace({
           <small>{draft.platform} · {t.revision} {draft.revision}</small>
           <p>{draft.body}</p>
           <code>{draft.contentHash.slice(0, 16)}…</code>
-          {draft.status === 'draft' && <button className="flow-link-button" onClick={() => void requestDraftApproval(draft)} disabled={busy}>{t.requestApproval}</button>}
+          <div className="flow-inline-actions">
+            {draft.status === 'draft' && <button className="flow-link-button" onClick={() => editPublishingDraft(draft)} disabled={busy}>{t.save} / Edit</button>}
+            {draft.status === 'draft' && <button className="flow-link-button" onClick={() => void requestDraftApproval(draft)} disabled={busy}>{t.requestApproval}</button>}
+          </div>
         </div>)}{drafts.length === 0 && <Empty>{t.noDrafts}</Empty>}</div>
       </section>
     </div>
