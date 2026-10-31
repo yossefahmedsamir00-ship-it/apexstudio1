@@ -160,6 +160,20 @@ async function requestApproval(context: Context, body: Record<string, unknown>) 
     .single();
   if (error) throw new FlowRequestError("internal_error", 500);
 
+  if (targetType === "scene") {
+    const { error: targetUpdateError } = await context.admin.from("flow_scenes")
+      .update({ status: "ready_for_review" })
+      .eq("id", targetId).eq("owner_user_id", context.user.id)
+      .eq("revision", snapshot.revision);
+    if (targetUpdateError) throw new FlowRequestError("internal_error", 500);
+  } else {
+    const { error: targetUpdateError } = await context.admin.from("flow_publishing_drafts")
+      .update({ status: "awaiting_approval" })
+      .eq("id", targetId).eq("owner_user_id", context.user.id)
+      .eq("revision", snapshot.revision);
+    if (targetUpdateError) throw new FlowRequestError("internal_error", 500);
+  }
+
   await writeFlowAudit(context, "approval.requested", "flow_approval", String(approval.id), {
     approval_id: String(approval.id),
     operation_id: operationId,
@@ -224,6 +238,20 @@ async function decideApproval(context: Context, body: Record<string, unknown>) {
     .maybeSingle();
   if (error) throw new FlowRequestError("internal_error", 500);
   if (!data) throw new FlowRequestError("conflict", 409);
+
+  if (approval.target_type === "scene") {
+    const { error: statusError } = await context.admin.from("flow_scenes")
+      .update({ status: decision === "approved" ? "approved" : "drafting" })
+      .eq("id", approval.target_id).eq("owner_user_id", context.user.id)
+      .eq("revision", approval.content_revision);
+    if (statusError) throw new FlowRequestError("internal_error", 500);
+  } else {
+    const { error: statusError } = await context.admin.from("flow_publishing_drafts")
+      .update({ status: decision === "approved" ? "approved" : "draft" })
+      .eq("id", approval.target_id).eq("owner_user_id", context.user.id)
+      .eq("revision", approval.content_revision);
+    if (statusError) throw new FlowRequestError("internal_error", 500);
+  }
 
   await writeFlowAudit(context, `approval.${decision}`, "flow_approval", approvalId, {
     approval_id: approvalId,
