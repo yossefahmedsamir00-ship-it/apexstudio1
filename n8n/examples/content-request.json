@@ -1,0 +1,12 @@
+{
+  "request_id": "test-apex-001",
+  "brief": "Create a launch campaign for APEX STUDIO introducing premium digital experiences.",
+  "platforms": [
+    "instagram",
+    "facebook",
+    "tiktok"
+  ],
+  "language": "ar",
+  "tone": "premium",
+  "audience": "small businesses"
+}
