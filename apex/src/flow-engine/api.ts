@@ -53,7 +53,7 @@ export function createFlowErrorEnvelope(
   return { ok: false, error };
 }
 
-export function isFlowApiEnvelope(value: unknown): value is FlowApiEnvelope<unknown> {
+export function isFlowApiEnvelope<T = unknown>(value: unknown): value is FlowApiEnvelope<T> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const candidate = value as Record<string, unknown>;
 
