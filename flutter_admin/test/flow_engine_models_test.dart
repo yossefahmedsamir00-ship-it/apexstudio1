@@ -37,7 +37,7 @@ void main() {
       'targetId': 'draft-1',
       'target': 'instagram:apex',
       'contentRevision': 2,
-      'contentHash': 'a' * 64,
+      'contentHash': List.filled(64, 'a').join(),
       'decision': 'pending',
     });
     final entry = FlowFinancialEntryModel.fromJson({
