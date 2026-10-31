@@ -51,7 +51,7 @@ export async function runWorkflowDryRun(
 
   const byId = new Map(definition.nodes.map((node) => [node.id, node]));
   const queue: Array<{ nodeId: string; incoming: unknown }> = [{ nodeId: start.id, incoming: input }];
-  const visited = new Set<string>();
+  const scheduled = new Set<string>([start.id]);
   const nodeRuns: DryRunNodeResult[] = [];
   const outputs: Record<string, unknown> = {};
 
@@ -60,14 +60,6 @@ export async function runWorkflowDryRun(
       return { status: "limit_exceeded", node_runs: nodeRuns, outputs, issues: [], external_effects_performed: false };
     }
     const current = queue.shift()!;
-    if (visited.has(current.nodeId)) {
-      return {
-        status: "failed", node_runs: nodeRuns, outputs,
-        issues: [{ code: "DRY_RUN_REPEATED_NODE", path: `nodes.${current.nodeId}` }],
-        external_effects_performed: false
-      };
-    }
-    visited.add(current.nodeId);
     const node = byId.get(current.nodeId);
     if (!node) continue;
 
@@ -137,7 +129,12 @@ export async function runWorkflowDryRun(
       edge.source === node.id &&
       (node.type !== "logic.condition" || edge.source_handle === (output ? "true" : "false"))
     );
-    for (const edge of outgoing) queue.push({ nodeId: edge.target, incoming: output });
+    for (const edge of outgoing) {
+      if (!scheduled.has(edge.target)) {
+        scheduled.add(edge.target);
+        queue.push({ nodeId: edge.target, incoming: output });
+      }
+    }
   }
 
   return { status: "completed", node_runs: nodeRuns, outputs, issues: [], external_effects_performed: false };
