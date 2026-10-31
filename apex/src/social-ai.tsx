@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BarChart3, Bot, CalendarDays, CheckCircle2, FileText, FlaskConical, Instagram, LayoutDashboard, Megaphone, Search, ShieldCheck, Sparkles, Upload, Users, Youtube } from 'lucide-react';
+import { BarChart3, Bot, CalendarDays, Camera, CheckCircle2, FileText, FlaskConical, LayoutDashboard, Megaphone, PlayCircle, Search, ShieldCheck, Sparkles, Upload, Users } from 'lucide-react';
 import { adminSupabase as supabase } from './lib/admin-supabase';
 import './social-ai.css';
 
@@ -16,7 +16,7 @@ const nav: Array<{ id: View; label: string; icon: React.ElementType }> = [
   { id: 'ugc', label: 'UGC Studio', icon: Users },
   { id: 'ads', label: 'Ads Intelligence', icon: Megaphone },
 ];
-const platformIcons: Record<string, React.ElementType> = { instagram: Instagram, youtube: Youtube, tiktok: Sparkles, x: Search };
+const platformIcons: Record<string, React.ElementType> = { instagram: Camera, youtube: PlayCircle, tiktok: Sparkles, x: Search };
 const DEMO_CONTENT: ContentItem[] = [
   { id: 'demo-1', title: 'APEX STUDIO — Brand Introduction', status: 'draft', platform: 'instagram' },
   { id: 'demo-2', title: 'Founder POV — Building better digital products', status: 'in_review', platform: 'x' },
