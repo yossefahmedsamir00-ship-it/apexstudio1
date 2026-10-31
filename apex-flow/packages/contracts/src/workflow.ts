@@ -83,6 +83,31 @@ export function validateWorkflow(input: unknown): ValidationResult {
     if (typeof edge.target_handle !== "string" || !edge.target_handle) add("INVALID_EDGE_HANDLE", `${path}.target_handle`);
   });
 
+  if (nodeIds.size === nodes.length && edges.every((edge) =>
+    isRecord(edge) && typeof edge.source === "string" && nodeIds.has(edge.source) &&
+    typeof edge.target === "string" && nodeIds.has(edge.target)
+  )) {
+    const adjacency = new Map<string, string[]>();
+    for (const id of nodeIds) adjacency.set(id, []);
+    for (const edge of edges as Array<Record<string, unknown>>) {
+      (adjacency.get(String(edge.source)) ?? []).push(String(edge.target));
+    }
+    const visiting = new Set<string>();
+    const visited = new Set<string>();
+    const hasCycle = (id: string): boolean => {
+      if (visiting.has(id)) return true;
+      if (visited.has(id)) return false;
+      visiting.add(id);
+      for (const next of adjacency.get(id) ?? []) {
+        if (hasCycle(next)) return true;
+      }
+      visiting.delete(id);
+      visited.add(id);
+      return false;
+    };
+    if ([...nodeIds].some(hasCycle)) add("WORKFLOW_CYCLE_NOT_SUPPORTED", "edges");
+  }
+
   if (!isRecord(input.settings)) add("INVALID_SETTINGS", "settings");
   else {
     const settings = input.settings;
