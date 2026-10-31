@@ -108,7 +108,7 @@ async function snapshotTarget(
   const actualHash = await sha256(content);
   if (actualHash !== draft.content_hash) throw new FlowRequestError("conflict", 409);
   return {
-    target: `${draft.platform}:${draft.platform}`,
+    target: `${draft.platform}:${draft.id}`,
     revision: Number(draft.revision),
     contentHash: actualHash,
   };
