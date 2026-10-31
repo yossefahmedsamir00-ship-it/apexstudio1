@@ -10,6 +10,7 @@ create table public.flow_requests (
   prompt text not null check (char_length(btrim(prompt)) between 1 and 8000),
   locale text not null default 'ar' check (locale in ('ar', 'en')),
   status text not null default 'draft' check (status in ('draft', 'accepted', 'cancelled')),
+  idempotency_key text check (idempotency_key is null or char_length(idempotency_key) between 8 and 160),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint flow_requests_id_owner_unique unique (id, owner_user_id)
@@ -188,6 +189,7 @@ create table public.flow_audit_events (
   created_at timestamptz not null default now()
 );
 
+create unique index flow_requests_owner_idempotency_uidx on public.flow_requests (owner_user_id, idempotency_key) where idempotency_key is not null;
 create index flow_requests_owner_created_idx on public.flow_requests (owner_user_id, created_at desc);
 create index flow_requests_owner_status_idx on public.flow_requests (owner_user_id, status);
 create index flow_operations_owner_created_idx on public.flow_operations (owner_user_id, created_at desc);
