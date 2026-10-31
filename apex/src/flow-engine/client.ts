@@ -1,6 +1,7 @@
 import type {
   FlowApproval,
   FlowFinancialEntry,
+  FlowPublishingDraft,
   FlowOperation,
   FlowRequest,
   FlowScene,
@@ -140,6 +141,59 @@ export class FlowEngineClient {
     return result.operations;
   }
 
+  async listProjects(): Promise<FlowVideoProject[]> {
+    const result = await this.invoke<{ projects: FlowVideoProject[] }>(
+      'flow-engine-operation',
+      { action: 'projects.list' },
+    );
+    return result.projects;
+  }
+
+  async listScenes(projectId: string): Promise<FlowScene[]> {
+    const result = await this.invoke<{ scenes: FlowScene[] }>(
+      'flow-engine-operation',
+      { action: 'scenes.list', projectId },
+    );
+    return result.scenes;
+  }
+
+  async listPublishingDrafts(): Promise<FlowPublishingDraft[]> {
+    const result = await this.invoke<{ drafts: FlowPublishingDraft[] }>(
+      'flow-engine-publishing',
+      { action: 'list' },
+    );
+    return result.drafts;
+  }
+
+  async createPublishingDraft(input: {
+    operationId: string;
+    platform: FlowPublishingDraft['platform'];
+    title?: string;
+    body: string;
+  }): Promise<FlowPublishingDraft> {
+    const result = await this.invoke<{ draft: FlowPublishingDraft }>(
+      'flow-engine-publishing',
+      { action: 'create', ...input },
+    );
+    return result.draft;
+  }
+
+  async updatePublishingDraft(input: {
+    draftId: string;
+    title?: string;
+    body?: string;
+  }): Promise<FlowPublishingDraft> {
+    const result = await this.invoke<{ draft: FlowPublishingDraft }>(
+      'flow-engine-publishing',
+      { action: 'update', ...input },
+    );
+    return result.draft;
+  }
+
+  requestPublish(draftId: string): Promise<never> {
+    return this.invoke('flow-engine-publishing', { action: 'publish', draftId });
+  }
+
   getOperation(operationId: string): Promise<{
     operation: FlowOperation;
     steps: Array<Record<string, unknown>>;
@@ -184,7 +238,6 @@ export class FlowEngineClient {
     targetType: 'scene' | 'publishing_draft';
     targetId: string;
     action: 'publish' | 'approve_scene';
-    target: string;
   }): Promise<FlowApproval> {
     const result = await this.invoke<{ approval: FlowApproval }>('flow-engine-approval', {
       action: 'request',
