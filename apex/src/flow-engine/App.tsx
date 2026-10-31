@@ -345,14 +345,14 @@ function FlowWorkspace({
       setApprovals(approvalRows);
       setDrafts(publishingRows);
       setEntries(financeRows);
-      if (!selectedOperation && ops[0]) setSelectedOperation(ops[0].id);
-      if (!selectedProject && videoProjects[0]) setSelectedProject(videoProjects[0].id);
+      setSelectedOperation(current => current || ops[0]?.id || '');
+      setSelectedProject(current => current || videoProjects[0]?.id || '');
     } catch (caught) {
       setError(errorMessage(caught, locale));
     } finally {
       setLoading(false);
     }
-  }, [client, locale, selectedOperation, selectedProject]);
+  }, [client, locale]);
 
   const loadScenes = useCallback(async (projectId: string) => {
     if (!projectId) { setScenes([]); return; }
@@ -703,7 +703,7 @@ function FlowWorkspace({
           <label>{t.status}<select value={financeStatus} onChange={e => setFinanceStatus(e.target.value as FlowFinancialEntry['status'])}>
             <option value="pending">{t.pending}</option><option value="confirmed">{t.confirmed}</option><option value="estimated">{t.estimated}</option><option value="refunded">{t.refunded}</option><option value="voided">{t.voided}</option>
           </select></label>
-          <label>{t.evidence}<input value={financeEvidence} onChange={e => setFinanceEvidence(e.target.value)} placeholder={financeStatus === 'confirmed' ? t.evidenceHint : ''}/></label>
+          <label>{t.evidence}<input value={financeEvidence} onChange={e => setFinanceEvidence(e.target.value)} placeholder={financeStatus === 'confirmed' ? t.evidenceHint : ''} required={financeStatus === 'confirmed'}/></label>
           {financeStatus === 'confirmed' && <small className="flow-muted">{t.evidenceHint}</small>}
           <button className="flow-button primary" disabled={busy}><Plus size={16}/>{t.addEntry}</button>
         </form>
@@ -737,7 +737,7 @@ function FlowWorkspace({
         </button>;
       })}</nav>
       <div className="flow-sidebar-bottom">
-        <div className="flow-owner"><span className="flow-owner-dot"/><span><b>{t.owner}</b><small>{userId.slice(0, 8)}…</small></span></div>
+        <div className="flow-owner"><span className="flow-owner-dot"/><span><b>{t.owner}</b><small>APEX FLOW ENGINE</small></span></div>
         <button className="flow-sidebar-action" onClick={onSignOut}><LogOut size={15}/>{t.signOut}</button>
       </div>
     </aside>
