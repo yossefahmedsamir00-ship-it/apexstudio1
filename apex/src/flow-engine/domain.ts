@@ -111,12 +111,17 @@ export interface FlowAsset {
 export interface FlowApproval {
   id: string;
   ownerUserId: string;
+  operationId: string;
   action: FlowApprovalAction;
+  targetType: 'scene' | 'publishing_draft' | 'operation';
+  targetId: string;
   contentRevision: number;
   target: string;
   contentHash: string;
   decision: 'pending' | 'approved' | 'rejected' | 'revoked';
-  decidedAt?: string;
+  decisionComment?: string | null;
+  decidedAt?: string | null;
+  createdAt: string;
 }
 
 export interface FlowApprovalActionSnapshot {
@@ -145,12 +150,14 @@ export interface FlowPublishingDraft {
 export interface FlowFinancialEntry {
   id: string;
   ownerUserId: string;
+  operationId?: string | null;
   entryType: FlowFinancialEntryType;
   amountMinor: number;
   currency: string;
   source: FlowFinancialSource;
   status: FlowFinancialStatus;
-  evidenceReference?: string;
+  evidenceReference?: string | null;
+  occurredAt?: string | null;
   createdAt: string;
 }
 
