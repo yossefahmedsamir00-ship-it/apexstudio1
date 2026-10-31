@@ -305,6 +305,27 @@ async function updateScene(
   return mapScene(data);
 }
 
+
+async function listProjects(context: Awaited<ReturnType<typeof getFlowContext>>) {
+  const { data, error } = await context.admin.from("flow_video_projects")
+    .select("*").eq("owner_user_id", context.user.id)
+    .order("updated_at", { ascending: false }).limit(100);
+  if (error) throw new FlowRequestError("internal_error", 500);
+  return { projects: (data ?? []).map(mapProject) };
+}
+
+async function listScenes(context: Awaited<ReturnType<typeof getFlowContext>>, projectId: string) {
+  const { data: project, error: projectError } = await context.admin.from("flow_video_projects")
+    .select("id").eq("id", projectId).eq("owner_user_id", context.user.id).maybeSingle();
+  if (projectError) throw new FlowRequestError("internal_error", 500);
+  if (!project) throw new FlowRequestError("not_found", 404);
+  const { data, error } = await context.admin.from("flow_scenes").select("*")
+    .eq("project_id", projectId).eq("owner_user_id", context.user.id)
+    .order("sort_order", { ascending: true });
+  if (error) throw new FlowRequestError("internal_error", 500);
+  return { scenes: (data ?? []).map(mapScene) };
+}
+
 Deno.serve(async (request: Request) => {
   const fallbackId = correlationId();
   if (request.method === "OPTIONS") {
@@ -330,12 +351,16 @@ Deno.serve(async (request: Request) => {
     const action = requireEnum(
       body.action,
       "action",
-      ["list", "get", "cancel", "project.create", "scene.create", "scene.update"] as const,
+      ["list", "get", "cancel", "projects.list", "scenes.list", "project.create", "scene.create", "scene.update"] as const,
     );
     let data: unknown;
 
     if (action === "list") {
       data = await listOperations(context);
+    } else if (action === "projects.list") {
+      data = await listProjects(context);
+    } else if (action === "scenes.list") {
+      data = await listScenes(context, requireString(body.projectId, "projectId", 80));
     } else if (action === "get") {
       data = await getOperation(context, requireString(body.operationId, "operationId", 80));
     } else if (action === "cancel") {
