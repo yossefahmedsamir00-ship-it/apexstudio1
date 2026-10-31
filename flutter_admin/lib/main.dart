@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'features/flow_engine/flow_engine_screen.dart';
+
 const supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
   defaultValue: 'https://dyoaiszrmfrdxgouzgzq.supabase.co',
@@ -584,6 +586,7 @@ class _AdminShellState extends State<AdminShell> {
     NavigationDestination(icon: Icon(Icons.timeline_outlined), selectedIcon: Icon(Icons.timeline), label: 'Activity'),
     NavigationDestination(icon: Icon(Icons.shield_outlined), selectedIcon: Icon(Icons.shield), label: 'Security'),
     NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune), label: 'Controls'),
+    NavigationDestination(icon: Icon(Icons.hub_outlined), selectedIcon: Icon(Icons.hub), label: 'Flow Engine'),
   ];
 
   late final AdminRepository _repository;
@@ -669,6 +672,8 @@ class _AdminShellState extends State<AdminShell> {
         return SecurityPage(securityEvents: data.securityEvents, auditLogs: data.auditLogs);
       case 6:
         return ControlsPage(controls: data.runtimeControls, onSetLockdown: _setLockdown, onRefresh: _refresh);
+      case 7:
+        return const FlowEngineScreen();
       default:
         return OverviewPage(data: data, repository: _repository, onChanged: _refresh);
     }
