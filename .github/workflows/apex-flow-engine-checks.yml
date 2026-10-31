@@ -107,3 +107,4 @@ jobs:
           supabase/functions/flow-engine-operation/index.ts
           supabase/functions/flow-engine-approval/index.ts
           supabase/functions/flow-engine-finance/index.ts
+          supabase/functions/flow-engine-publishing/index.ts
