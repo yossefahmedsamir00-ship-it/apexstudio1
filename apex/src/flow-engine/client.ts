@@ -147,25 +147,28 @@ export class FlowEngineClient {
     return this.invoke('flow-engine-operation', { action: 'get', operationId });
   }
 
-  createProject(input: CreateFlowProjectInput): Promise<FlowVideoProject> {
-    return this.invoke('flow-engine-operation', {
+  async createProject(input: CreateFlowProjectInput): Promise<FlowVideoProject> {
+    const result = await this.invoke<{ project: FlowVideoProject }>('flow-engine-operation', {
       action: 'project.create',
       ...input,
     });
+    return result.project;
   }
 
-  createScene(input: CreateFlowSceneInput): Promise<FlowScene> {
-    return this.invoke('flow-engine-operation', {
+  async createScene(input: CreateFlowSceneInput): Promise<FlowScene> {
+    const result = await this.invoke<{ scene: FlowScene }>('flow-engine-operation', {
       action: 'scene.create',
       ...input,
     });
+    return result.scene;
   }
 
-  updateScene(input: UpdateFlowSceneInput): Promise<FlowScene> {
-    return this.invoke('flow-engine-operation', {
+  async updateScene(input: UpdateFlowSceneInput): Promise<FlowScene> {
+    const result = await this.invoke<{ scene: FlowScene }>('flow-engine-operation', {
       action: 'scene.update',
       ...input,
     });
+    return result.scene;
   }
 
   async listApprovals(): Promise<FlowApproval[]> {
@@ -176,32 +179,33 @@ export class FlowEngineClient {
     return result.approvals;
   }
 
-  requestApproval(input: {
+  async requestApproval(input: {
     operationId: string;
-    targetType: 'scene' | 'publishing_draft' | 'operation';
+    targetType: 'scene' | 'publishing_draft';
     targetId: string;
-    action: 'publish' | 'send' | 'execute' | 'approve_scene';
+    action: 'publish' | 'approve_scene';
     target: string;
   }): Promise<FlowApproval> {
-    return this.invoke('flow-engine-approval', {
+    const result = await this.invoke<{ approval: FlowApproval }>('flow-engine-approval', {
       action: 'request',
       operationAction: input.action,
       operationId: input.operationId,
       targetType: input.targetType,
       targetId: input.targetId,
-      target: input.target,
     });
+    return result.approval;
   }
 
-  decideApproval(input: {
+  async decideApproval(input: {
     approvalId: string;
     decision: 'approved' | 'rejected';
     comment?: string;
   }): Promise<FlowApproval> {
-    return this.invoke('flow-engine-approval', {
+    const result = await this.invoke<{ approval: FlowApproval }>('flow-engine-approval', {
       action: 'decide',
       ...input,
     });
+    return result.approval;
   }
 
   async listFinancialEntries(): Promise<FlowFinancialEntry[]> {
@@ -212,10 +216,11 @@ export class FlowEngineClient {
     return result.entries;
   }
 
-  createFinancialEntry(input: CreateFlowFinancialEntryInput): Promise<FlowFinancialEntry> {
-    return this.invoke('flow-engine-finance', {
+  async createFinancialEntry(input: CreateFlowFinancialEntryInput): Promise<FlowFinancialEntry> {
+    const result = await this.invoke<{ entry: FlowFinancialEntry }>('flow-engine-finance', {
       action: 'create',
       ...input,
     });
+    return result.entry;
   }
 }
