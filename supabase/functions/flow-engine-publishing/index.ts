@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import {
-  assertAllowedOrigin, correlationId, FlowRequestError, jsonResponse,
+  assertAllowedOrigin,
+  corsHeaders, correlationId, FlowRequestError, jsonResponse,
   readJsonBody, requireEnum, requireString, toFlowError,
 } from "../_shared/flow-engine-contracts.ts";
 import { getFlowContext } from "../_shared/flow-engine-auth.ts";
@@ -98,15 +99,7 @@ async function updateDraft(context: Context, body: Record<string, unknown>) {
 Deno.serve(async (request: Request) => {
   const fallbackId = correlationId();
   if (request.method === "OPTIONS") {
-    const origin = request.headers.get("origin") ?? "";
-    const headers: Record<string, string> = {
-      "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-      "Access-Control-Allow-Methods": "POST, OPTIONS", "Vary": "Origin",
-    };
-    if (origin === "https://yossefahmedsamir00-ship-it.github.io") {
-      headers["Access-Control-Allow-Origin"] = origin;
-    }
-    return new Response(null, { status: 204, headers });
+    return new Response(null, { status: 204, headers: corsHeaders(request) });
   }
   if (request.method !== "POST") {
     const safe = toFlowError(new FlowRequestError("validation_error", 405));
