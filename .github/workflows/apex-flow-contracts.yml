@@ -1,0 +1,31 @@
+name: APEX FLOW Contracts
+
+on:
+  push:
+    branches: [docs/apex-flow-engine-design]
+    paths:
+      - 'apex-flow/**'
+      - '.github/workflows/apex-flow-contracts.yml'
+  pull_request:
+    paths:
+      - 'apex-flow/**'
+      - '.github/workflows/apex-flow-contracts.yml'
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apex-flow
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apex-flow/package-lock.json
+      - run: npm install
+      - name: Run contract tests
+        run: npm test
+      - name: Typecheck
+        run: npm run typecheck
