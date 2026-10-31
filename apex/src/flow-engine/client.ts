@@ -191,7 +191,7 @@ export class FlowEngineClient {
   }
 
   requestPublish(draftId: string): Promise<never> {
-    return this.invoke('flow-engine-publishing', { action: 'publish', draftId });
+    return this.invoke<never>('flow-engine-publishing', { action: 'publish', draftId });
   }
 
   getOperation(operationId: string): Promise<{
