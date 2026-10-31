@@ -18,8 +18,14 @@ Only official platform APIs and documented OAuth flows may be used. No password 
 4. Approval queue: owner review, edit, approve, reject, and immutable approval history. Publishing is disabled until explicit owner approval.
 5. Publishing center: per-platform connector, capability checks, media validation, idempotent publish jobs, retry policy, and status reconciliation.
 6. Analytics: provider-sourced metrics with retrieval timestamps, metric definitions, date windows, and clear unavailable-data states.
-7. Automation center: n8n workflow references and run status. n8n is an executor, not an authorization boundary.
-8. Audit and settings: account connections, token health, permissions, security events, and owner activity.
+7. Brand Brain: versioned brand profile, approved product facts, audience evidence, source-backed knowledge, and asset rights.
+8. UGC Studio: hooks, scene-by-scene scripts, shot lists, voice-over, and creator disclosure/usage-rights checks.
+9. Meta Ads Intelligence: report import/read-only analysis first; campaign and budget changes remain disabled unless separately authorized.
+10. Growth Command Center: evidence-backed performance insights, experiment tracking, and proposed learning updates.
+11. Automation center: n8n workflow references and run status. n8n is an executor, not an authorization boundary.
+12. Audit and settings: account connections, token health, permissions, security events, and owner activity.
+
+See docs/APEX_SOCIAL_AI_GROWTH_SYSTEM.md for the unified Brand Brain, research, UGC, Ads Intelligence, agent permissions, n8n workflows, and phased delivery design.
 
 ## 4. Architecture
 - Web admin and Flutter Admin are presentation clients only.
@@ -125,7 +131,8 @@ Every function validates caller identity, tenant membership, ownership, payload 
 
 ## 12. Explicit non-goals for Release 1
 - Client tenant activation.
-- X integration.
+- X publishing connector in Release 1 (X content planning and copy generation are supported; publishing is gated on API access, terms, and cost/plan suitability).
+- Write-capable Meta Ads operations in the initial release.
 - Auto-publishing without owner approval.
 - Unofficial scraping or UI automation.
 - Paid ads campaign management or ad spend controls.
