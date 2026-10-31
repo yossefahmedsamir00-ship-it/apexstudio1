@@ -12,6 +12,7 @@ on:
       - 'apex/vite.config.ts'
       - 'supabase/migrations/**'
       - 'supabase/tests/**'
+      - 'supabase/functions/**'
       - '.github/workflows/apex-flow-engine-checks.yml'
   pull_request:
     branches:
@@ -24,6 +25,7 @@ on:
       - 'apex/vite.config.ts'
       - 'supabase/migrations/**'
       - 'supabase/tests/**'
+      - 'supabase/functions/**'
 
 jobs:
   web:
@@ -41,8 +43,25 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
       - name: Run focused Flow Engine contracts
-        run: npm test -- src/flow-engine/domain.test.ts src/flow-engine/api.test.ts
+        run: npm test -- src/flow-engine/domain.test.ts src/flow-engine/api.test.ts src/flow-engine/client.test.ts
       - name: Run complete web test suite
         run: npm test
       - name: Build all web entries
         run: npm run build
+
+  edge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Test server request contracts
+        run: deno test --no-lock --allow-env supabase/functions/_shared/flow-engine-contracts.test.ts
+      - name: Type-check Flow Engine Edge Functions
+        run: >-
+          deno check --no-lock
+          supabase/functions/flow-engine-request/index.ts
+          supabase/functions/flow-engine-operation/index.ts
+          supabase/functions/flow-engine-approval/index.ts
+          supabase/functions/flow-engine-finance/index.ts
