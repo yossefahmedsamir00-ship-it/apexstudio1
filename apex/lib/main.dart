@@ -1,3 +1,5 @@
+import 'flow/flow_workspace.dart';
+
 import 'package:flutter/material.dart';
 
 void main() => runApp(const ApexStudioApp());
@@ -50,6 +52,13 @@ class _ApexHomeState extends State<ApexHome> {
       textDirection: ar ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         appBar: PreferredSize(preferredSize: Size.fromHeight(mobile ? 74 : 86), child: _Nav(mobile: mobile, ar: ar, onLang: () => setState(() => ar = !ar), onWork: () => go(workKey), onServices: () => go(servicesKey), onContact: () => go(contactKey))),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FlowWorkspace())),
+          backgroundColor: const Color(0xFFD7A83E),
+          foregroundColor: Colors.black,
+          icon: const Icon(Icons.account_tree_rounded),
+          label: const Text('APEX FLOW', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.1)),
+        ),
         body: CustomScrollView(slivers: [
           SliverToBoxAdapter(child: _Hero(mobile: mobile, ar: ar, onWork: () => go(workKey), onContact: () => go(contactKey))),
           SliverToBoxAdapter(child: _Statement(ar: ar)),
