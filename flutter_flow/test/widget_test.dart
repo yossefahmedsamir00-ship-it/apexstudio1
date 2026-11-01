@@ -6,7 +6,7 @@ void main() {
   testWidgets('renders APEX FLOW workspace and builder modes', (tester) async {
     await tester.pumpWidget(const ApexFlowApp());
 
-    expect(find.text('APEX FLOW'), findsOneWidget);
+    expect(find.text('APEX FLOW'), findsNWidgets(2));
     expect(find.text('Automation Studio'), findsOneWidget);
     expect(find.text('Visual'), findsOneWidget);
     expect(find.text('Simple'), findsOneWidget);
