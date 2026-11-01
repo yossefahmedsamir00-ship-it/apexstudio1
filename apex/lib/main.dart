@@ -53,6 +53,7 @@ class _ApexHomeState extends State<ApexHome> {
       child: Scaffold(
         appBar: PreferredSize(preferredSize: Size.fromHeight(mobile ? 74 : 86), child: _Nav(mobile: mobile, ar: ar, onLang: () => setState(() => ar = !ar), onWork: () => go(workKey), onServices: () => go(servicesKey), onContact: () => go(contactKey))),
         floatingActionButton: FloatingActionButton.extended(
+          tooltip: 'Open APEX FLOW',
           onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FlowWorkspace())),
           backgroundColor: const Color(0xFFD7A83E),
           foregroundColor: Colors.black,
