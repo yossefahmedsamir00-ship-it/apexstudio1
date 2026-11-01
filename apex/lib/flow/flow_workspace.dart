@@ -25,7 +25,7 @@ class _FlowWorkspaceState extends State<FlowWorkspace> {
       version: 1,
       builderMode: _mode,
       executionMode: _executionMode,
-      nodes: const [
+      nodes: [
         FlowNodeInstance(id: 'trigger-1', definition: flowStarterNodes[0]),
         FlowNodeInstance(id: 'ai-1', definition: flowStarterNodes[1]),
       ],
