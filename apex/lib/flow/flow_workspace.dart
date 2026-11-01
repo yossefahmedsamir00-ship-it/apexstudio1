@@ -67,18 +67,20 @@ class _FlowWorkspaceState extends State<FlowWorkspace> {
             children: [
               const Icon(Icons.account_tree_rounded, color: Color(0xFFD6B56A)),
               const SizedBox(width: 10),
-              Text(_label('APEX FLOW', 'APEX FLOW'), style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                decoration: BoxDecoration(color: const Color(0xFFD6B56A).withValues(alpha: .12), borderRadius: BorderRadius.circular(99)),
-                child: Text(_label('OWNER WORKSPACE', 'مساحة المالك'), style: const TextStyle(color: Color(0xFFD6B56A), fontSize: 10, fontWeight: FontWeight.w800)),
-              ),
+              Text(_label('APEX FLOW', 'APEX FLOW'), style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              if (!compact) ...[
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  decoration: BoxDecoration(color: const Color(0xFFD6B56A).withValues(alpha: .12), borderRadius: BorderRadius.circular(99)),
+                  child: Text(_label('OWNER WORKSPACE', 'مساحة المالك'), style: const TextStyle(color: Color(0xFFD6B56A), fontSize: 10, fontWeight: FontWeight.w800)),
+                ),
+              ],
             ],
           ),
           actions: [
             IconButton(onPressed: () => setState(() => _arabic = !_arabic), tooltip: 'Language', icon: const Icon(Icons.translate)),
-            IconButton(onPressed: () {}, tooltip: _label('Save draft', 'حفظ المسودة'), icon: const Icon(Icons.save_outlined)),
+            if (!compact) IconButton(onPressed: () {}, tooltip: _label('Save draft', 'حفظ المسودة'), icon: const Icon(Icons.save_outlined)),
             const SizedBox(width: 8),
           ],
         ),
