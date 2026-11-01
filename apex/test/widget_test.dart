@@ -9,12 +9,12 @@ void main() {
     expect(find.text('STUDIO'), findsOneWidget);
     expect(find.text('INDEPENDENT DIGITAL STUDIO · CAIRO / REMOTE'), findsOneWidget);
     expect(find.text('START A PROJECT'), findsWidgets);
-    expect(find.text('APEX FLOW'), findsOneWidget);
+    expect(find.text('APEX FLOW'), findsWidgets);
   });
 
   testWidgets('opens APEX FLOW from the main application', (tester) async {
     await tester.pumpWidget(const ApexStudioApp());
-    await tester.tap(find.text('APEX FLOW'));
+    await tester.tap(find.byTooltip('Open APEX FLOW'));
     await tester.pumpAndSettle();
 
     expect(find.text('Automation Studio'), findsOneWidget);
