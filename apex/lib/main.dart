@@ -46,7 +46,7 @@ class _ApexHomeState extends State<ApexHome> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final mobile = width < 760;
+    final mobile = width < 900;
     final shown = filter == 'All' ? projects : projects.where((p) => p.category == filter).toList();
     return Directionality(
       textDirection: ar ? TextDirection.rtl : TextDirection.ltr,
