@@ -55,6 +55,7 @@ class _FlowWorkspaceState extends State<FlowWorkspace> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final compact = MediaQuery.sizeOf(context).width < 850;
     return Directionality(
       textDirection: _arabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -81,12 +82,29 @@ class _FlowWorkspaceState extends State<FlowWorkspace> {
             const SizedBox(width: 8),
           ],
         ),
-        body: Row(
-          children: [
-            _Sidebar(section: _section, arabic: _arabic, onSelect: (value) => setState(() => _section = value)),
-            Expanded(child: _content(scheme)),
-          ],
-        ),
+        drawer: compact
+            ? Drawer(
+                backgroundColor: const Color(0xFF080A0F),
+                child: SafeArea(
+                  child: _Sidebar(
+                    section: _section,
+                    arabic: _arabic,
+                    onSelect: (value) {
+                      setState(() => _section = value);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              )
+            : null,
+        body: compact
+            ? _content(scheme)
+            : Row(
+                children: [
+                  _Sidebar(section: _section, arabic: _arabic, onSelect: (value) => setState(() => _section = value)),
+                  Expanded(child: _content(scheme)),
+                ],
+              ),
       ),
     );
   }
@@ -214,12 +232,28 @@ class _BuilderPanel extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Expanded(
-          child: Row(
-            children: [
-              SizedBox(width: 220, child: _NodePalette(arabic: arabic, onAdd: onAdd)),
-              Expanded(child: _Canvas(arabic: arabic, workflow: workflow)),
-              SizedBox(width: 230, child: _Inspector(arabic: arabic, workflow: workflow)),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 900) {
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 18),
+                  children: [
+                    SizedBox(height: 190, child: _NodePalette(arabic: arabic, onAdd: onAdd)),
+                    const SizedBox(height: 12),
+                    SizedBox(height: 330, child: _Canvas(arabic: arabic, workflow: workflow)),
+                    const SizedBox(height: 12),
+                    SizedBox(height: 220, child: _Inspector(arabic: arabic, workflow: workflow)),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  SizedBox(width: 220, child: _NodePalette(arabic: arabic, onAdd: onAdd)),
+                  Expanded(child: _Canvas(arabic: arabic, workflow: workflow)),
+                  SizedBox(width: 230, child: _Inspector(arabic: arabic, workflow: workflow)),
+                ],
+              );
+            },
           ),
         ),
       ],
