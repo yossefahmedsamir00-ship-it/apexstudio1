@@ -204,7 +204,7 @@ class _BuilderPanel extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(22, 20, 22, 14),
+          padding: const EdgeInsets.fromLTRB(14, 20, 14, 14),
           child: Wrap(
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
