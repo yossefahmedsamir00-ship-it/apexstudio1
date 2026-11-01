@@ -203,9 +203,12 @@ class _BuilderPanel extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(22, 20, 22, 14),
-          child: Row(
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 12,
             children: [
-              Expanded(child: Text(l('Automation Studio', 'استوديو الأتمتة'), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900))),
+              Text(l('Automation Studio', 'استوديو الأتمتة'), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
               SegmentedButton<FlowBuilderMode>(
                 segments: [
                   ButtonSegment(value: FlowBuilderMode.visual, label: Text(l('Visual', 'مرئي')), icon: const Icon(Icons.account_tree, size: 16)),
@@ -220,14 +223,21 @@ class _BuilderPanel extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22),
-          child: Row(
-            children: [
-              Expanded(child: _FieldCard(title: l('Workflow', 'سير العمل'), value: workflow.name, icon: Icons.bolt_outlined)),
-              const SizedBox(width: 10),
-              Expanded(child: _FieldCard(title: l('Version', 'الإصدار'), value: 'v${workflow.version}', icon: Icons.history)),
-              const SizedBox(width: 10),
-              Expanded(child: _ExecutionCard(mode: workflow.executionMode, onChanged: onExecutionMode, arabic: arabic)),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final cardWidth = constraints.maxWidth < 650
+                  ? (constraints.maxWidth - 10) / 2
+                  : (constraints.maxWidth - 20) / 3;
+              return Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  SizedBox(width: cardWidth, child: _FieldCard(title: l('Workflow', 'سير العمل'), value: workflow.name, icon: Icons.bolt_outlined)),
+                  SizedBox(width: cardWidth, child: _FieldCard(title: l('Version', 'الإصدار'), value: 'v${workflow.version}', icon: Icons.history)),
+                  SizedBox(width: cardWidth, child: _ExecutionCard(mode: workflow.executionMode, onChanged: onExecutionMode, arabic: arabic)),
+                ],
+              );
+            },
           ),
         ),
         const SizedBox(height: 14),
