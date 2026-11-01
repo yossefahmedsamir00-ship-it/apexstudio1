@@ -269,7 +269,6 @@ class _Canvas extends StatelessWidget {
         color: const Color(0xFF0C1017),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withValues(alpha: .06)),
-        image: const DecorationImage(image: AssetImage(''), onError: null),
       ),
       child: CustomPaint(
         painter: _GridPainter(),
