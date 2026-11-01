@@ -250,9 +250,9 @@ class _BuilderPanel extends StatelessWidget {
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(14, 0, 14, 18),
                   children: [
-                    SizedBox(height: 190, child: _NodePalette(arabic: arabic, onAdd: onAdd)),
+                    SizedBox(height: 190, child: _NodePalette(arabic: arabic, onAdd: onAdd, compact: true)),
                     const SizedBox(height: 12),
-                    SizedBox(height: 330, child: _Canvas(arabic: arabic, workflow: workflow)),
+                    SizedBox(height: 330, child: _Canvas(arabic: arabic, workflow: workflow, compact: true)),
                     const SizedBox(height: 12),
                     SizedBox(height: 220, child: _Inspector(arabic: arabic, workflow: workflow)),
                   ],
@@ -274,13 +274,14 @@ class _BuilderPanel extends StatelessWidget {
 }
 
 class _NodePalette extends StatelessWidget {
-  const _NodePalette({required this.arabic, required this.onAdd});
+  const _NodePalette({required this.arabic, required this.onAdd, this.compact = false});
   final bool arabic;
   final ValueChanged<FlowNodeDefinition> onAdd;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(left: 18, bottom: 18),
+        margin: EdgeInsets.only(left: compact ? 0 : 18, bottom: compact ? 0 : 18),
         padding: const EdgeInsets.all(12),
         decoration: _panelDecoration(),
         child: ListView(
@@ -303,14 +304,15 @@ class _NodePalette extends StatelessWidget {
 }
 
 class _Canvas extends StatelessWidget {
-  const _Canvas({required this.arabic, required this.workflow});
+  const _Canvas({required this.arabic, required this.workflow, this.compact = false});
   final bool arabic;
   final FlowWorkflow workflow;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+      margin: EdgeInsets.symmetric(horizontal: compact ? 0 : 10, vertical: 0),
       decoration: BoxDecoration(
         color: const Color(0xFF0C1017),
         borderRadius: BorderRadius.circular(18),
@@ -319,7 +321,7 @@ class _Canvas extends StatelessWidget {
       child: CustomPaint(
         painter: _GridPainter(),
         child: Padding(
-          padding: const EdgeInsets.all(28),
+          padding: EdgeInsets.all(compact ? 16 : 28),
           child: ListView.separated(
             itemCount: workflow.nodes.length,
             separatorBuilder: (_, __) => const SizedBox(height: 16),
