@@ -1,0 +1,43 @@
+name: APEX FLOW Flutter CI
+
+on:
+  push:
+    branches: [feat/apex-flow-flutter-foundation, main]
+    paths:
+      - 'flutter_flow/**'
+      - '.github/workflows/flutter-flow.yml'
+  pull_request:
+    paths:
+      - 'flutter_flow/**'
+      - '.github/workflows/flutter-flow.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_flow
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - name: Generate platform files
+        run: flutter create --platforms=android --project-name apex_flow_engine --org com.apexstudio .
+      - name: Pub get
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test
+      - name: Build Android debug APK
+        run: flutter build apk --debug
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-flow-engine-debug-apk
+          path: flutter_flow/build/app/outputs/flutter-apk/app-debug.apk
