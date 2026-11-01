@@ -1,4 +1,5 @@
 import 'package:apex_studio/main.dart';
+import 'package:apex_studio/flow/flow_workspace.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -21,5 +22,16 @@ void main() {
     expect(find.text('Visual'), findsOneWidget);
     expect(find.text('Simple'), findsOneWidget);
     expect(find.text('Hybrid'), findsOneWidget);
+  });
+  testWidgets('FLOW workspace renders without overflow on a phone viewport', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const MaterialApp(home: FlowWorkspace()));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
   });
 }
