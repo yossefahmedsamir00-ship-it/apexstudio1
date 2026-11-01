@@ -1,4 +1,4 @@
-name: Deploy APEX STUDIO to GitHub Pages
+name: Deploy APEX STUDIO Flutter app to GitHub Pages
 
 on:
   push:
@@ -16,11 +16,6 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
-env:
-  VITE_AI_API_URL: https://dyoaiszrmfrdxgouzgzq.supabase.co/functions/v1/apex-ai-gateway
-  VITE_SUPABASE_URL: https://dyoaiszrmfrdxgouzgzq.supabase.co
-  VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_VD3iKy4zbt4pJFfZkO4YFA_rj5sS1Ui
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,78 +23,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          node-version: 24
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
 
-      - name: Install dependencies
+      - name: Get Flutter dependencies
         working-directory: apex
-        run: npm ci
+        run: flutter pub get
 
-      - name: Dependency security audit (report-only)
+      - name: Analyze Flutter app
         working-directory: apex
-        shell: bash
-        run: |
-          npm audit --json > "$RUNNER_TEMP/npm-audit.json" || true
-          node <<'NODE'
-          const fs = require('node:fs');
-          const path = process.env.RUNNER_TEMP + '/npm-audit.json';
-          let report;
-          try {
-            report = JSON.parse(fs.readFileSync(path, 'utf8'));
-          } catch {
-            console.log('npm audit report was unavailable; dependency audit is NOT VERIFIED in this run.');
-            process.exit(0);
-          }
-          const summary = report.metadata?.vulnerabilities ?? {};
-          console.log('Dependency audit (report only):', JSON.stringify(summary));
-          for (const [name, vuln] of Object.entries(report.vulnerabilities ?? {})) {
-            const fix = typeof vuln.fixAvailable === 'object'
-              ? JSON.stringify(vuln.fixAvailable)
-              : String(vuln.fixAvailable);
-            console.log(`[${vuln.severity}] ${name} | direct=${vuln.isDirect} | range=${vuln.range} | fixAvailable=${fix}`);
-            for (const item of vuln.via ?? []) {
-              if (typeof item === 'object') console.log(`  - ${item.title ?? item.name ?? 'Advisory'} ${item.url ?? ''}`);
-            }
-          }
-          NODE
+        run: flutter analyze
 
-      - name: Enforce dependency security threshold
+      - name: Run Flutter tests
         working-directory: apex
-        run: npm audit --audit-level=high
+        run: flutter test
 
-      - name: Preserve resolved lockfile and audit report
-        if: always()
+      - name: Build Flutter web
         working-directory: apex
-        shell: bash
-        run: |
-          mkdir -p ci-artifacts
-          if [ -f package-lock.json ]; then cp package-lock.json ci-artifacts/package-lock.json; fi
-          if [ -f "$RUNNER_TEMP/npm-audit.json" ]; then cp "$RUNNER_TEMP/npm-audit.json" ci-artifacts/npm-audit.json; fi
-
-      - name: Upload dependency audit artifact
-        if: always() && github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: apex-dependency-audit-${{ github.run_number }}
-          path: apex/ci-artifacts/
-          if-no-files-found: warn
-          retention-days: 3
-
-      - name: Run tests
-        working-directory: apex
-        run: npm test
-
-      - name: Build project
-        working-directory: apex
-        run: npm run build
+        run: flutter build web --release --base-href /apexstudio1/
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: apex/dist
+          path: apex/build/web
 
   deploy:
     if: github.event_name != 'pull_request'
