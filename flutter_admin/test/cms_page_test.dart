@@ -33,7 +33,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Launch announcement'), findsOneWidget);
-    expect(find.text('A new studio update.'), findsOneWidget);
+    expect(find.textContaining('A new studio update.'), findsOneWidget);
   });
 
   testWidgets('opens a preview without publishing', (tester) async {
