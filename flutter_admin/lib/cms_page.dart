@@ -97,7 +97,7 @@ class _CmsPageState extends State<CmsPage> {
                   ),
                   const SizedBox(height: 14),
                   DropdownButtonFormField<String>(
-                    value: kind,
+                    initialValue: kind,
                     decoration: const InputDecoration(labelText: 'Content type'),
                     items: const [
                       DropdownMenuItem(value: 'Page section', child: Text('Page section')),
