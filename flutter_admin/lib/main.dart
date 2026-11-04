@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'cms_page.dart';
+
 const supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
   defaultValue: 'https://dyoaiszrmfrdxgouzgzq.supabase.co',
@@ -13,11 +15,13 @@ const supabasePublishableKey = String.fromEnvironment(
   defaultValue: 'sb_publishable_VD3iKy4zbt4pJFfZkO4YFA_rj5sS1Ui',
 );
 
-const _gold = Color(0xFFD6B56A);
-const _cyan = Color(0xFF64DDF2);
-const _surface = Color(0xFF11141B);
-const _background = Color(0xFF080A0F);
-const _muted = Color(0xFF9AA4B2);
+const _gold = Color(0xFFD7AA5B);
+const _goldLight = Color(0xFFFFE2A1);
+const _cyan = Color(0xFF5C8DFF);
+const _red = Color(0xFFFF543D);
+const _surface = Color(0xFF0B0C0D);
+const _background = Color(0xFF050505);
+const _muted = Color(0xFF92958F);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,37 +38,82 @@ class ApexAdminApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: _gold,
+      brightness: Brightness.dark,
+      surface: _surface,
+    ).copyWith(primary: _gold, secondary: _cyan, tertiary: _red, surface: _surface);
     final theme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: _background,
-      colorScheme: ColorScheme.fromSeed(seedColor: _gold, brightness: Brightness.dark, surface: _surface),
-      appBarTheme: const AppBarTheme(backgroundColor: _background, foregroundColor: Colors.white),
+      colorScheme: scheme,
+      dividerColor: Colors.white.withValues(alpha: .08),
+      textTheme: ThemeData.dark().textTheme.apply(
+        bodyColor: const Color(0xFFF7F3EA),
+        displayColor: const Color(0xFFF7F3EA),
+        fontFamily: 'Roboto',
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: _background,
+        foregroundColor: Color(0xFFF7F3EA),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+      ),
       cardTheme: CardThemeData(
         color: _surface,
         elevation: 0,
+        margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: Colors.white.withValues(alpha: .07)),
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: _gold.withValues(alpha: .13)),
+        ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: const Color(0xFF090A0A),
+        indicatorColor: _gold.withValues(alpha: .17),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
+          color: states.contains(WidgetState.selected) ? _goldLight : _muted,
+          fontSize: 10,
+          fontWeight: states.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w500,
+        )),
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: const Color(0xFF080909),
+        indicatorColor: _gold.withValues(alpha: .17),
+        selectedIconTheme: const IconThemeData(color: _goldLight),
+        unselectedIconTheme: const IconThemeData(color: _muted),
+        selectedLabelTextStyle: const TextStyle(color: _goldLight, fontSize: 11, fontWeight: FontWeight.w800),
+        unselectedLabelTextStyle: const TextStyle(color: _muted, fontSize: 11),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: _gold,
+          foregroundColor: const Color(0xFF100D07),
+          minimumSize: const Size(0, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF171B23),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)),
+        fillColor: const Color(0xFF111313),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(13),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: Colors.white.withValues(alpha: .1)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(13),
-          borderSide: const BorderSide(color: _gold),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _goldLight, width: 1.4),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF252A34),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: const Color(0xFF171918),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
     return MaterialApp(
@@ -74,6 +123,133 @@ class ApexAdminApp extends StatelessWidget {
       home: forceConfigurationMissing ? const ConfigScreen() : const OwnerAuthGate(),
     );
   }
+}
+
+class ApexBrandMark extends StatelessWidget {
+  const ApexBrandMark({super.key, this.size = 56});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(painter: _ApexBrandPainter()),
+      );
+}
+
+class _ApexBrandPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 100;
+    canvas.save();
+    canvas.scale(scale, scale);
+
+    final gold = Paint()
+      ..color = _gold
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    final cyan = Paint()
+      ..color = _cyan
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.4
+      ..strokeCap = StrokeCap.round;
+
+    final frame = Path()
+      ..moveTo(50, 5)
+      ..lineTo(91, 28)
+      ..lineTo(91, 72)
+      ..lineTo(50, 95)
+      ..lineTo(9, 72)
+      ..lineTo(9, 28)
+      ..close();
+    canvas.drawPath(frame, gold);
+
+    final apex = Path()
+      ..moveTo(25, 72)
+      ..lineTo(50, 25)
+      ..lineTo(75, 72);
+    canvas.drawPath(apex, gold);
+
+    final crossbar = Path()
+      ..moveTo(37, 57)
+      ..lineTo(63, 57);
+    canvas.drawPath(crossbar, cyan);
+
+    final core = Paint()
+      ..color = _cyan
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(const Offset(50, 57), 3.2, core);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _ApexAmbientBackground extends StatelessWidget {
+  const _ApexAmbientBackground({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+        fit: StackFit.expand,
+        children: [
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [_background, Color(0xFF090A09), _background],
+              ),
+            ),
+          ),
+          Positioned(
+            top: -150,
+            right: -130,
+            child: IgnorePointer(
+              child: Container(
+                width: 360,
+                height: 360,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(colors: [_cyan.withValues(alpha: .12), Colors.transparent]),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -170,
+            left: -140,
+            child: IgnorePointer(
+              child: Container(
+                width: 380,
+                height: 380,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(colors: [_red.withValues(alpha: .08), Colors.transparent]),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 100,
+            left: 20,
+            child: IgnorePointer(
+              child: Container(
+                width: 260,
+                height: 260,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(colors: [_gold.withValues(alpha: .07), Colors.transparent]),
+                ),
+              ),
+            ),
+          ),
+          child,
+        ],
+      );
 }
 
 class ConfigScreen extends StatelessWidget {
@@ -87,7 +263,7 @@ class ConfigScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.hub_outlined, color: _gold, size: 54),
+                ApexBrandMark(size: 64),
                 SizedBox(height: 18),
                 Text('APEX STUDIO Admin', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800)),
                 SizedBox(height: 10),
@@ -222,18 +398,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  final _otp = TextEditingController();
   bool _busy = false;
-  bool _otpMode = false;
-  bool _otpRequested = false;
   String? _error;
-  String? _notice;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
-    _otp.dispose();
     super.dispose();
   }
 
@@ -242,7 +413,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _busy = true;
       _error = null;
-      _notice = null;
     });
     try {
       await action();
@@ -264,38 +434,12 @@ class _LoginScreenState extends State<LoginScreen> {
     // OwnerAuthGate validates the session server-side before rendering the app.
   }
 
-  Future<void> _requestOtp() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    await Supabase.instance.client.auth.signInWithOtp(
-      email: email,
-      shouldCreateUser: false,
-    );
-    if (!mounted) return;
-    setState(() {
-      _otpRequested = true;
-      _otp.clear();
-      _notice = 'If this email is eligible, a sign-in code has been sent. Check your inbox and spam folder.';
-    });
-  }
-
-  Future<void> _verifyOtp() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    if (_otp.text.trim().length != 6) throw Exception('Enter the 6-digit code from your email.');
-    await Supabase.instance.client.auth.verifyOTP(
-      type: OtpType.email,
-      email: email,
-      token: _otp.text.trim(),
-    );
-    // OwnerAuthGate validates the session server-side before rendering the app.
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
+      body: _ApexAmbientBackground(
+        child: SafeArea(
+          child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(22),
             child: ConstrainedBox(
@@ -306,8 +450,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(Icons.hub_outlined, color: _gold, size: 44),
-                      const SizedBox(height: 14),
+                      const Center(child: ApexBrandMark(size: 76)),
+                      const SizedBox(height: 18),
                       const Text(
                         'APEX STUDIO',
                         textAlign: TextAlign.center,
@@ -322,31 +466,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 28),
                       TextField(
                         controller: _email,
-                        enabled: !_busy && !_otpRequested,
+                        enabled: !_busy,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.username],
                         decoration: const InputDecoration(labelText: 'Owner email', prefixIcon: Icon(Icons.alternate_email)),
                       ),
-                      if (!_otpMode) ...[
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _password,
-                          enabled: !_busy,
-                          obscureText: true,
-                          autofillHints: const [AutofillHints.password],
-                          onSubmitted: (_) => _run(_passwordSignIn),
-                          decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
-                        ),
-                      ] else if (_otpRequested) ...[
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _otp,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.number,
-                          maxLength: 6,
-                          decoration: const InputDecoration(labelText: '6-digit email code', prefixIcon: Icon(Icons.password), counterText: ''),
-                        ),
-                      ],
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _password,
+                        enabled: !_busy,
+                        obscureText: true,
+                        autofillHints: const [AutofillHints.password],
+                        onSubmitted: (_) => _run(_passwordSignIn),
+                        decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
+                      ),
                       if (widget.gateError != null) ...[
                         const SizedBox(height: 14),
                         _MessageBanner(text: widget.gateError!, isError: true),
@@ -355,66 +488,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 14),
                         _MessageBanner(text: _error!, isError: true),
                       ],
-                      if (_notice != null) ...[
-                        const SizedBox(height: 14),
-                        _MessageBanner(text: _notice!, isError: false),
-                      ],
                       const SizedBox(height: 20),
                       FilledButton.icon(
-                        onPressed: _busy
-                            ? null
-                            : () => _run(
-                                  _otpMode
-                                      ? _otpRequested
-                                          ? _verifyOtp
-                                          : _requestOtp
-                                      : _passwordSignIn,
-                                ),
+                        onPressed: _busy ? null : () => _run(_passwordSignIn),
                         icon: _busy
                             ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2))
                             : const Icon(Icons.verified_user_outlined),
                         label: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            _busy
-                                ? 'Please wait…'
-                                : _otpMode
-                                    ? _otpRequested
-                                        ? 'Verify owner code'
-                                        : 'Send owner code'
-                                    : 'Sign in securely',
-                          ),
+                          child: Text(_busy ? 'Please wait…' : 'Sign in securely'),
                         ),
                       ),
-                      TextButton(
-                        onPressed: _busy
-                            ? null
-                            : () {
-                                setState(() {
-                                  _otpMode = !_otpMode;
-                                  _otpRequested = false;
-                                  _otp.clear();
-                                  _error = null;
-                                  _notice = null;
-                                });
-                              },
-                        child: Text(_otpMode ? 'Use password instead' : 'Use email verification code (OTP)'),
-                      ),
-                      if (_otpMode && _otpRequested)
-                        TextButton(
-                          onPressed: _busy
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _otpRequested = false;
-                                    _otp.clear();
-                                    _notice = null;
-                                    _error = null;
-                                  });
-                                },
-                          child: const Text('Change email / request another code'),
-                        ),
-                      const SizedBox(height: 8),
                       const Text(
                         'Access is granted only after the APEX server confirms the configured owner account.',
                         textAlign: TextAlign.center,
@@ -426,6 +510,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+        ),
         ),
       ),
     );
@@ -584,6 +669,7 @@ class _AdminShellState extends State<AdminShell> {
     NavigationDestination(icon: Icon(Icons.timeline_outlined), selectedIcon: Icon(Icons.timeline), label: 'Activity'),
     NavigationDestination(icon: Icon(Icons.shield_outlined), selectedIcon: Icon(Icons.shield), label: 'Security'),
     NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune), label: 'Controls'),
+    NavigationDestination(icon: Icon(Icons.article_outlined), selectedIcon: Icon(Icons.article), label: 'CMS'),
   ];
 
   late final AdminRepository _repository;
@@ -669,6 +755,8 @@ class _AdminShellState extends State<AdminShell> {
         return SecurityPage(securityEvents: data.securityEvents, auditLogs: data.auditLogs);
       case 6:
         return ControlsPage(controls: data.runtimeControls, onSetLockdown: _setLockdown, onRefresh: _refresh);
+      case 7:
+        return const CmsPage();
       default:
         return OverviewPage(data: data, repository: _repository, onChanged: _refresh);
     }
@@ -690,7 +778,15 @@ class _AdminShellState extends State<AdminShell> {
     final wide = MediaQuery.sizeOf(context).width >= 900;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('APEX STUDIO', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+        title: const Row(children: [
+          ApexBrandMark(size: 30),
+          SizedBox(width: 10),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text('APEX', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 15, height: 1)),
+            SizedBox(height: 4),
+            Text('STUDIO · OWNER CONSOLE', style: TextStyle(color: _muted, fontSize: 8, letterSpacing: 1.4, height: 1)),
+          ]),
+        ]),
         actions: [
           IconButton(
             tooltip: 'Refresh data',
@@ -703,7 +799,7 @@ class _AdminShellState extends State<AdminShell> {
           const SizedBox(width: 6),
         ],
       ),
-      body: Row(children: [
+      body: _ApexAmbientBackground(child: Row(children: [
         if (wide)
           NavigationRail(
             selectedIndex: _selectedIndex,
@@ -727,7 +823,7 @@ class _AdminShellState extends State<AdminShell> {
             Expanded(child: RefreshIndicator(onRefresh: _refresh, child: _selectedPage(data))),
           ]),
         ),
-      ]),
+      ])),
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
@@ -751,6 +847,10 @@ class OverviewPage extends StatelessWidget {
     final paid = data.invoices.where((item) => item['status'] == 'paid').length;
     final unread = data.conversations.fold<int>(0, (total, item) => total + _integer(item['unreadCount']));
     final locked = data.runtimeControls['emergency_lockdown'] == true;
+    final uniqueContacts = data.inquiries.map((item) => _string(
+      item['client_email'],
+      _string(item['client_phone'], _string(item['client_name'], '')),
+    ).trim().toLowerCase()).where((value) => value.isNotEmpty).toSet().length;
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -774,6 +874,7 @@ class OverviewPage extends StatelessWidget {
             childAspectRatio: 1.7,
             children: [
               _MetricCard(label: 'Client leads', value: data.inquiries.length.toString(), icon: Icons.inbox_outlined, accent: _gold),
+              _MetricCard(label: 'Unique client contacts', value: uniqueContacts.toString(), icon: Icons.groups_outlined, accent: _red),
               _MetricCard(label: 'Conversations', value: data.conversations.length.toString(), icon: Icons.forum_outlined, accent: _cyan),
               _MetricCard(label: 'Unread messages', value: unread.toString(), icon: Icons.mark_chat_unread_outlined, accent: const Color(0xFF8FE0B4)),
               _MetricCard(label: 'Invoices', value: data.invoices.length.toString(), icon: Icons.receipt_long_outlined, accent: const Color(0xFFB6A0FF)),
