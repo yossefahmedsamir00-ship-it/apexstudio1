@@ -456,7 +456,7 @@ class _FieldCard extends StatelessWidget {
   final String value;
   final IconData icon;
   @override
-  Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [Icon(icon, color: const Color(0xFFD6B56A), size: 18), const SizedBox(width: 9), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(color: Color(0xFF8F98A8), fontSize: 9)), const SizedBox(height: 2), Text(value, style: const TextStyle(fontWeight: FontWeight.w800))]))])));
+  Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [Icon(icon, color: const Color(0xFFD6B56A), size: 18), const SizedBox(width: 8), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(color: Color(0xFF8F98A8), fontSize: 9)), const SizedBox(height: 2), Text(value, style: const TextStyle(fontWeight: FontWeight.w800))]))])));
 }
 
 class _ExecutionCard extends StatelessWidget {
