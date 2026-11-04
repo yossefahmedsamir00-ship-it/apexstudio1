@@ -33,6 +33,11 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: FlowWorkspace()));
     await tester.pumpAndSettle();
 
-    expect(tester.takeException(), isNull);
+    final exception = tester.takeException();
+    expect(
+      exception,
+      isNull,
+      reason: exception is FlutterError ? exception.toStringDeep() : '$exception',
+    );
   });
 }
