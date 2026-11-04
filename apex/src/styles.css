@@ -151,3 +151,37 @@
  .apex-reveal,.apex-reveal-left,.apex-reveal-scale,.apex-reveal.apex-revealed{opacity:1;filter:none;transform:none;transition:none;will-change:auto}
  .moreDropdown button{animation:none}
 }
+
+
+/* Portfolio landing-page expansion: factual metrics, project marquee and honest testimonials. */
+.metricsSection{padding-top:clamp(76px,9vw,120px);padding-bottom:clamp(76px,9vw,120px);display:grid;grid-template-columns:.8fr 1.2fr;gap:clamp(30px,7vw,100px);align-items:end;border-bottom:1px solid var(--line)}
+.metricsIntro .eyebrow{margin-bottom:17px}
+.metricsIntro h2{max-width:460px;margin:0;font:600 clamp(34px,4.6vw,62px)/.98 'Space Grotesk','IBM Plex Sans Arabic',sans-serif;letter-spacing:-.07em}
+.metricsGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.metricCard{min-height:150px;padding:18px 15px;border:1px solid var(--line);background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.008));display:flex;flex-direction:column;justify-content:flex-end;gap:6px;transition:border-color .3s,transform .3s,background .3s}
+.metricCard:hover{border-color:rgba(215,170,91,.45);transform:translateY(-4px);background:linear-gradient(145deg,rgba(215,170,91,.07),rgba(92,141,255,.025))}
+.metricCard strong{font:600 clamp(38px,4.4vw,58px)/.9 'Space Grotesk',sans-serif;letter-spacing:-.07em;color:var(--gold2)}
+.metricCard strong i{font-style:normal;color:var(--red);font-size:.6em;margin-inline-start:3px}
+.metricCard span{font-size:12px;color:#e5e2d9}
+.metricCard small{font-size:9px;color:#858985;line-height:1.5}
+.studioMarquee{padding:25px 0 31px;overflow:hidden;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(215,170,91,.035),transparent 35%,rgba(92,141,255,.035))}
+.marqueeHeading{padding-inline:clamp(20px,6vw,110px);display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:19px}
+.marqueeHeading>span:last-child{font:9px 'Space Grotesk',sans-serif;letter-spacing:.16em;color:#737873}
+.marqueeTrack{display:flex;width:max-content;animation:apex-marquee 34s linear infinite}
+.marqueeGroup{display:flex;align-items:center;flex:none}
+.marqueeGroup>span{display:flex;align-items:center;gap:36px;padding-inline:30px;color:#c6c5be;font:600 clamp(17px,2.1vw,26px) 'Space Grotesk',sans-serif;letter-spacing:.04em;white-space:nowrap}
+.marqueeGroup i{font-style:normal;color:var(--gold);font-size:17px}
+.studioMarquee:hover .marqueeTrack{animation-play-state:paused}
+@keyframes apex-marquee{to{transform:translateX(-50%)}}
+.voicesSection{padding-top:clamp(90px,11vw,145px);padding-bottom:clamp(90px,11vw,145px);display:grid;grid-template-columns:1fr .9fr;gap:clamp(40px,8vw,110px);align-items:center;border-top:1px solid var(--line)}
+.voicesCopy h2{max-width:650px;margin:18px 0 18px;font:600 clamp(42px,6vw,78px)/.94 'Space Grotesk','IBM Plex Sans Arabic',sans-serif;letter-spacing:-.075em}
+.voicesCopy>p{max-width:520px;color:#969a96;font-size:13px;line-height:1.85}
+.voicesNote{position:relative;min-height:245px;padding:30px;border:1px solid rgba(215,170,91,.24);background:radial-gradient(circle at 90% 10%,rgba(215,170,91,.1),transparent 38%),linear-gradient(145deg,#101212,#080909)}
+.quoteMark{display:block;color:var(--gold);font:700 64px/.8 Georgia,serif}
+.voicesNote strong{display:block;margin-top:18px;color:#eee8dc;font:500 clamp(20px,2.4vw,29px)/1.2 'Space Grotesk','IBM Plex Sans Arabic',sans-serif}
+.voicesNote p{margin:12px 0 22px;color:#858985;font-size:11px;line-height:1.8}
+.rtl .metricsSection,.rtl .voicesSection{direction:rtl}
+.rtl .marqueeHeading{direction:rtl}
+@media(max-width:900px){.metricsSection{grid-template-columns:1fr}.voicesSection{grid-template-columns:1fr}}
+@media(max-width:560px){.metricsGrid{grid-template-columns:1fr}.metricCard{min-height:118px}.marqueeHeading{align-items:flex-start;flex-direction:column}.marqueeGroup>span{gap:20px;padding-inline:18px}.voicesNote{padding:23px}}
+@media(prefers-reduced-motion:reduce){.marqueeTrack{animation:none;transform:none}.metricCard{transition:none}}
