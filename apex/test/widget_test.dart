@@ -1,6 +1,7 @@
 import 'package:apex_studio/main.dart';
 import 'package:apex_studio/flow/flow_workspace.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -34,10 +35,21 @@ void main() {
     await tester.pumpAndSettle();
 
     final exception = tester.takeException();
+    final flexDiagnostics = find.byType(Row).evaluate().map((element) {
+      final renderObject = element.renderObject;
+      if (renderObject is! RenderFlex) return '';
+      final childSizes = <String>[];
+      RenderBox? child = renderObject.firstChild;
+      while (child != null) {
+        childSizes.add('${child.runtimeType}=${child.size}');
+        child = (child.parentData! as FlexParentData).nextSibling;
+      }
+      return 'Row size=${renderObject.size}, constraints=${renderObject.constraints}, children=${childSizes.join(', ')}';
+    }).where((line) => line.isNotEmpty).join('\\n');
     expect(
       exception,
       isNull,
-      reason: exception is FlutterError ? exception.toStringDeep() : '$exception',
+      reason: '${exception is FlutterError ? exception.toStringDeep() : exception}\\n$flexDiagnostics',
     );
   });
 }
