@@ -312,7 +312,7 @@
 - [x] CMS design and implementation plan recorded on the feature branch.
 - [x] Typed CMS contracts and defensive page/navigation/theme parsing added under `apex/src/cms/`.
 - [x] Stagger-delay helper and tests added; reduced-motion-aware reveal and menu styling added to the website.
-- [x] A dedicated Flutter Admin CI workflow added for `flutter_admin/`.
+- [x] Existing Flutter Admin CI workflow reused for `flutter_admin/`; the separate Flutter Pages workflow scoped to Flutter app source paths.
 - [x] A local-first Flutter CMS workspace added with demo content, status filtering, create/edit drafts, and local preview.
 - [x] CMS destination integrated into the existing Flutter Admin navigation without changing the existing authentication gate or data repository.
 - [ ] Confirm Flutter Admin analysis, widget tests, and web build in GitHub Actions.
