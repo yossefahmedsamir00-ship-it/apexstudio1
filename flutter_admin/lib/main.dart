@@ -32,6 +32,12 @@ Future<void> main() async {
 bool ownerResponseIsVerified(dynamic data) =>
     data is Map && data['configured'] == true;
 
+int unreadMessageCount(Iterable<Map<String, dynamic>> conversations) =>
+    conversations.fold<int>(
+      0,
+      (total, item) => total + _integer(item['unreadCount']),
+    );
+
 class ApexAdminApp extends StatelessWidget {
   const ApexAdminApp({super.key, this.forceConfigurationMissing = false});
   final bool forceConfigurationMissing;
@@ -680,10 +686,7 @@ class _AdminShellState extends State<AdminShell> {
   int _selectedIndex = 0;
   Timer? _notificationRefresh;
 
-  int get _unreadMessages => (_data?.conversations ?? []).fold<int>(
-        0,
-        (total, item) => total + _integer(item['unreadCount']),
-      );
+  int get _unreadMessages => unreadMessageCount(_data?.conversations ?? const []);
 
   @override
   void initState() {
