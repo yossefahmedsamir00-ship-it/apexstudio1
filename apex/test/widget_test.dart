@@ -44,7 +44,12 @@ void main() {
         childSizes.add('${child.runtimeType}=${child.size}');
         child = (child.parentData! as FlexParentData).nextSibling;
       }
-      return 'Row size=${renderObject.size}, constraints=${renderObject.constraints}, children=${childSizes.join(', ')}';
+      final ancestors = <String>[];
+      element.visitAncestorElements((ancestor) {
+        ancestors.add(ancestor.widget.runtimeType.toString());
+        return true;
+      });
+      return 'Row size=${renderObject.size}, constraints=${renderObject.constraints}, children=${childSizes.join(', ')}, ancestors=${ancestors.join(' > ')}';
     }).where((line) => line.isNotEmpty).join('\\n');
     expect(
       exception,
