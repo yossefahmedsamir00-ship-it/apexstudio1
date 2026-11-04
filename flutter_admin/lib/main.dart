@@ -76,6 +76,69 @@ class ApexAdminApp extends StatelessWidget {
   }
 }
 
+class ApexBrandMark extends StatelessWidget {
+  const ApexBrandMark({super.key, this.size = 56});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(painter: _ApexBrandPainter()),
+      );
+}
+
+class _ApexBrandPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 100;
+    canvas.save();
+    canvas.scale(scale, scale);
+
+    final gold = Paint()
+      ..color = _gold
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    final cyan = Paint()
+      ..color = _cyan
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.4
+      ..strokeCap = StrokeCap.round;
+
+    final frame = Path()
+      ..moveTo(50, 5)
+      ..lineTo(91, 28)
+      ..lineTo(91, 72)
+      ..lineTo(50, 95)
+      ..lineTo(9, 72)
+      ..lineTo(9, 28)
+      ..close();
+    canvas.drawPath(frame, gold);
+
+    final apex = Path()
+      ..moveTo(25, 72)
+      ..lineTo(50, 25)
+      ..lineTo(75, 72);
+    canvas.drawPath(apex, gold);
+
+    final crossbar = Path()
+      ..moveTo(37, 57)
+      ..lineTo(63, 57);
+    canvas.drawPath(crossbar, cyan);
+
+    final core = Paint()
+      ..color = _cyan
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(const Offset(50, 57), 3.2, core);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class ConfigScreen extends StatelessWidget {
   const ConfigScreen({super.key});
 
@@ -87,7 +150,7 @@ class ConfigScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.hub_outlined, color: _gold, size: 54),
+                ApexBrandMark(size: 64),
                 SizedBox(height: 18),
                 Text('APEX STUDIO Admin', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800)),
                 SizedBox(height: 10),
@@ -273,8 +336,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(Icons.hub_outlined, color: _gold, size: 44),
-                      const SizedBox(height: 14),
+                      const Center(child: ApexBrandMark(size: 76)),
+                      const SizedBox(height: 18),
                       const Text(
                         'APEX STUDIO',
                         textAlign: TextAlign.center,
