@@ -20,4 +20,16 @@ void main() {
     expect(ownerResponseIsVerified({'error': 'not allowed'}), isFalse);
     expect(ownerResponseIsVerified(null), isFalse);
   });
+
+  test('unread notification badge totals unread client messages', () {
+    expect(
+      unreadMessageCount([
+        {'unreadCount': 2},
+        {'unreadCount': 0},
+        {'unreadCount': 3},
+      ]),
+      5,
+    );
+    expect(unreadMessageCount(const []), 0);
+  });
 }
