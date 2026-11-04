@@ -76,6 +76,69 @@ class ApexAdminApp extends StatelessWidget {
   }
 }
 
+class ApexBrandMark extends StatelessWidget {
+  const ApexBrandMark({super.key, this.size = 56});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(painter: _ApexBrandPainter()),
+      );
+}
+
+class _ApexBrandPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 100;
+    canvas.save();
+    canvas.scale(scale, scale);
+
+    final gold = Paint()
+      ..color = _gold
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+    final cyan = Paint()
+      ..color = _cyan
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.4
+      ..strokeCap = StrokeCap.round;
+
+    final frame = Path()
+      ..moveTo(50, 5)
+      ..lineTo(91, 28)
+      ..lineTo(91, 72)
+      ..lineTo(50, 95)
+      ..lineTo(9, 72)
+      ..lineTo(9, 28)
+      ..close();
+    canvas.drawPath(frame, gold);
+
+    final apex = Path()
+      ..moveTo(25, 72)
+      ..lineTo(50, 25)
+      ..lineTo(75, 72);
+    canvas.drawPath(apex, gold);
+
+    final crossbar = Path()
+      ..moveTo(37, 57)
+      ..lineTo(63, 57);
+    canvas.drawPath(crossbar, cyan);
+
+    final core = Paint()
+      ..color = _cyan
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(const Offset(50, 57), 3.2, core);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class ConfigScreen extends StatelessWidget {
   const ConfigScreen({super.key});
 
@@ -87,7 +150,7 @@ class ConfigScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.hub_outlined, color: _gold, size: 54),
+                ApexBrandMark(size: 64),
                 SizedBox(height: 18),
                 Text('APEX STUDIO Admin', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800)),
                 SizedBox(height: 10),
@@ -222,73 +285,36 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  final _otp = TextEditingController();
   bool _busy = false;
-  bool _otpMode = false;
-  bool _otpRequested = false;
   String? _error;
-  String? _notice;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
-    _otp.dispose();
     super.dispose();
   }
 
-  Future<void> _run(Future<void> Function() action) async {
+  Future<void> _signIn() async {
     if (_busy) return;
     setState(() {
       _busy = true;
       _error = null;
-      _notice = null;
     });
     try {
-      await action();
+      final email = _email.text.trim();
+      if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
+      if (_password.text.isEmpty) throw Exception('Enter your password.');
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: _password.text,
+      );
+      // OwnerAuthGate verifies the signed-in account with the server.
     } catch (error) {
       if (mounted) setState(() => _error = _cleanError(error));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
-  }
-
-  Future<void> _passwordSignIn() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    if (_password.text.isEmpty) throw Exception('Enter your password.');
-    await Supabase.instance.client.auth.signInWithPassword(
-      email: email,
-      password: _password.text,
-    );
-    // OwnerAuthGate validates the session server-side before rendering the app.
-  }
-
-  Future<void> _requestOtp() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    await Supabase.instance.client.auth.signInWithOtp(
-      email: email,
-      shouldCreateUser: false,
-    );
-    if (!mounted) return;
-    setState(() {
-      _otpRequested = true;
-      _otp.clear();
-      _notice = 'If this email is eligible, a sign-in code has been sent. Check your inbox and spam folder.';
-    });
-  }
-
-  Future<void> _verifyOtp() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    if (_otp.text.trim().length != 6) throw Exception('Enter the 6-digit code from your email.');
-    await Supabase.instance.client.auth.verifyOTP(
-      type: OtpType.email,
-      email: email,
-      token: _otp.text.trim(),
-    );
-    // OwnerAuthGate validates the session server-side before rendering the app.
   }
 
   @override
@@ -306,8 +332,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Icon(Icons.hub_outlined, color: _gold, size: 44),
-                      const SizedBox(height: 14),
+                      const Center(child: ApexBrandMark(size: 76)),
+                      const SizedBox(height: 18),
                       const Text(
                         'APEX STUDIO',
                         textAlign: TextAlign.center,
@@ -322,103 +348,40 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 28),
                       TextField(
                         controller: _email,
-                        enabled: !_busy && !_otpRequested,
+                        enabled: !_busy,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.username],
                         decoration: const InputDecoration(labelText: 'Owner email', prefixIcon: Icon(Icons.alternate_email)),
                       ),
-                      if (!_otpMode) ...[
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _password,
+                        enabled: !_busy,
+                        obscureText: true,
+                        autofillHints: const [AutofillHints.password],
+                        onSubmitted: (_) => _signIn(),
+                        decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
+                      ),
+                      if (widget.gateError != null || _error != null) ...[
                         const SizedBox(height: 14),
-                        TextField(
-                          controller: _password,
-                          enabled: !_busy,
-                          obscureText: true,
-                          autofillHints: const [AutofillHints.password],
-                          onSubmitted: (_) => _run(_passwordSignIn),
-                          decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
-                        ),
-                      ] else if (_otpRequested) ...[
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _otp,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.number,
-                          maxLength: 6,
-                          decoration: const InputDecoration(labelText: '6-digit email code', prefixIcon: Icon(Icons.password), counterText: ''),
-                        ),
-                      ],
-                      if (widget.gateError != null) ...[
-                        const SizedBox(height: 14),
-                        _MessageBanner(text: widget.gateError!, isError: true),
-                      ],
-                      if (_error != null) ...[
-                        const SizedBox(height: 14),
-                        _MessageBanner(text: _error!, isError: true),
-                      ],
-                      if (_notice != null) ...[
-                        const SizedBox(height: 14),
-                        _MessageBanner(text: _notice!, isError: false),
+                        _MessageBanner(text: widget.gateError ?? _error!, isError: true),
                       ],
                       const SizedBox(height: 20),
                       FilledButton.icon(
-                        onPressed: _busy
-                            ? null
-                            : () => _run(
-                                  _otpMode
-                                      ? _otpRequested
-                                          ? _verifyOtp
-                                          : _requestOtp
-                                      : _passwordSignIn,
-                                ),
+                        onPressed: _busy ? null : _signIn,
                         icon: _busy
                             ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.verified_user_outlined),
+                            : const Icon(Icons.login_rounded),
                         label: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            _busy
-                                ? 'Please wait…'
-                                : _otpMode
-                                    ? _otpRequested
-                                        ? 'Verify owner code'
-                                        : 'Send owner code'
-                                    : 'Sign in securely',
-                          ),
+                          child: Text(_busy ? 'Please wait…' : 'Sign in securely'),
                         ),
                       ),
-                      TextButton(
-                        onPressed: _busy
-                            ? null
-                            : () {
-                                setState(() {
-                                  _otpMode = !_otpMode;
-                                  _otpRequested = false;
-                                  _otp.clear();
-                                  _error = null;
-                                  _notice = null;
-                                });
-                              },
-                        child: Text(_otpMode ? 'Use password instead' : 'Use email verification code (OTP)'),
-                      ),
-                      if (_otpMode && _otpRequested)
-                        TextButton(
-                          onPressed: _busy
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _otpRequested = false;
-                                    _otp.clear();
-                                    _notice = null;
-                                    _error = null;
-                                  });
-                                },
-                          child: const Text('Change email / request another code'),
-                        ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 14),
                       const Text(
-                        'Access is granted only after the APEX server confirms the configured owner account.',
+                        'Owner access is granted only after the APEX server verifies your account.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: _muted, fontSize: 11),
+                        style: TextStyle(color: _muted, fontSize: 11, height: 1.5),
                       ),
                     ],
                   ),

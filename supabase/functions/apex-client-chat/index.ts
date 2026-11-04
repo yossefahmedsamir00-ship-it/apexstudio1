@@ -158,6 +158,17 @@ async function requireClientConversation(admin: ReturnType<typeof createClient>,
   }
   return conversation;
 }
+
+// Owner access is checked server-side for every privileged conversation operation.
+// A conversation assigned to another owner identity is never exposed or modified.
+async function requireOwnerConversation(admin: ReturnType<typeof createClient>, conversationId: string, ownerId: string, req: Request) {
+  const conversation = await getConversation(admin,conversationId);
+  if (!conversation || conversation.owner_user_id !== ownerId) {
+    await writeSecurityEvent(admin,req,{actorUserId:ownerId,eventType:"owner_conversation_access_denied",severity:"high",metadata:{conversationId}});
+    return null;
+  }
+  return conversation;
+}
 async function makeAiReply(req: Request, userToken: string, publishable: string, messages: Array<{role:"user"|"assistant";content:string}>, agent: string) {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   if (!supabaseUrl) return null;
@@ -376,7 +387,7 @@ Deno.serve(async (req: Request) => {
       if (!allowed) return respond({error:"Too many admin refresh requests. Please wait a moment."},429,headers);
       const {data:rows,error} = await admin.from("client_conversations")
         .select("id,owner_user_id,client_user_id,client_name,client_email,subject,status,created_at,updated_at,last_client_message_at,last_owner_message_at")
-        .order("updated_at",{ascending:false}).limit(100);
+         .eq("owner_user_id",user.id).order("updated_at",{ascending:false}).limit(100);
       if (error) return respond({error:"Could not load conversations."},500,headers);
       const ids = (rows ?? []).map((x) => x.id);
       let latestMessages: Array<Record<string,unknown>> = [];
@@ -415,7 +426,7 @@ Deno.serve(async (req: Request) => {
       if (!conversationId) return respond({error:"Conversation reference is required."},400,headers);
       const allowed = await consumeRateLimit(admin,req,user.id,"owner_chat_history",60);
       if (!allowed) return respond({error:"Too many conversation history requests. Please wait."},429,headers);
-      const conversation = await getConversation(admin,conversationId);
+      const conversation = await requireOwnerConversation(admin,conversationId,user.id,req);
       if (!conversation) return respond({error:"Conversation not found."},404,headers);
       if (action === "owner_read") await markRead(admin,conversationId,"owner");
       const messages = await loadMessages(admin,conversationId,before);
@@ -432,7 +443,7 @@ Deno.serve(async (req: Request) => {
       const idempotencyKey = clip(input.idempotencyKey,100);
       if (body.length < 1 || typeof input.body !== "string" || input.body.length > 8000) return respond({error:"Message must contain between 1 and 8000 characters."},400,headers);
       if (!/^[a-zA-Z0-9:_-]{8,100}$/.test(idempotencyKey)) return respond({error:"Invalid message request key."},400,headers);
-      const conversation = await getConversation(admin,conversationId);
+      const conversation = await requireOwnerConversation(admin,conversationId,user.id,req);
       if (!conversation) return respond({error:"Conversation not found."},404,headers);
       const duplicate = await admin.from("client_messages").select("id,conversation_id,sender_type,sender_user_id,body,message_status,read_at,attachment_metadata,created_at").eq("conversation_id",conversationId).eq("idempotency_key",idempotencyKey).maybeSingle();
       if (duplicate.data) return respond({conversation:safeConversation(conversation),messages:[duplicate.data],duplicate:true},200,headers);
@@ -457,9 +468,9 @@ Deno.serve(async (req: Request) => {
       if (!conversationId) return respond({error:"Conversation reference is required."},400,headers);
       const status = clip(input.status,40);
       if (!OWNER_STATUSES.has(status)) return respond({error:"Unsupported conversation status."},400,headers);
-      const conversation = await getConversation(admin,conversationId);
+      const conversation = await requireOwnerConversation(admin,conversationId,user.id,req);
       if (!conversation) return respond({error:"Conversation not found."},404,headers);
-      const {error} = await admin.from("client_conversations").update({status,owner_user_id:user.id,updated_at:new Date().toISOString()}).eq("id",conversationId);
+      const {error} = await admin.from("client_conversations").update({status,updated_at:new Date().toISOString()}).eq("id",conversationId).eq("owner_user_id",user.id);
       if (error) return respond({error:"Could not update conversation status."},500,headers);
       await writeAudit(admin,user.id,"conversation_status_changed","conversation",conversationId,{from:conversation.status,to:status});
       return respond({ok:true,status},200,headers);
