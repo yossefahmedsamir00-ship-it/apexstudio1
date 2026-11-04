@@ -42,7 +42,6 @@ jobs:
 
       - name: Run Flutter tests
         working-directory: apex
-        continue-on-error: true
         run: flutter test
 
       - name: Build release APK
