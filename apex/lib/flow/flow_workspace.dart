@@ -67,7 +67,14 @@ class _FlowWorkspaceState extends State<FlowWorkspace> {
             children: [
               const Icon(Icons.account_tree_rounded, color: Color(0xFFD6B56A)),
               const SizedBox(width: 10),
-              Text(_label('APEX FLOW', 'APEX FLOW'), style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              Expanded(
+                child: Text(
+                  _label('APEX FLOW', 'APEX FLOW'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2),
+                ),
+              ),
               if (!compact) ...[
                 const SizedBox(width: 12),
                 Container(
