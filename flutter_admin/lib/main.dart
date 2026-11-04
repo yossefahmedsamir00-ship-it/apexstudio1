@@ -799,7 +799,7 @@ class _AdminShellState extends State<AdminShell> {
           const SizedBox(width: 6),
         ],
       ),
-      body: Row(children: [
+      body: _ApexAmbientBackground(child: Row(children: [
         if (wide)
           NavigationRail(
             selectedIndex: _selectedIndex,
@@ -823,7 +823,7 @@ class _AdminShellState extends State<AdminShell> {
             Expanded(child: RefreshIndicator(onRefresh: _refresh, child: _selectedPage(data))),
           ]),
         ),
-      ]),
+      ])),
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
