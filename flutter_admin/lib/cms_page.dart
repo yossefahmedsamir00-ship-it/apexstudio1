@@ -74,87 +74,10 @@ class _CmsPageState extends State<CmsPage> {
       : _entries.where((entry) => entry.status == _filter).toList();
 
   Future<void> _editEntry({_CmsEntry? entry}) async {
-    final title = TextEditingController(text: entry?.title ?? '');
-    final summary = TextEditingController(text: entry?.summary ?? '');
-    var kind = entry?.kind ?? 'Page section';
-
     final result = await showDialog<_CmsEntry>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, refreshDialog) => AlertDialog(
-          backgroundColor: _cmsPanel,
-          title: Text(entry == null ? 'Create content' : 'Edit content'),
-          content: SizedBox(
-            width: 440,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: title,
-                    decoration: const InputDecoration(labelText: 'Content title'),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  const SizedBox(height: 14),
-                  DropdownButtonFormField<String>(
-                    initialValue: kind,
-                    decoration: const InputDecoration(labelText: 'Content type'),
-                    items: const [
-                      DropdownMenuItem(value: 'Page section', child: Text('Page section')),
-                      DropdownMenuItem(value: 'Project', child: Text('Project')),
-                      DropdownMenuItem(value: 'Service', child: Text('Service')),
-                      DropdownMenuItem(value: 'Announcement', child: Text('Announcement')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) refreshDialog(() => kind = value);
-                    },
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: summary,
-                    minLines: 3,
-                    maxLines: 5,
-                    decoration: const InputDecoration(labelText: 'Summary / content brief'),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'This draft is stored in this preview session only. No server data is changed.',
-                    style: TextStyle(color: _cmsMuted, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final cleanTitle = title.text.trim();
-                if (cleanTitle.isEmpty) return;
-                Navigator.pop(
-                  dialogContext,
-                  _CmsEntry(
-                    id: entry?.id ?? _nextId,
-                    title: cleanTitle,
-                    kind: kind,
-                    summary: summary.text.trim(),
-                    status: entry?.status == 'Published' ? 'Draft' : (entry?.status ?? 'Draft'),
-                  ),
-                );
-              },
-              child: const Text('Save draft'),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => _CmsEditorDialog(entry: entry, nextId: _nextId),
     );
-
-    title.dispose();
-    summary.dispose();
 
     if (result == null || !mounted) return;
     setState(() {
@@ -343,6 +266,111 @@ class _CmsPageState extends State<CmsPage> {
       ],
     );
   }
+}
+
+class _CmsEditorDialog extends StatefulWidget {
+  const _CmsEditorDialog({required this.entry, required this.nextId});
+
+  final _CmsEntry? entry;
+  final int nextId;
+
+  @override
+  State<_CmsEditorDialog> createState() => _CmsEditorDialogState();
+}
+
+class _CmsEditorDialogState extends State<_CmsEditorDialog> {
+  late final TextEditingController _title;
+  late final TextEditingController _summary;
+  late String _kind;
+
+  @override
+  void initState() {
+    super.initState();
+    _title = TextEditingController(text: widget.entry?.title ?? '');
+    _summary = TextEditingController(text: widget.entry?.summary ?? '');
+    _kind = widget.entry?.kind ?? 'Page section';
+  }
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _summary.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final cleanTitle = _title.text.trim();
+    if (cleanTitle.isEmpty) return;
+    final existing = widget.entry;
+    Navigator.pop(
+      context,
+      _CmsEntry(
+        id: existing?.id ?? widget.nextId,
+        title: cleanTitle,
+        kind: _kind,
+        summary: _summary.text.trim(),
+        status: existing?.status == 'Published' ? 'Draft' : (existing?.status ?? 'Draft'),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    backgroundColor: _cmsPanel,
+    title: Text(widget.entry == null ? 'Create content' : 'Edit content'),
+    content: SizedBox(
+      width: 440,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _title,
+              decoration: const InputDecoration(labelText: 'Content title'),
+              textCapitalization: TextCapitalization.sentences,
+            ),
+            const SizedBox(height: 14),
+            DropdownButtonFormField<String>(
+              initialValue: _kind,
+              decoration: const InputDecoration(labelText: 'Content type'),
+              items: const [
+                DropdownMenuItem(value: 'Page section', child: Text('Page section')),
+                DropdownMenuItem(value: 'Project', child: Text('Project')),
+                DropdownMenuItem(value: 'Service', child: Text('Service')),
+                DropdownMenuItem(value: 'Announcement', child: Text('Announcement')),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _kind = value);
+              },
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _summary,
+              minLines: 3,
+              maxLines: 5,
+              decoration: const InputDecoration(labelText: 'Summary / content brief'),
+              textCapitalization: TextCapitalization.sentences,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'This draft is stored in this preview session only. No server data is changed.',
+              style: TextStyle(color: _cmsMuted, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: _save,
+        child: const Text('Save draft'),
+      ),
+    ],
+  );
 }
 
 class _CmsMetric extends StatelessWidget {
