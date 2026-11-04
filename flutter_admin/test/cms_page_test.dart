@@ -22,6 +22,20 @@ void main() {
     expect(find.text('Save draft'), findsOneWidget);
   });
 
+  testWidgets('saves new content as a local draft', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: CmsPage()));
+
+    await tester.tap(find.text('New content'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(0), 'Launch announcement');
+    await tester.enterText(find.byType(TextField).at(1), 'A new studio update.');
+    await tester.tap(find.text('Save draft'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Launch announcement'), findsOneWidget);
+    expect(find.text('A new studio update.'), findsOneWidget);
+  });
+
   testWidgets('opens a preview without publishing', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: CmsPage()));
 
