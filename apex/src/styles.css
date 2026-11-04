@@ -102,3 +102,52 @@
 .ownerChatComposer .primary{flex:0 0 auto;padding:12px 15px;gap:8px}
 .ownerChatComposer .primary:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:600px){.chatFabStack{right:12px;bottom:12px;gap:8px}.ownerChatFab,.chatFabStack .askFab{font-size:10px;padding:11px 13px}.ownerChatModal{height:88vh;min-height:360px}.ownerChatHead{padding:23px 18px 16px}.ownerChatMessages{padding:16px}.ownerChatComposer{padding:12px;gap:7px}.ownerChatComposer .primary{padding:12px}.ownerChatStatus{padding:10px 14px}}
+
+
+/* APEX motion pass: ambient blur, sequential reveals, press feedback and the More menu. */
+.app{position:relative;isolation:isolate}
+.app::before{
+ content:"";position:fixed;inset:-18%;z-index:-1;pointer-events:none;
+ background:
+  radial-gradient(ellipse at 18% 28%,rgba(255,84,61,.105),transparent 31%),
+  radial-gradient(ellipse at 78% 18%,rgba(92,141,255,.13),transparent 34%),
+  radial-gradient(ellipse at 62% 78%,rgba(215,170,91,.095),transparent 32%);
+ filter:blur(58px);opacity:.72;transform:translate3d(0,0,0);
+ animation:apex-ambient-drift 24s ease-in-out infinite alternate;
+}
+@keyframes apex-ambient-drift{
+ 0%{transform:translate3d(-1.5%,0,0) scale(1)}
+ 50%{transform:translate3d(1.5%,-1%,0) scale(1.035)}
+ 100%{transform:translate3d(-.5%,1.5%,0) scale(.99)}
+}
+.apex-reveal{opacity:0;filter:blur(10px);transform:translate3d(0,22px,0);transition:opacity .72s var(--ease),filter .72s var(--ease),transform .72s var(--ease);transition-delay:var(--apex-reveal-delay,0ms);will-change:opacity,filter,transform}
+.apex-reveal-left{transform:translate3d(24px,0,0)}
+.apex-reveal-scale{transform:translate3d(0,12px,0) scale(.975)}
+.apex-reveal.apex-revealed{opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1);will-change:auto}
+.app button:not(:disabled){-webkit-tap-highlight-color:transparent}
+.app button:not(:disabled):active{transform:scale(.965);filter:brightness(1.08)}
+.primary:active,.outlineButton:active,.moreTrigger:active,.moreDropdown button:active{box-shadow:0 0 0 1px rgba(255,226,161,.38),0 0 26px rgba(215,170,91,.2)}
+.primary:hover,.outlineButton:hover,.moreTrigger:hover,.moreDropdown button:hover{box-shadow:0 0 0 1px rgba(255,226,161,.2),0 0 22px rgba(215,170,91,.12)}
+.moreMenu{position:relative;display:flex;align-items:center}
+.moreTrigger{display:inline-flex;align-items:center;gap:8px;padding:8px 2px;color:#a6aaa6;font-size:11px;transition:color .2s,background .2s,box-shadow .2s}
+.moreTrigger:hover,.moreTrigger[aria-expanded="true"]{color:var(--gold2)}
+.moreTrigger span{font-size:14px;line-height:1;transition:transform .25s}
+.moreTrigger[aria-expanded="true"] span{transform:rotate(180deg)}
+.moreDropdown{position:absolute;top:calc(100% + 17px);inset-inline-end:0;z-index:90;width:min(248px,82vw);padding:8px;display:grid;gap:4px;border:1px solid rgba(215,170,91,.28);border-radius:12px;background:rgba(8,11,13,.94);backdrop-filter:blur(22px) saturate(145%);-webkit-backdrop-filter:blur(22px) saturate(145%);box-shadow:0 22px 65px rgba(0,0,0,.48),0 0 28px rgba(92,141,255,.08)}
+.moreDropdown button{width:100%;min-height:42px;padding:10px 12px;text-align:start;border-radius:7px;color:#c8cbc7;font-size:11px;transition:color .2s,background .2s,transform .2s;animation:apex-more-enter .34s both}
+.moreDropdown button:hover{color:var(--gold2);background:rgba(215,170,91,.075)}
+.moreDropdown button:nth-child(1){animation-delay:35ms}.moreDropdown button:nth-child(2){animation-delay:90ms}.moreDropdown button:nth-child(3){animation-delay:145ms}.moreDropdown button:nth-child(4){animation-delay:200ms}
+@keyframes apex-more-enter{from{opacity:0;filter:blur(6px);transform:translateY(8px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
+.rtl .moreTrigger{direction:rtl}
+@media(max-width:720px){
+ .nav.open .moreMenu{width:100%;display:flex;flex-direction:column;align-items:stretch}
+ .nav.open .moreTrigger{width:100%;min-height:44px;padding:12px;text-align:start;justify-content:space-between}
+ .nav.open .moreDropdown{position:static;width:100%;margin:5px 0 4px;box-shadow:none;background:rgba(15,19,21,.9)}
+ .app::before{opacity:.38;filter:blur(38px);animation-duration:34s}
+}
+@media(pointer:coarse){.app::before{animation:none;opacity:.34;filter:blur(36px)}}
+@media(prefers-reduced-motion:reduce){
+ .app::before{animation:none;filter:blur(24px)}
+ .apex-reveal,.apex-reveal-left,.apex-reveal-scale,.apex-reveal.apex-revealed{opacity:1;filter:none;transform:none;transition:none;will-change:auto}
+ .moreDropdown button{animation:none}
+}
