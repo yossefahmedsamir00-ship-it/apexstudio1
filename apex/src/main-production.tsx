@@ -53,7 +53,7 @@ function Metric({value,label,detail}:{value:number;label:string;detail:string}){
   observer.observe(el);
   return ()=>{observer.disconnect();cancelAnimationFrame(frame)};
  },[value]);
- return <article ref={node} className="metricCard"><strong>{count.toString().padStart(2,'0')}<i>+</i></strong><span>{label}</span><small>{detail}</small></article>;
+ return <article ref={node} className="metricCard"><strong>{count.toString().padStart(2,'0')}</strong><span>{label}</span><small>{detail}</small></article>;
 }
 
 function App(){
