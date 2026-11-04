@@ -9,7 +9,6 @@ on:
       - 'apex/pubspec.yaml'
       - 'apex/pubspec.lock'
       - 'apex/web/**'
-      - '.github/workflows/deploy.yml'
   pull_request:
     branches: [main]
     paths:
