@@ -303,3 +303,22 @@
 
 - Whether a separate Supabase development branch/project is available for database role and Storage integration tests. Do not create a billable Supabase branch without handling its cost-confirmation flow.
 - Whether the current production static content should be migrated as one initial published page revision or split into multiple page documents. The implementation should preserve current page rendering either way; decide after inspecting the exact section boundaries and URL structure.
+
+
+---
+
+## Implementation progress — 2026-11-04
+
+- [x] CMS design and implementation plan recorded on the feature branch.
+- [x] Typed CMS contracts and defensive page/navigation/theme parsing added under `apex/src/cms/`.
+- [x] Stagger-delay helper and tests added; reduced-motion-aware reveal and menu styling added to the website.
+- [x] A dedicated Flutter Admin CI workflow added for `flutter_admin/`.
+- [x] A local-first Flutter CMS workspace added with demo content, status filtering, create/edit drafts, and local preview.
+- [x] CMS destination integrated into the existing Flutter Admin navigation without changing the existing authentication gate or data repository.
+- [ ] Confirm Flutter Admin analysis, widget tests, and web build in GitHub Actions.
+- [ ] Build the website CMS management UI and published-content renderer with fallback.
+- [ ] Implement database schema, RLS, storage, and privileged publish operations only against a disposable/development Supabase environment.
+- [ ] Add role-aware CMS workflows, revision history, and media management after the backend contract is verified.
+- [ ] Complete full end-to-end verification and review the PR.
+
+**Current safety boundary:** The Flutter CMS workspace uses in-memory demo data only. It does not read or write Supabase CMS tables, does not publish content, and does not modify the production database. The dedicated Flutter Admin workflow is the verification source for this app; the separate `apex/` Flutter Pages workflow targets a different Flutter project and is not a substitute for this check.
