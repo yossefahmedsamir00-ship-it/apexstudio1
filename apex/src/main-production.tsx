@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowUpRight, Bot, Check, Globe2, Menu, MessageCircle, MoveUpRight, Plus, Send, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
 import './styles.css';
@@ -32,19 +32,28 @@ const process=[['01','Discover','اكتشاف','Understand the goal, audience an
 
 function Metric({value,label,detail}:{value:number;label:string;detail:string}){
  const [count,setCount]=useState(0);
+ const node=useRef<HTMLElement|null>(null);
  useEffect(()=>{
-  let frame=0;let start=0;
-  const tick=(now:number)=>{
-   if(!start) start=now;
-   const progress=Math.min((now-start)/1150,1);
-   const eased=1-Math.pow(1-progress,3);
-   setCount(Math.round(value*eased));
-   if(progress<1) frame=requestAnimationFrame(tick);
-  };
-  frame=requestAnimationFrame(tick);
-  return ()=>cancelAnimationFrame(frame);
+  const el=node.current;
+  if(!el) return;
+  let frame=0;
+  const observer=new IntersectionObserver((entries)=>{
+   if(!entries.some(entry=>entry.isIntersecting)) return;
+   observer.disconnect();
+   let start=0;
+   const tick=(now:number)=>{
+    if(!start) start=now;
+    const progress=Math.min((now-start)/1150,1);
+    const eased=1-Math.pow(1-progress,3);
+    setCount(Math.round(value*eased));
+    if(progress<1) frame=requestAnimationFrame(tick);
+   };
+   frame=requestAnimationFrame(tick);
+  },{threshold:.35});
+  observer.observe(el);
+  return ()=>{observer.disconnect();cancelAnimationFrame(frame)};
  },[value]);
- return <article className="metricCard"><strong>{count.toString().padStart(2,'0')}<i>+</i></strong><span>{label}</span><small>{detail}</small></article>;
+ return <article ref={node} className="metricCard"><strong>{count.toString().padStart(2,'0')}<i>+</i></strong><span>{label}</span><small>{detail}</small></article>;
 }
 
 function App(){
@@ -75,7 +84,7 @@ function App(){
  return <div className={`${ar?'app rtl':'app'} ${vrMode?'vrMode':''}`} dir={ar?'rtl':'ltr'}>
   <header className="topbar"><button className="brand" onClick={()=>go('home')}><span className="brandMark">A</span><span><b>APEX</b><small>STUDIO</small></span></button><nav className={menu?'nav open':'nav'}><button onClick={()=>go('work')}>{t.nav[0]}</button><button onClick={()=>go('services')}>{t.nav[1]}</button><button onClick={()=>go('process')}>{t.nav[2]}</button><button onClick={()=>go('about')}>{t.nav[3]}</button><div className="moreMenu"><button className="moreTrigger" type="button" aria-haspopup="menu" aria-expanded={moreOpen} onClick={()=>setMoreOpen(!moreOpen)}>{ar?'المزيد':'More'}<span aria-hidden="true">⌄</span></button>{moreOpen&&<div className="moreDropdown" role="menu"><button role="menuitem" onClick={()=>go('payments')}>{ar?'طرق الدفع':'Payment options'}</button><button role="menuitem" onClick={()=>go('contact')}>{ar?'تواصل معنا':'Contact the studio'}</button><button role="menuitem" onClick={()=>{setMoreOpen(false);setMenu(false);setAssistantOpen(true)}}>{t.ask}</button><button role="menuitem" onClick={()=>{setMoreOpen(false);setMenu(false);setVrMode(true)}}>{ar?'التجربة الغامرة':'Immersive mode'}</button></div>}</div></nav><div className="topActions"><button className="lang" onClick={()=>setLocale(ar?'en':'ar')}><Globe2 size={15}/>{ar?'EN':'AR'}</button><button className="primary small" onClick={openRequest}>{t.start}<ArrowUpRight size={15}/></button><button className="iconButton menuButton" onClick={()=>setMenu(!menu)}>{menu?<X/>:<Menu/>}</button></div></header>
   <main>
-   <section id="home" className="hero sectionPad"><div className="heroCopy"><div className="eyebrow"><span className="dot"/>{t.kicker}</div><h1>{t.hero}</h1><p className="heroBody">{t.heroBody}</p><div className="heroActions"><button className="primary" onClick={openRequest}>{t.start}<ArrowUpRight size={18}/></button><button className="textButton" onClick={()=>go('work')}>{t.explore}<MoveUpRight size={17}/></button></div></div><div className="heroVisual showroomScene" aria-label={ar?'صالة APEX الافتراضية':'APEX immersive showroom'} onPointerMove={e=>{const r=e.currentTarget.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5;const y=(e.clientY-r.top)/r.height-.5;e.currentTarget.style.setProperty('--tilt-y',`${x*3}deg`);e.currentTarget.style.setProperty('--tilt-x',`${y*-3}deg`)}} onPointerLeave={e=>{e.currentTarget.style.setProperty('--tilt-y','0deg');e.currentTarget.style.setProperty('--tilt-x','0deg')}}><div className="roomSky"/><div className="sceneCeiling"/><div className="sceneSide sceneSideLeft"/><div className="sceneSide sceneSideRight"/><div className="scenePlanet"/><div className="portalHalo portalOuter"/><div className="portalHalo portalInner"/><div className="sceneFloor"/><div className="apexGlyph"><div className="apexMark" aria-label="APEX symbol"><svg viewBox="0 0 180 145" aria-hidden="true"><defs><linearGradient id="apexMetal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#e7fcff"/><stop offset=".42" stopColor="#25e8ff"/><stop offset="1" stopColor="#076bff"/></linearGradient><linearGradient id="apexArrow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8fffff"/><stop offset=".58" stopColor="#12cfff"/><stop offset="1" stopColor="#0751d8"/></linearGradient></defs><path d="M22 125 70 18 103 74 84 94 71 65 44 125Z" fill="url(#apexMetal)" stroke="#b9fbff" strokeWidth="2"/><path d="M56 123 133 35 111 37 158 13 146 61 138 50 86 111Z" fill="url(#apexArrow)" stroke="#65f3ff" strokeWidth="2"/><ellipse cx="91" cy="116" rx="72" ry="19" transform="rotate(-11 91 116)" fill="none" stroke="#12d9ff" strokeWidth="5"/><ellipse cx="91" cy="116" rx="56" ry="13" transform="rotate(-11 91 116)" fill="none" stroke="#168dff" strokeWidth="2"/></svg></div><strong>APEX</strong><small>STUDIO</small></div><div className="visualLabel top">IMMERSIVE STUDIO / 001</div><div className="visualLabel bottom">IDEAS → DIGITAL REALITY</div><div className="heroContact"><div className="heroContactHead"><span className="heroAvatar">YA</span><div><strong>{APEX_CONTACT.name}</strong><small>{ar?'مؤسس ومطور':'Founder & Developer'}</small></div></div><a href={`mailto:${APEX_CONTACT.email}`}><span>✉</span>{APEX_CONTACT.email}</a><a href={`tel:${APEX_CONTACT.phone}`}><span>↗</span>{APEX_CONTACT.phone}</a></div><button className="vrLaunch" onClick={()=>setVrMode(true)}>{ar?'دخول التجربة الغامرة':'ENTER IMMERSIVE MODE'}</button>{vrMode&&<button className="vrClose" onClick={()=>setVrMode(false)}>{ar?'إنهاء التجربة':'EXIT EXPERIENCE'} ×</button>}</div></section>
+   <section id="home" className="hero sectionPad"><div className="heroCopy"><div className="eyebrow"><span className="dot"/>{t.kicker}</div><h1>{t.hero}</h1><p className="heroBody">{t.heroBody}</p><div className="heroActions"><button className="primary" onClick={openRequest}>{t.start}<ArrowUpRight size={18}/></button><button className="textButton" onClick={()=>go('work')}>{t.explore}<MoveUpRight size={17}/></button></div></div><div className="heroVisual showroomScene" aria-label={ar?'صالة APEX الافتراضية':'APEX immersive showroom'} onPointerMove={e=>{const r=e.currentTarget.getBoundingClientRect();const x=(e.clientX-r.left)/r.width-.5;const y=(e.clientY-r.top)/r.height-.5;e.currentTarget.style.setProperty('--tilt-y',`${x*3}deg`);e.currentTarget.style.setProperty('--tilt-x',`${y*-3}deg`)}} onPointerLeave={e=>{e.currentTarget.style.setProperty('--tilt-y','0deg');e.currentTarget.style.setProperty('--tilt-x','0deg')}}><div className="roomSky"/><div className="sceneCeiling"/><div className="sceneSide sceneSideLeft"/><div className="sceneSide sceneSideRight"/><div className="scenePlanet"/><div className="portalHalo portalOuter"/><div className="portalHalo portalInner"/><div className="sceneFloor"/><div className="apexGlyph"><div className="apexMark" aria-label="APEX symbol"><svg viewBox="0 0 180 145" aria-hidden="true"><defs><linearGradient id="apexMetal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffe2a1"/><stop offset=".42" stopColor="#d7aa5b"/><stop offset="1" stopColor="#5c8dff"/></linearGradient><linearGradient id="apexArrow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#ffb18d"/><stop offset=".58" stopColor="#ff543d"/><stop offset="1" stopColor="#5c8dff"/></linearGradient></defs><path d="M22 125 70 18 103 74 84 94 71 65 44 125Z" fill="url(#apexMetal)" stroke="#ffe2a1" strokeWidth="2"/><path d="M56 123 133 35 111 37 158 13 146 61 138 50 86 111Z" fill="url(#apexArrow)" stroke="#ffb18d" strokeWidth="2"/><ellipse cx="91" cy="116" rx="72" ry="19" transform="rotate(-11 91 116)" fill="none" stroke="#d7aa5b" strokeWidth="5"/><ellipse cx="91" cy="116" rx="56" ry="13" transform="rotate(-11 91 116)" fill="none" stroke="#5c8dff" strokeWidth="2"/></svg></div><strong>APEX</strong><small>STUDIO</small></div><div className="visualLabel top">IMMERSIVE STUDIO / 001</div><div className="visualLabel bottom">IDEAS → DIGITAL REALITY</div><div className="heroContact"><div className="heroContactHead"><span className="heroAvatar">YA</span><div><strong>{APEX_CONTACT.name}</strong><small>{ar?'مؤسس ومطور':'Founder & Developer'}</small></div></div><a href={`mailto:${APEX_CONTACT.email}`}><span>✉</span>{APEX_CONTACT.email}</a><a href={`tel:${APEX_CONTACT.phone}`}><span>↗</span>{APEX_CONTACT.phone}</a></div><button className="vrLaunch" onClick={()=>setVrMode(true)}>{ar?'دخول التجربة الغامرة':'ENTER IMMERSIVE MODE'}</button>{vrMode&&<button className="vrClose" onClick={()=>setVrMode(false)}>{ar?'إنهاء التجربة':'EXIT EXPERIENCE'} ×</button>}</div></section>
    <section className="statement"><div className="sectionPad statementInner"><span>01</span><p>{t.proof}</p><span className="statementArrow">↘</span></div></section>   
    <section className="metricsSection sectionPad" aria-label={ar?'أرقام الاستوديو':'Studio facts'}>
     <div className="metricsIntro"><div className="eyebrow">02 / {ar?'بالأرقام':'THE STUDIO IN FOCUS'}</div><h2>{ar?'الفكرة تتحول إلى تجربة.':'Ideas, shaped into experiences.'}</h2></div>
