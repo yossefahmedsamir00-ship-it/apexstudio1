@@ -224,7 +224,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _password = TextEditingController();
   bool _busy = false;
   String? _error;
-  String? _notice;
 
   @override
   void dispose() {
@@ -311,10 +310,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (_error != null) ...[
                         const SizedBox(height: 14),
                         _MessageBanner(text: _error!, isError: true),
-                      ],
-                      if (_notice != null) ...[
-                        const SizedBox(height: 14),
-                        _MessageBanner(text: _notice!, isError: false),
                       ],
                       const SizedBox(height: 20),
                       FilledButton.icon(
