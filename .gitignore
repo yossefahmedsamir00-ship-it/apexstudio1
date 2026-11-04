@@ -1,0 +1,17 @@
+# Environment secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Node / Vite
+**/node_modules/
+**/dist/
+
+# Flutter / Dart generated files
+**/.dart_tool/
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/android/local.properties
+**/ios/Flutter/.last_build_id

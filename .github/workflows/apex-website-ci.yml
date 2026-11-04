@@ -1,0 +1,46 @@
+name: APEX Website CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apex/src/**'
+      - 'apex/*.html'
+      - 'apex/package.json'
+      - 'apex/package-lock.json'
+      - 'apex/vite.config.ts'
+      - '.github/workflows/apex-website-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apex/src/**'
+      - 'apex/*.html'
+      - 'apex/package.json'
+      - 'apex/package-lock.json'
+      - 'apex/vite.config.ts'
+      - '.github/workflows/apex-website-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apex
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apex/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+      - name: Build production website
+        run: npm run build
