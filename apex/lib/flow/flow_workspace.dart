@@ -216,9 +216,9 @@ class _BuilderPanel extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: SegmentedButton<FlowBuilderMode>(
                   segments: [
-                    ButtonSegment(value: FlowBuilderMode.visual, label: Text(l('Visual', 'مرئي')), icon: const Icon(Icons.account_tree, size: 16)),
-                    ButtonSegment(value: FlowBuilderMode.simple, label: Text(l('Simple', 'بسيط')), icon: const Icon(Icons.view_list, size: 16)),
-                    ButtonSegment(value: FlowBuilderMode.hybrid, label: Text(l('Hybrid', 'هجين')), icon: const Icon(Icons.merge_type, size: 16)),
+                    ButtonSegment(value: FlowBuilderMode.visual, label: Text(l('Visual', 'مرئي'))),
+                    ButtonSegment(value: FlowBuilderMode.simple, label: Text(l('Simple', 'بسيط'))),
+                    ButtonSegment(value: FlowBuilderMode.hybrid, label: Text(l('Hybrid', 'هجين'))),
                   ],
                   selected: {mode},
                   onSelectionChanged: (values) => onMode(values.first),
