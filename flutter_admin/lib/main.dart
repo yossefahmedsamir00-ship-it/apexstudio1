@@ -751,7 +751,7 @@ class _AdminShellState extends State<AdminShell> {
                     : ListView.separated(
                         padding: const EdgeInsets.all(14),
                         itemCount: unread.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final item = unread[index];
                           final last = _asMap(item['lastMessage']);
