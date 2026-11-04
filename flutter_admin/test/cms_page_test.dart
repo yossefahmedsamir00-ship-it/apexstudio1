@@ -8,6 +8,7 @@ void main() {
 
     expect(find.text('Content studio'), findsOneWidget);
     expect(find.textContaining('Demo mode'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Homepage hero'), 250, scrollable: find.byType(Scrollable).first);
     expect(find.text('Homepage hero'), findsOneWidget);
   });
 
@@ -32,6 +33,7 @@ void main() {
     await tester.tap(find.text('Save draft'));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(find.text('Launch announcement'), 250, scrollable: find.byType(Scrollable).first);
     expect(find.text('Launch announcement'), findsOneWidget);
     expect(find.textContaining('A new studio update.'), findsOneWidget);
   });
@@ -39,6 +41,7 @@ void main() {
   testWidgets('opens a preview without publishing', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: Scaffold(body: CmsPage())));
 
+    await tester.scrollUntilVisible(find.byTooltip('Preview Homepage hero'), 250, scrollable: find.byType(Scrollable).first);
     await tester.tap(find.byTooltip('Preview Homepage hero'));
     await tester.pumpAndSettle();
 
