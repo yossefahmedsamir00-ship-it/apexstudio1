@@ -3,8 +3,22 @@ name: Deploy APEX STUDIO Flutter app to GitHub Pages
 on:
   push:
     branches: [main]
+    paths:
+      - 'apex/lib/**'
+      - 'apex/test/**'
+      - 'apex/pubspec.yaml'
+      - 'apex/pubspec.lock'
+      - 'apex/web/**'
+      - '.github/workflows/deploy.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'apex/lib/**'
+      - 'apex/test/**'
+      - 'apex/pubspec.yaml'
+      - 'apex/pubspec.lock'
+      - 'apex/web/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 permissions:
