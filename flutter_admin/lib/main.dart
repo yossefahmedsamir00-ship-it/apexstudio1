@@ -222,10 +222,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  final _otp = TextEditingController();
   bool _busy = false;
-  bool _otpMode = false;
-  bool _otpRequested = false;
   String? _error;
   String? _notice;
 
@@ -233,7 +230,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _email.dispose();
     _password.dispose();
-    _otp.dispose();
     super.dispose();
   }
 
@@ -242,7 +238,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _busy = true;
       _error = null;
-      _notice = null;
     });
     try {
       await action();
@@ -260,33 +255,6 @@ class _LoginScreenState extends State<LoginScreen> {
     await Supabase.instance.client.auth.signInWithPassword(
       email: email,
       password: _password.text,
-    );
-    // OwnerAuthGate validates the session server-side before rendering the app.
-  }
-
-  Future<void> _requestOtp() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    await Supabase.instance.client.auth.signInWithOtp(
-      email: email,
-      shouldCreateUser: false,
-    );
-    if (!mounted) return;
-    setState(() {
-      _otpRequested = true;
-      _otp.clear();
-      _notice = 'If this email is eligible, a sign-in code has been sent. Check your inbox and spam folder.';
-    });
-  }
-
-  Future<void> _verifyOtp() async {
-    final email = _email.text.trim();
-    if (!_validEmail(email)) throw Exception('Enter a valid owner email.');
-    if (_otp.text.trim().length != 6) throw Exception('Enter the 6-digit code from your email.');
-    await Supabase.instance.client.auth.verifyOTP(
-      type: OtpType.email,
-      email: email,
-      token: _otp.text.trim(),
     );
     // OwnerAuthGate validates the session server-side before rendering the app.
   }
@@ -322,31 +290,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 28),
                       TextField(
                         controller: _email,
-                        enabled: !_busy && !_otpRequested,
+                        enabled: !_busy,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.username],
                         decoration: const InputDecoration(labelText: 'Owner email', prefixIcon: Icon(Icons.alternate_email)),
                       ),
-                      if (!_otpMode) ...[
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _password,
-                          enabled: !_busy,
-                          obscureText: true,
-                          autofillHints: const [AutofillHints.password],
-                          onSubmitted: (_) => _run(_passwordSignIn),
-                          decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
-                        ),
-                      ] else if (_otpRequested) ...[
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _otp,
-                          enabled: !_busy,
-                          keyboardType: TextInputType.number,
-                          maxLength: 6,
-                          decoration: const InputDecoration(labelText: '6-digit email code', prefixIcon: Icon(Icons.password), counterText: ''),
-                        ),
-                      ],
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _password,
+                        enabled: !_busy,
+                        obscureText: true,
+                        autofillHints: const [AutofillHints.password],
+                        onSubmitted: (_) => _run(_passwordSignIn),
+                        decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline)),
+                      ),
                       if (widget.gateError != null) ...[
                         const SizedBox(height: 14),
                         _MessageBanner(text: widget.gateError!, isError: true),
@@ -361,60 +318,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                       const SizedBox(height: 20),
                       FilledButton.icon(
-                        onPressed: _busy
-                            ? null
-                            : () => _run(
-                                  _otpMode
-                                      ? _otpRequested
-                                          ? _verifyOtp
-                                          : _requestOtp
-                                      : _passwordSignIn,
-                                ),
+                        onPressed: _busy ? null : () => _run(_passwordSignIn),
                         icon: _busy
                             ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2))
                             : const Icon(Icons.verified_user_outlined),
                         label: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            _busy
-                                ? 'Please wait…'
-                                : _otpMode
-                                    ? _otpRequested
-                                        ? 'Verify owner code'
-                                        : 'Send owner code'
-                                    : 'Sign in securely',
-                          ),
+                          child: Text(_busy ? 'Please wait…' : 'Sign in securely'),
                         ),
                       ),
-                      TextButton(
-                        onPressed: _busy
-                            ? null
-                            : () {
-                                setState(() {
-                                  _otpMode = !_otpMode;
-                                  _otpRequested = false;
-                                  _otp.clear();
-                                  _error = null;
-                                  _notice = null;
-                                });
-                              },
-                        child: Text(_otpMode ? 'Use password instead' : 'Use email verification code (OTP)'),
-                      ),
-                      if (_otpMode && _otpRequested)
-                        TextButton(
-                          onPressed: _busy
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _otpRequested = false;
-                                    _otp.clear();
-                                    _notice = null;
-                                    _error = null;
-                                  });
-                                },
-                          child: const Text('Change email / request another code'),
-                        ),
-                      const SizedBox(height: 8),
                       const Text(
                         'Access is granted only after the APEX server confirms the configured owner account.',
                         textAlign: TextAlign.center,
