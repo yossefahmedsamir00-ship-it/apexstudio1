@@ -678,12 +678,130 @@ class _AdminShellState extends State<AdminShell> {
   bool _refreshing = false;
   String? _error;
   int _selectedIndex = 0;
+  Timer? _notificationRefresh;
+
+  int get _unreadMessages => (_data?.conversations ?? []).fold<int>(
+        0,
+        (total, item) => total + _integer(item['unreadCount']),
+      );
 
   @override
   void initState() {
     super.initState();
     _repository = AdminRepository(Supabase.instance.client);
     unawaited(_refresh(initial: true));
+    // Lightweight polling keeps the inbox fresh without a permanent socket.
+    _notificationRefresh = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && !_refreshing) unawaited(_refresh());
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationRefresh?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _openNotifications() async {
+    final conversations = _data?.conversations ?? [];
+    final unread = conversations
+        .where((item) => _integer(item['unreadCount']) > 0)
+        .toList(growable: false);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF101214),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * .72,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.notifications_active_outlined, color: _gold),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text('Notifications', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                    ),
+                    Text('${unread.length} unread', style: const TextStyle(color: _muted, fontSize: 12)),
+                    IconButton(
+                      tooltip: 'Close notifications',
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: unread.isEmpty
+                    ? const _EmptyState(
+                        icon: Icons.notifications_none_rounded,
+                        title: 'You are all caught up',
+                        subtitle: 'New client messages will appear here.',
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(14),
+                        itemCount: unread.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final item = unread[index];
+                          final last = _asMap(item['lastMessage']);
+                          final client = _string(item['clientName'], _string(item['clientEmail'], 'Website visitor'));
+                          final preview = _string(last['body'], 'New message received');
+                          return Card(
+                            color: const Color(0xFF171A1C),
+                            child: ListTile(
+                              leading: Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: _gold.withValues(alpha: .14),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: const Icon(Icons.mark_chat_unread_outlined, color: _gold),
+                              ),
+                              title: Text(client, style: const TextStyle(fontWeight: FontWeight.w800)),
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 5),
+                                child: Text(preview, maxLines: 2, overflow: TextOverflow.ellipsis),
+                              ),
+                              trailing: CircleAvatar(
+                                radius: 13,
+                                backgroundColor: _gold,
+                                child: Text(
+                                  '${_integer(item['unreadCount'])}',
+                                  style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w900),
+                                ),
+                              ),
+                              onTap: () {
+                                Navigator.pop(sheetContext);
+                                if (!mounted) return;
+                                setState(() => _selectedIndex = 2);
+                                Navigator.of(this.context).push(MaterialPageRoute(
+                                  builder: (_) => ConversationDetailPage(
+                                    repository: _repository,
+                                    conversation: item,
+                                    onChanged: _refresh,
+                                  ),
+                                ));
+                              },
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _refresh({bool initial = false}) async {
@@ -788,6 +906,35 @@ class _AdminShellState extends State<AdminShell> {
           ]),
         ]),
         actions: [
+          IconButton(
+            tooltip: 'Notifications',
+            onPressed: _openNotifications,
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.notifications_none_rounded),
+                if (_unreadMessages > 0)
+                  Positioned(
+                    right: -7,
+                    top: -6,
+                    child: Container(
+                      constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: _red,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: _background, width: 1.5),
+                      ),
+                      child: Text(
+                        _unreadMessages > 99 ? '99+' : '$_unreadMessages',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
           IconButton(
             tooltip: 'Refresh data',
             onPressed: _refreshing ? null : _refresh,
