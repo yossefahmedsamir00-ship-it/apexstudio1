@@ -215,6 +215,7 @@ class _BuilderPanel extends StatelessWidget {
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
                 child: SegmentedButton<FlowBuilderMode>(
+                  showSelectedIcon: false,
                   segments: [
                     ButtonSegment(value: FlowBuilderMode.visual, label: Text(l('Visual', 'مرئي'))),
                     ButtonSegment(value: FlowBuilderMode.simple, label: Text(l('Simple', 'بسيط'))),
