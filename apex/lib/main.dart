@@ -269,7 +269,7 @@ class _GoldButton extends StatelessWidget {
   final VoidCallback onPressed;
   const _GoldButton({required this.label, required this.onPressed});
   @override
-  Widget build(BuildContext context) => FilledButton.icon(
+  Widget build(BuildContext context) => _PressScale(child: FilledButton.icon(
     onPressed: onPressed,
     icon: const Icon(Icons.north_east, size: 17),
     label: Text(label),
@@ -281,7 +281,7 @@ class _GoldButton extends StatelessWidget {
       textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: .4),
       elevation: 0,
     ),
-  );
+  ));
 }
 
 class _ImmersiveScene extends StatefulWidget {
@@ -566,4 +566,22 @@ class _Footer extends StatelessWidget { final bool ar; const _Footer({required t
 
 class _Card extends StatelessWidget { final String index, title, body; const _Card({required this.index, required this.title, required this.body}); @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.all(28), decoration: BoxDecoration(color: const Color(0xFF0D0D0F), border: Border.all(color: const Color(0xFF252525)), borderRadius: BorderRadius.circular(3)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(index, style: const TextStyle(color: Color(0xFFD7A83E), fontWeight: FontWeight.w800)), const Spacer(), Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)), const SizedBox(height: 8), Text(body, style: const TextStyle(color: Color(0xFF929292), height: 1.45))])); }
 
-class _Section extends StatelessWidget { final String eyebrow, title; final Widget child; const _Section({required this.eyebrow, required this.title, required this.child}); @override Widget build(BuildContext context) => Padding(padding: const EdgeInsets.fromLTRB(24, 90, 24, 30), child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1160), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(eyebrow, style: const TextStyle(color: Color(0xFFD7A83E), letterSpacing: 2.2, fontWeight: FontWeight.w700)), const SizedBox(height: 12), Text(title, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w900)), const SizedBox(height: 30), child])))); }
+class _Section extends StatelessWidget {
+  final String eyebrow, title;
+  final Widget child;
+  const _Section({required this.eyebrow, required this.title, required this.child});
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(24, 90, 24, 30),
+    child: Center(child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 1160),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(eyebrow, style: const TextStyle(color: Color(0xFFD7AA5B), letterSpacing: 2.2, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 12),
+        Text(title, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w900, letterSpacing: -1.4)),
+        const SizedBox(height: 30),
+        _Reveal(child: child),
+      ]),
+    )),
+  );
+}
