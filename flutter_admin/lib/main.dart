@@ -1338,6 +1338,7 @@ class _LeadsPageState extends State<LeadsPage> {
     ('cancelled', 'Cancelled'),
   ];
 
+  final TextEditingController _searchController = TextEditingController();
   String _query = '';
   String _status = 'all';
 
@@ -1359,6 +1360,12 @@ class _LeadsPageState extends State<LeadsPage> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final visible = _visibleInquiries;
     return ListView(
@@ -1372,6 +1379,7 @@ class _LeadsPageState extends State<LeadsPage> {
         ),
         TextField(
           key: const ValueKey('lead-search-field'),
+          controller: _searchController,
           onChanged: (value) => setState(() => _query = value),
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
@@ -1381,7 +1389,10 @@ class _LeadsPageState extends State<LeadsPage> {
                 ? null
                 : IconButton(
                     tooltip: 'Clear search',
-                    onPressed: () => setState(() => _query = ''),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _query = '');
+                    },
                     icon: const Icon(Icons.close_rounded),
                   ),
           ),
@@ -1425,10 +1436,13 @@ class _LeadsPageState extends State<LeadsPage> {
             ),
             if (_query.isNotEmpty || _status != 'all')
               TextButton(
-                onPressed: () => setState(() {
-                  _query = '';
-                  _status = 'all';
-                }),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    _query = '';
+                    _status = 'all';
+                  });
+                },
                 child: const Text('Clear filters'),
               ),
           ],
