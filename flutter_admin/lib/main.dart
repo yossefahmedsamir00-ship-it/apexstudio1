@@ -676,6 +676,8 @@ class _AdminShellState extends State<AdminShell> {
     NavigationDestination(icon: Icon(Icons.inbox_outlined), selectedIcon: Icon(Icons.inbox), label: 'Leads'),
     NavigationDestination(icon: Icon(Icons.forum_outlined), selectedIcon: Icon(Icons.forum), label: 'Inbox'),
     NavigationDestination(icon: Icon(Icons.payments_outlined), selectedIcon: Icon(Icons.payments), label: 'Payments'),
+  ];
+  static const _moreDestinations = [
     NavigationDestination(icon: Icon(Icons.timeline_outlined), selectedIcon: Icon(Icons.timeline), label: 'Activity'),
     NavigationDestination(icon: Icon(Icons.shield_outlined), selectedIcon: Icon(Icons.shield), label: 'Security'),
     NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune), label: 'Controls'),
@@ -688,6 +690,7 @@ class _AdminShellState extends State<AdminShell> {
   bool _refreshing = false;
   String? _error;
   int _selectedIndex = 0;
+  bool _moreExpanded = false;
   Timer? _notificationRefresh;
   late final ApexPushNotifications _pushNotifications;
   bool _pushReady = false;
@@ -926,6 +929,89 @@ class _AdminShellState extends State<AdminShell> {
     );
   }
 
+  List<Widget> _desktopNavItems(List<NavigationDestination> items, int offset) {
+    return List.generate(items.length, (index) {
+      final item = items[index];
+      final selected = _selectedIndex == offset + index;
+      return TweenAnimationBuilder<double>(
+        key: ValueKey('nav-${offset + index}'),
+        tween: Tween(begin: 0, end: 1),
+        duration: Duration(milliseconds: 180 + index * 65),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) => Opacity(
+          opacity: value,
+          child: Transform.translate(offset: Offset(0, 8 * (1 - value)), child: child),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Material(
+            color: selected ? const Color(0xFF328AC8).withValues(alpha: .22) : Colors.transparent,
+            borderRadius: BorderRadius.circular(13),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(13),
+              onTap: () => setState(() => _selectedIndex = offset + index),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                child: Row(children: [
+                  Icon(selected ? item.selectedIcon.icon : item.icon.icon,
+                    color: selected ? const Color(0xFF9AD9FF) : const Color(0xFF8798AD), size: 20),
+                  const SizedBox(width: 13),
+                  Expanded(child: Text(item.label,
+                    style: TextStyle(color: selected ? const Color(0xFFB8E4FF) : const Color(0xFFA6B4C7),
+                      fontSize: 11, fontWeight: selected ? FontWeight.w900 : FontWeight.w600))),
+                  if (selected) Container(width: 5, height: 22,
+                    decoration: BoxDecoration(color: _cyan, borderRadius: BorderRadius.circular(8))),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Future<void> _openMoreMenu() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF101A28),
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('More controls', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 5),
+            const Text('Additional workspace sections', style: TextStyle(color: _muted, fontSize: 11)),
+            const SizedBox(height: 14),
+            ...List.generate(_moreDestinations.length, (index) {
+              final item = _moreDestinations[index];
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: Duration(milliseconds: 220 + index * 75),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) => Opacity(
+                  opacity: value,
+                  child: Transform.translate(offset: Offset(0, 10 * (1 - value)), child: child),
+                ),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  leading: Icon(item.icon.icon, color: _cyan),
+                  title: Text(item.label, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: _muted),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    if (mounted) setState(() => _selectedIndex = index + 4);
+                  },
+                ),
+              );
+            }),
+          ]),
+        ),
+      ),
+    );
+  }
+
   Widget _selectedPage(DashboardData data) {
     switch (_selectedIndex) {
       case 1:
@@ -1025,16 +1111,23 @@ class _AdminShellState extends State<AdminShell> {
               const SizedBox(height: 18), const ApexBrandMark(size: 46), const SizedBox(height: 8),
               const Text('APEX STUDIO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.8)),
               const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 16), child: Divider(color: Color(0x333D8CC8))),
-              Expanded(child: NavigationRail(
-                selectedIndex: _selectedIndex, onDestinationSelected: (v) => setState(() => _selectedIndex = v),
-                labelType: null, backgroundColor: Colors.transparent,
-                selectedIconTheme: const IconThemeData(color: Color(0xFF9AD9FF), size: 23),
-                unselectedIconTheme: const IconThemeData(color: Color(0xFF8798AD), size: 21),
-                selectedLabelTextStyle: const TextStyle(color: Color(0xFFB8E4FF), fontSize: 11, fontWeight: FontWeight.w800),
-                unselectedLabelTextStyle: const TextStyle(color: Color(0xFFA6B4C7), fontSize: 11),
-                indicatorColor: const Color(0xFF328AC8).withValues(alpha: .24),
-                minWidth: 72, minExtendedWidth: 220, extended: true,
-                destinations: _destinations.map((item) => NavigationRailDestination(icon: item.icon, selectedIcon: item.selectedIcon, label: Text(item.label))).toList(),
+              Expanded(child: ListView(
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
+                children: [
+                  ..._desktopNavItems(_destinations, 0),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10), child: Divider(color: Color(0x333D8CC8))),
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      key: const PageStorageKey('admin-more-menu'),
+                      initiallyExpanded: _moreExpanded || _selectedIndex >= 4,
+                      onExpansionChanged: (value) => setState(() => _moreExpanded = value),
+                      leading: const Icon(Icons.grid_view_rounded, color: Color(0xFF9AD9FF)),
+                      title: const Text('More', style: TextStyle(color: Color(0xFFB8E4FF), fontSize: 12, fontWeight: FontWeight.w800)),
+                      children: _desktopNavItems(_moreDestinations, 4),
+                    ),
+                  ),
+                ],
               )),
               Padding(padding: const EdgeInsets.all(14), child: Text('PRIVATE OWNER WORKSPACE', textAlign: TextAlign.center,
                 style: TextStyle(color: _cyan.withValues(alpha: .75), fontSize: 8, letterSpacing: 1.2, fontWeight: FontWeight.w800))),
@@ -1055,9 +1148,18 @@ class _AdminShellState extends State<AdminShell> {
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (value) => setState(() => _selectedIndex = value),
-              destinations: _destinations,
+              selectedIndex: _selectedIndex < 4 ? _selectedIndex : 4,
+              onDestinationSelected: (value) {
+                if (value == 4) {
+                  _openMoreMenu();
+                } else {
+                  setState(() => _selectedIndex = value);
+                }
+              },
+              destinations: [
+                ..._destinations,
+                const NavigationDestination(icon: Icon(Icons.grid_view_rounded), selectedIcon: Icon(Icons.grid_view), label: 'More'),
+              ],
             ),
     );
   }
