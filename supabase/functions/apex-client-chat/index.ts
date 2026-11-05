@@ -445,7 +445,11 @@ Deno.serve(async (req: Request) => {
       }).eq("id",conversationId);
       await writeAudit(admin,user.id,"client_message_sent","conversation",conversationId,{messageId:clientMessage.id,bodyLength:body.length});
       // Send a privacy-preserving push only after the message is durably stored.
-      await sendOwnerPush(admin,typeof conversation.owner_user_id === "string" ? conversation.owner_user_id : null,conversationId);
+      EdgeRuntime.waitUntil(sendOwnerPush(
+        admin,
+        typeof conversation.owner_user_id === "string" ? conversation.owner_user_id : null,
+        conversationId,
+      ));
 
       // Direct owner chat is saved to the same secure inbox, but must never generate an AI reply.
       if (input.mode === "owner") {
