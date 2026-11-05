@@ -46,7 +46,10 @@ class ApexPushNotifications {
 
   static Future<void> configureBackgroundHandler() async {
     if (!firebasePushConfigured) return;
-    await configureBackgroundHandler();
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: _firebaseOptions);
+    }
+    FirebaseMessaging.onBackgroundMessage(apexFirebaseMessagingBackgroundHandler);
   }
 
   static const _channel = AndroidNotificationChannel(
@@ -62,10 +65,7 @@ class ApexPushNotifications {
     if (!firebasePushConfigured) return false;
     _onConversationTap = onConversationTap;
 
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(options: _firebaseOptions);
-    }
-    FirebaseMessaging.onBackgroundMessage(apexFirebaseMessagingBackgroundHandler);
+    await configureBackgroundHandler();
 
     await _local.initialize(
       const InitializationSettings(
