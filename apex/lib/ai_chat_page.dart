@@ -132,9 +132,28 @@ class _ApexAiChatPageState extends State<ApexAiChatPage> {
       _notice = null;
     });
     try {
+      final historyResponse = await _client.functions.invoke(
+        'apex-client-chat',
+        body: {'action': 'client_list'},
+      );
+      final historyBody = _map(historyResponse.data);
+      if (historyResponse.status < 200 ||
+          historyResponse.status >= 300 ||
+          historyBody['error'] != null) {
+        throw Exception(historyBody['error'] ?? 'Could not load your chat history.');
+      }
+      final previous = _rows(historyBody['conversations']).where(
+        (item) => item['status'] != 'closed',
+      );
+      final previousId = previous.isEmpty ? null : previous.first['id']?.toString();
+
       final response = await _client.functions.invoke(
         'apex-client-chat',
-        body: {'action': 'open', 'subject': 'APEX AI Chat'},
+        body: {
+          'action': 'open',
+          'subject': 'APEX AI Chat',
+          if (previousId != null) 'conversationId': previousId,
+        },
       );
       final body = _map(response.data);
       if (response.status < 200 || response.status >= 300 || body['error'] != null) {
