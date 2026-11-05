@@ -25,11 +25,10 @@
 5. Keep admin/payment/social entry pages working as separate build inputs.
 
 Acceptance:
-- Public `index.html` contains no React root or TSX module.
-- No React/ReactDOM imports or framework runtime are used by the public page.
-- Project filters, modal, locale direction, form validation, and mobile navigation work.
-- Request success is shown only after the backend confirms persistence.
-- Reduced motion is respected; no forced animation for users who disable it.
+- The public experience is built from the Flutter project in `apex/` using `flutter build web --release`.
+- Project filters, CMS-backed published projects/services, locale direction, and responsive navigation work.
+- CMS changes appear publicly only after a successful owner publish action.
+- Existing curated Flutter content remains available if the CMS migration has not yet been installed.
 
 ## Phase 2 — Flutter CMS persistence
 
@@ -72,7 +71,7 @@ External setup required before live delivery:
 
 ## Phase 4 — Quality, security, and delivery
 
-1. Update GitHub Actions so the public site is built as static assets and Flutter Admin is analyzed/tested/built independently.
+1. Update GitHub Actions so the public Flutter Web project and Flutter Admin are analyzed, tested, and built independently.
 2. Keep existing payment/social/admin build inputs functional.
 3. Run available unit tests, Flutter analyze/tests, production build, and workflow checks.
 4. Review diffs for accessibility, RTL, performance, secrets, RLS, and regressions.
@@ -83,8 +82,8 @@ External setup required before live delivery:
 - PR #18 head at planning time: `49784f616835ab6017f8d3a7b8bd80584f6c4eda`.
 - Existing Flutter Web CI run `41991501859`: success.
 - Existing Flutter Admin CI run `41991501740`: success.
-- The existing public page currently loads `/src/main-production.tsx`; the legacy `app.js` is a separate minimal prototype and is not feature parity.
-- The current Flutter CMS is local/demo-only and explicitly states that drafts are not persisted to the server.
+- The public Flutter Web application is sourced from `apex/lib/main.dart`; its published project/service lists now read from the shared CMS table with curated fallback content.
+- The Flutter Admin CMS now uses Supabase persistence in production mode and an explicit demo mode for tests.
 
 ## Open implementation constraints
 
