@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui' show ImageFilter;
+import 'dashboard_v2.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cms_page.dart';
@@ -1013,17 +1015,26 @@ class _AdminShellState extends State<AdminShell> {
       ),
       body: _ApexAmbientBackground(child: Row(children: [
         if (wide)
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (value) => setState(() => _selectedIndex = value),
-            labelType: NavigationRailLabelType.all,
-            backgroundColor: _background,
-            destinations: _destinations.map((item) => NavigationRailDestination(
-              icon: item.icon,
-              selectedIcon: item.selectedIcon,
-              label: Text(item.label),
-            )).toList(),
-          ),
+          ClipRRect(borderRadius: const BorderRadius.horizontal(right: Radius.circular(22)), child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(width: 224, decoration: BoxDecoration(
+              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                colors: [const Color(0xFF1B3552).withValues(alpha: .78), const Color(0xFF080E19).withValues(alpha: .92)]),
+              border: Border(right: BorderSide(color: _cyan.withValues(alpha: .22))),
+            ), child: Column(children: [
+              const SizedBox(height: 18), const ApexBrandMark(size: 46), const SizedBox(height: 8),
+              const Text('APEX STUDIO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.8)),
+              const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 16), child: Divider(color: Color(0x333D8CC8))),
+              Expanded(child: NavigationRail(
+                selectedIndex: _selectedIndex, onDestinationSelected: (v) => setState(() => _selectedIndex = v),
+                labelType: NavigationRailLabelType.all, backgroundColor: Colors.transparent,
+                minWidth: 72, minExtendedWidth: 220, extended: true,
+                destinations: _destinations.map((item) => NavigationRailDestination(icon: item.icon, selectedIcon: item.selectedIcon, label: Text(item.label))).toList(),
+              )),
+              Padding(padding: const EdgeInsets.all(14), child: Text('PRIVATE OWNER WORKSPACE', textAlign: TextAlign.center,
+                style: TextStyle(color: _cyan.withValues(alpha: .75), fontSize: 8, letterSpacing: 1.2, fontWeight: FontWeight.w800))),
+            ])),
+          )),
         if (wide) const VerticalDivider(width: 1),
         Expanded(
           child: Column(children: [
@@ -1047,76 +1058,131 @@ class _AdminShellState extends State<AdminShell> {
   }
 }
 
+
 class OverviewPage extends StatelessWidget {
   const OverviewPage({super.key, required this.data, required this.repository, required this.onChanged});
-
   final DashboardData data;
   final AdminRepository repository;
   final Future<void> Function() onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final paid = data.invoices.where((item) => item['status'] == 'paid').length;
-    final unread = data.conversations.fold<int>(0, (total, item) => total + _integer(item['unreadCount']));
-    final locked = data.runtimeControls['emergency_lockdown'] == true;
-    final uniqueContacts = data.inquiries.map((item) => _string(
-      item['client_email'],
-      _string(item['client_phone'], _string(item['client_name'], '')),
-    ).trim().toLowerCase()).where((value) => value.isNotEmpty).toSet().length;
-
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(18),
-      children: [
-        const _SectionHeading(
-          eyebrow: 'PRIVATE OWNER WORKSPACE',
-          title: 'Command center',
-          subtitle: 'Live visibility across your website and client operations.',
-        ),
-        if (locked) const _MessageBanner(text: 'Emergency lockdown is currently enabled.', isError: true),
-        const SizedBox(height: 18),
-        LayoutBuilder(builder: (context, constraints) {
-          final columns = constraints.maxWidth > 1000 ? 4 : constraints.maxWidth > 600 ? 3 : 2;
-          return GridView.count(
-            crossAxisCount: columns,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.7,
-            children: [
-              _MetricCard(label: 'Client leads', value: data.inquiries.length.toString(), icon: Icons.inbox_outlined, accent: _gold),
-              _MetricCard(label: 'Unique client contacts', value: uniqueContacts.toString(), icon: Icons.groups_outlined, accent: _red),
-              _MetricCard(label: 'Conversations', value: data.conversations.length.toString(), icon: Icons.forum_outlined, accent: _cyan),
-              _MetricCard(label: 'Unread messages', value: unread.toString(), icon: Icons.mark_chat_unread_outlined, accent: const Color(0xFF8FE0B4)),
-              _MetricCard(label: 'Invoices', value: data.invoices.length.toString(), icon: Icons.receipt_long_outlined, accent: const Color(0xFFB6A0FF)),
-              _MetricCard(label: 'Paid invoices', value: paid.toString(), icon: Icons.verified_outlined, accent: const Color(0xFF8FE0B4)),
-              _MetricCard(label: 'Tracked events', value: data.events.length.toString(), icon: Icons.insights_outlined, accent: const Color(0xFFFF9D73)),
-            ],
-          );
-        }),
-        const SizedBox(height: 24),
-        const _SectionHeading(eyebrow: 'CLIENT PIPELINE', title: 'New inquiries'),
-        if (data.inquiries.isEmpty)
-          const _EmptyState(icon: Icons.inbox_outlined, title: 'No inquiries yet', subtitle: 'New client requests from the website will appear here.')
-        else
-          ...data.inquiries.take(5).map((item) => _InquiryCard(item: item)),
-        const SizedBox(height: 24),
-        const _SectionHeading(eyebrow: 'MESSAGING', title: 'Recent conversations'),
-        if (data.conversations.isEmpty)
-          const _EmptyState(icon: Icons.forum_outlined, title: 'Inbox is clear', subtitle: 'Website conversations will appear here.')
-        else
-          ...data.conversations.take(5).map((item) => _ConversationCard(
-            item: item,
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => ConversationDetailPage(repository: repository, conversation: item, onChanged: onChanged),
-            )),
-          )),
-        const SizedBox(height: 16),
-        Text('Last synced: ${_dateTime(data.lastSync)}', style: const TextStyle(color: _muted, fontSize: 11), textAlign: TextAlign.end),
-      ],
-    );
+    final paid = data.invoices.where((x) => x['status'] == 'paid').toList();
+    final pending = data.invoices.where((x) => x['status'] == 'pending').length;
+    final failed = data.invoices.where((x) => x['status'] == 'failed' || x['status'] == 'cancelled').length;
+    final unread = data.conversations.fold<int>(0, (sum, x) => sum + _integer(x['unreadCount']));
+    final contacts = data.inquiries.map((x) => _string(x['client_email'], _string(x['client_phone'], _string(x['client_name'], ''))).trim().toLowerCase()).where((x) => x.isNotEmpty).toSet().length;
+    final egpMinor = paid.where((x) => _string(x['currency'], 'EGP').toUpperCase() == 'EGP').fold<int>(0, (sum, x) => sum + _integer(x['amount_minor']));
+    final now = DateTime.now();
+    final months = List.generate(6, (i) => DateTime(now.year, now.month - 5 + i, 1));
+    final revenue = List<double>.filled(6, 0);
+    for (final x in paid) {
+      if (_string(x['currency'], 'EGP').toUpperCase() != 'EGP') continue;
+      final date = DateTime.tryParse(_string(x['paid_at'], _string(x['created_at'], '')));
+      if (date == null) continue;
+      final offset = (now.year - date.year) * 12 + now.month - date.month;
+      if (offset >= 0 && offset < 6) revenue[5 - offset] += _integer(x['amount_minor']) / 100;
+    }
+    return ListView(physics: const AlwaysScrollableScrollPhysics(), padding: const EdgeInsets.all(18), children: [
+      Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(_greeting(), style: const TextStyle(color: _muted, fontSize: 12)),
+          const SizedBox(height: 5),
+          const Text('Your command center', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          const Text('A clear view of your APEX operations.', style: TextStyle(color: _muted, fontSize: 12)),
+        ])),
+        IconButton.filledTonal(onPressed: onChanged, icon: const Icon(Icons.refresh_rounded), tooltip: 'Refresh dashboard'),
+      ]),
+      const SizedBox(height: 18),
+      if (data.runtimeControls['emergency_lockdown'] == true)
+        const _MessageBanner(text: 'Emergency lockdown is enabled. Review runtime controls.', isError: true),
+      GlassPanel(child: Row(children: [
+        const Icon(Icons.auto_awesome_rounded, color: Color(0xFF9AD9FF), size: 28),
+        const SizedBox(width: 12),
+        const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('APEX overview', style: TextStyle(fontWeight: FontWeight.w800)),
+          SizedBox(height: 3),
+          Text('Connected owner workspace data', style: TextStyle(color: _muted, fontSize: 11)),
+        ])),
+        const Icon(Icons.circle, color: Color(0xFF8FE0B4), size: 9),
+        const SizedBox(width: 6),
+        const Text('LIVE DATA', style: TextStyle(color: Color(0xFF8FE0B4), fontSize: 9, fontWeight: FontWeight.w900)),
+      ])),
+      const SizedBox(height: 20),
+      const _SectionHeading(eyebrow: 'PERFORMANCE SNAPSHOT', title: 'At a glance'),
+      const SizedBox(height: 10),
+      LayoutBuilder(builder: (context, c) {
+        final cols = c.maxWidth > 1000 ? 4 : c.maxWidth > 620 ? 3 : 2;
+        return GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: cols,
+          crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: c.maxWidth < 380 ? 1.15 : 1.45,
+          children: [
+            GlassStatsCard(title: 'Client leads', value: '${data.inquiries.length}', note: 'Project requests', icon: Icons.groups_outlined, color: const Color(0xFF7BC8FF)),
+            GlassStatsCard(title: 'Contacts', value: '$contacts', note: 'Unique prospects', icon: Icons.person_search, color: _goldLight),
+            GlassStatsCard(title: 'Conversations', value: '${data.conversations.length}', note: '$unread unread', icon: Icons.forum_outlined, color: const Color(0xFFB69CFF)),
+            GlassStatsCard(title: 'Paid invoices', value: '${paid.length}', note: 'Confirmed payments', icon: Icons.verified_outlined, color: const Color(0xFF8FE0B4)),
+            GlassStatsCard(title: 'EGP revenue', value: _compactMoney(egpMinor / 100), note: 'Paid EGP only', icon: Icons.account_balance_wallet_outlined, color: const Color(0xFF8FE0B4)),
+            GlassStatsCard(title: 'Pending', value: '$pending', note: 'Awaiting payment', icon: Icons.hourglass_top, color: const Color(0xFFFFC46B)),
+            GlassStatsCard(title: 'Tracked events', value: '${data.events.length}', note: 'Stored site events', icon: Icons.insights, color: _cyan),
+            GlassStatsCard(title: 'Payment issues', value: '$failed', note: 'Failed / cancelled', icon: Icons.warning_amber, color: _red),
+          ]);
+      }),
+      const SizedBox(height: 18),
+      LayoutBuilder(builder: (context, c) {
+        final bars = GlassPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Agency revenue', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          const SizedBox(height: 4),
+          const Text('Paid EGP invoices · last six months', style: TextStyle(color: _muted, fontSize: 11)),
+          const SizedBox(height: 15),
+          SizedBox(height: 185, child: ApexMiniBars(labels: months.map((x) => _monthLabel(x.month)).toList(), values: revenue)),
+        ]));
+        final donut = GlassPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Payment breakdown', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          const SizedBox(height: 4),
+          const Text('Invoice status distribution', style: TextStyle(color: _muted, fontSize: 11)),
+          const SizedBox(height: 12),
+          Center(child: ApexDonut(values: [paid.length.toDouble(), pending.toDouble(), failed.toDouble()])),
+          const SizedBox(height: 12),
+          _DashboardLegend(color: const Color(0xFF70D9A4), label: 'Paid', value: '${paid.length}'),
+          _DashboardLegend(color: const Color(0xFFFFC46B), label: 'Pending', value: '$pending'),
+          _DashboardLegend(color: const Color(0xFFFF6D72), label: 'Failed / cancelled', value: '$failed'),
+        ]));
+        return c.maxWidth >= 760
+          ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(flex: 3, child: bars), const SizedBox(width: 12), Expanded(flex: 2, child: donut)])
+          : Column(children: [bars, const SizedBox(height: 12), donut]);
+      }),
+      const SizedBox(height: 20),
+      const _SectionHeading(eyebrow: 'CLIENT PIPELINE', title: 'Recent inquiries'),
+      if (data.inquiries.isEmpty) const _EmptyState(icon: Icons.inbox_outlined, title: 'No inquiries yet', subtitle: 'New client requests will appear here.')
+      else ...data.inquiries.take(4).map((x) => _InquiryCard(item: x)),
+      const SizedBox(height: 18),
+      const _SectionHeading(eyebrow: 'MESSAGING', title: 'Recent conversations'),
+      if (data.conversations.isEmpty) const _EmptyState(icon: Icons.forum_outlined, title: 'Inbox is clear', subtitle: 'Website conversations will appear here.')
+      else ...data.conversations.take(4).map((x) => _ConversationCard(item: x, onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ConversationDetailPage(repository: repository, conversation: x, onChanged: onChanged),
+      )))),
+      const SizedBox(height: 14),
+      Text('Last synced: ${_dateTime(data.lastSync)}', style: const TextStyle(color: _muted, fontSize: 11), textAlign: TextAlign.end),
+    ]);
   }
+}
+
+String _greeting() {
+  final hour = DateTime.now().hour;
+  return hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+}
+String _monthLabel(int month) => const ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month - 1];
+String _compactMoney(double v) => v >= 1000000 ? 'EGP ${(v/1000000).toStringAsFixed(1)}M' : v >= 1000 ? 'EGP ${(v/1000).toStringAsFixed(1)}K' : 'EGP ${v.toStringAsFixed(0)}';
+
+class _DashboardLegend extends StatelessWidget {
+  const _DashboardLegend({required this.color, required this.label, required this.value});
+  final Color color; final String label, value;
+  @override
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: 7), child: Row(children: [
+    Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+    const SizedBox(width: 8), Expanded(child: Text(label, style: const TextStyle(color: _muted, fontSize: 11))),
+    Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11)),
+  ]));
 }
 
 class LeadsPage extends StatelessWidget {
