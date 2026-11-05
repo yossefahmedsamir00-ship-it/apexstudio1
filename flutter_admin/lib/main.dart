@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cms_page.dart';
+import 'dashboard_v2.dart';
+import 'push_notifications.dart';
 
 const supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
@@ -26,6 +29,7 @@ const _muted = Color(0xFF92958F);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabasePublishableKey);
+  await ApexPushNotifications.configureBackgroundHandler();
   runApp(const ApexAdminApp());
 }
 
@@ -672,6 +676,8 @@ class _AdminShellState extends State<AdminShell> {
     NavigationDestination(icon: Icon(Icons.inbox_outlined), selectedIcon: Icon(Icons.inbox), label: 'Leads'),
     NavigationDestination(icon: Icon(Icons.forum_outlined), selectedIcon: Icon(Icons.forum), label: 'Inbox'),
     NavigationDestination(icon: Icon(Icons.payments_outlined), selectedIcon: Icon(Icons.payments), label: 'Payments'),
+  ];
+  static const _moreDestinations = [
     NavigationDestination(icon: Icon(Icons.timeline_outlined), selectedIcon: Icon(Icons.timeline), label: 'Activity'),
     NavigationDestination(icon: Icon(Icons.shield_outlined), selectedIcon: Icon(Icons.shield), label: 'Security'),
     NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune), label: 'Controls'),
@@ -684,7 +690,10 @@ class _AdminShellState extends State<AdminShell> {
   bool _refreshing = false;
   String? _error;
   int _selectedIndex = 0;
+  bool _moreExpanded = false;
   Timer? _notificationRefresh;
+  late final ApexPushNotifications _pushNotifications;
+  bool _pushReady = false;
 
   int get _unreadMessages => unreadMessageCount(_data?.conversations ?? const []);
 
@@ -692,6 +701,8 @@ class _AdminShellState extends State<AdminShell> {
   void initState() {
     super.initState();
     _repository = AdminRepository(Supabase.instance.client);
+    _pushNotifications = ApexPushNotifications(Supabase.instance.client);
+    unawaited(_initializePushNotifications());
     unawaited(_refresh(initial: true));
     _notificationRefresh = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted && !_refreshing) unawaited(_refresh());
@@ -701,7 +712,59 @@ class _AdminShellState extends State<AdminShell> {
   @override
   void dispose() {
     _notificationRefresh?.cancel();
+    unawaited(_pushNotifications.dispose());
     super.dispose();
+  }
+
+  Future<void> _initializePushNotifications() async {
+    try {
+      final ready = await _pushNotifications.initialize(onConversationTap: _openConversationFromPush);
+      if (mounted) setState(() => _pushReady = ready);
+    } catch (_) {
+      if (mounted) setState(() => _pushReady = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    await _pushNotifications.unregisterCurrentDevice();
+    await Supabase.instance.client.auth.signOut();
+  }
+
+  Future<void> _enablePushNotifications() async {
+    if (!_pushReady) {
+      _toast('Background alerts need Firebase app configuration first.', isError: true);
+      return;
+    }
+    try {
+      final enabled = await _pushNotifications.requestPermissionAndRegister();
+      _toast(enabled ? 'Push alerts enabled on this device.' : 'Permission was not granted. You can enable it in device settings.');
+    } catch (_) {
+      _toast('Could not register this device for push alerts. Check the CMS/push database migration.', isError: true);
+    }
+  }
+
+  Future<void> _openConversationFromPush(String conversationId) async {
+    if (!mounted) return;
+    Map<String, dynamic>? findConversation() {
+      for (final row in _data?.conversations ?? const <Map<String, dynamic>>[]) {
+        if (row['id']?.toString() == conversationId) return row;
+      }
+      return null;
+    }
+    var item = findConversation();
+    if (item == null) {
+      await _refresh();
+      if (!mounted) return;
+      item = findConversation();
+    }
+    if (item == null) {
+      _toast('The conversation is no longer available in your owner inbox.', isError: true);
+      return;
+    }
+    setState(() => _selectedIndex = 2);
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ConversationDetailPage(
+      repository: _repository, conversation: item!, onChanged: _refresh,
+    )));
   }
 
   Future<void> _openNotifications() async {
@@ -732,6 +795,11 @@ class _AdminShellState extends State<AdminShell> {
                       child: Text('Notifications', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
                     ),
                     Text('${unread.length} unread', style: const TextStyle(color: _muted, fontSize: 12)),
+                    IconButton(
+                      tooltip: _pushReady ? 'Enable background push alerts' : 'Firebase setup required for background alerts',
+                      onPressed: _pushReady ? _enablePushNotifications : null,
+                      icon: Icon(Icons.notifications_active_outlined, color: _pushReady ? _gold : _muted),
+                    ),
                     IconButton(
                       tooltip: 'Close notifications',
                       onPressed: () => Navigator.pop(sheetContext),
@@ -861,6 +929,89 @@ class _AdminShellState extends State<AdminShell> {
     );
   }
 
+  List<Widget> _desktopNavItems(List<NavigationDestination> items, int offset) {
+    return List.generate(items.length, (index) {
+      final item = items[index];
+      final selected = _selectedIndex == offset + index;
+      return TweenAnimationBuilder<double>(
+        key: ValueKey('nav-${offset + index}'),
+        tween: Tween(begin: 0, end: 1),
+        duration: Duration(milliseconds: 180 + index * 65),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) => Opacity(
+          opacity: value,
+          child: Transform.translate(offset: Offset(0, 8 * (1 - value)), child: child),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Material(
+            color: selected ? const Color(0xFF328AC8).withValues(alpha: .22) : Colors.transparent,
+            borderRadius: BorderRadius.circular(13),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(13),
+              onTap: () => setState(() => _selectedIndex = offset + index),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+                child: Row(children: [
+                  IconTheme(data: IconThemeData(color: selected ? const Color(0xFF9AD9FF) : const Color(0xFF8798AD), size: 20),
+                    child: selected ? (item.selectedIcon ?? item.icon) : item.icon),
+                  const SizedBox(width: 13),
+                  Expanded(child: Text(item.label,
+                    style: TextStyle(color: selected ? const Color(0xFFB8E4FF) : const Color(0xFFA6B4C7),
+                      fontSize: 11, fontWeight: selected ? FontWeight.w900 : FontWeight.w600))),
+                  if (selected) Container(width: 5, height: 22,
+                    decoration: BoxDecoration(color: _cyan, borderRadius: BorderRadius.circular(8))),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Future<void> _openMoreMenu() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF101A28),
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 22),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('More controls', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 5),
+            const Text('Additional workspace sections', style: TextStyle(color: _muted, fontSize: 11)),
+            const SizedBox(height: 14),
+            ...List.generate(_moreDestinations.length, (index) {
+              final item = _moreDestinations[index];
+              return TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: Duration(milliseconds: 220 + index * 75),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) => Opacity(
+                  opacity: value,
+                  child: Transform.translate(offset: Offset(0, 10 * (1 - value)), child: child),
+                ),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  leading: IconTheme(data: const IconThemeData(color: _cyan), child: item.icon),
+                  title: Text(item.label, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: _muted),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    if (mounted) setState(() => _selectedIndex = index + 4);
+                  },
+                ),
+              );
+            }),
+          ]),
+        ),
+      ),
+    );
+  }
+
   Widget _selectedPage(DashboardData data) {
     switch (_selectedIndex) {
       case 1:
@@ -944,23 +1095,44 @@ class _AdminShellState extends State<AdminShell> {
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.refresh),
           ),
-          IconButton(tooltip: 'Sign out', onPressed: () => Supabase.instance.client.auth.signOut(), icon: const Icon(Icons.logout)),
+          IconButton(tooltip: 'Sign out', onPressed: _signOut, icon: const Icon(Icons.logout)),
           const SizedBox(width: 6),
         ],
       ),
       body: _ApexAmbientBackground(child: Row(children: [
         if (wide)
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (value) => setState(() => _selectedIndex = value),
-            labelType: NavigationRailLabelType.all,
-            backgroundColor: _background,
-            destinations: _destinations.map((item) => NavigationRailDestination(
-              icon: item.icon,
-              selectedIcon: item.selectedIcon,
-              label: Text(item.label),
-            )).toList(),
-          ),
+          ClipRRect(borderRadius: const BorderRadius.horizontal(right: Radius.circular(22)), child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(width: 224, decoration: BoxDecoration(
+              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                colors: [const Color(0xFF1B3552).withValues(alpha: .78), const Color(0xFF080E19).withValues(alpha: .92)]),
+              border: Border(right: BorderSide(color: _cyan.withValues(alpha: .22))),
+            ), child: Column(children: [
+              const SizedBox(height: 18), const ApexBrandMark(size: 46), const SizedBox(height: 8),
+              const Text('APEX STUDIO', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.8)),
+              const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 16), child: Divider(color: Color(0x333D8CC8))),
+              Expanded(child: ListView(
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
+                children: [
+                  ..._desktopNavItems(_destinations, 0),
+                  const Padding(padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10), child: Divider(color: Color(0x333D8CC8))),
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      key: const PageStorageKey('admin-more-menu'),
+                      initiallyExpanded: _moreExpanded || _selectedIndex >= 4,
+                      onExpansionChanged: (value) => setState(() => _moreExpanded = value),
+                      leading: const Icon(Icons.grid_view_rounded, color: Color(0xFF9AD9FF)),
+                      title: const Text('More', style: TextStyle(color: Color(0xFFB8E4FF), fontSize: 12, fontWeight: FontWeight.w800)),
+                      children: _desktopNavItems(_moreDestinations, 4),
+                    ),
+                  ),
+                ],
+              )),
+              Padding(padding: const EdgeInsets.all(14), child: Text('PRIVATE OWNER WORKSPACE', textAlign: TextAlign.center,
+                style: TextStyle(color: _cyan.withValues(alpha: .75), fontSize: 8, letterSpacing: 1.2, fontWeight: FontWeight.w800))),
+            ])),
+          )),
         if (wide) const VerticalDivider(width: 1),
         Expanded(
           child: Column(children: [
@@ -969,114 +1141,331 @@ class _AdminShellState extends State<AdminShell> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: _MessageBanner(text: _error!, isError: true),
               ),
-            Expanded(child: RefreshIndicator(onRefresh: _refresh, child: _selectedPage(data))),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 320),
+                  reverseDuration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: const Offset(.025, .012), end: Offset.zero).animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  child: KeyedSubtree(
+                    key: ValueKey<int>(_selectedIndex),
+                    child: _selectedPage(data),
+                  ),
+                ),
+              ),
+            ),
           ]),
         ),
       ])),
       bottomNavigationBar: wide
           ? null
           : NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (value) => setState(() => _selectedIndex = value),
-              destinations: _destinations,
+              selectedIndex: _selectedIndex < 4 ? _selectedIndex : 4,
+              onDestinationSelected: (value) {
+                if (value == 4) {
+                  _openMoreMenu();
+                } else {
+                  setState(() => _selectedIndex = value);
+                }
+              },
+              destinations: [
+                ..._destinations,
+                const NavigationDestination(icon: Icon(Icons.grid_view_rounded), selectedIcon: Icon(Icons.grid_view), label: 'More'),
+              ],
             ),
     );
   }
 }
 
+
 class OverviewPage extends StatelessWidget {
   const OverviewPage({super.key, required this.data, required this.repository, required this.onChanged});
-
   final DashboardData data;
   final AdminRepository repository;
   final Future<void> Function() onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final paid = data.invoices.where((item) => item['status'] == 'paid').length;
-    final unread = data.conversations.fold<int>(0, (total, item) => total + _integer(item['unreadCount']));
-    final locked = data.runtimeControls['emergency_lockdown'] == true;
-    final uniqueContacts = data.inquiries.map((item) => _string(
-      item['client_email'],
-      _string(item['client_phone'], _string(item['client_name'], '')),
-    ).trim().toLowerCase()).where((value) => value.isNotEmpty).toSet().length;
+    final paid = data.invoices.where((x) => x['status'] == 'paid').toList();
+    final pending = data.invoices.where((x) => x['status'] == 'pending').length;
+    final failed = data.invoices.where((x) => x['status'] == 'failed' || x['status'] == 'cancelled').length;
+    final unread = data.conversations.fold<int>(0, (sum, x) => sum + _integer(x['unreadCount']));
+    final contacts = data.inquiries.map((x) => _string(x['client_email'], _string(x['client_phone'], _string(x['client_name'], ''))).trim().toLowerCase()).where((x) => x.isNotEmpty).toSet().length;
+    final egpMinor = paid.where((x) => _string(x['currency'], 'EGP').toUpperCase() == 'EGP').fold<int>(0, (sum, x) => sum + _integer(x['amount_minor']));
+    final now = DateTime.now();
+    final months = List.generate(6, (i) => DateTime(now.year, now.month - 5 + i, 1));
+    final revenue = List<double>.filled(6, 0);
+    for (final x in paid) {
+      if (_string(x['currency'], 'EGP').toUpperCase() != 'EGP') continue;
+      final date = DateTime.tryParse(_string(x['paid_at'], _string(x['created_at'], '')));
+      if (date == null) continue;
+      final offset = (now.year - date.year) * 12 + now.month - date.month;
+      if (offset >= 0 && offset < 6) revenue[5 - offset] += _integer(x['amount_minor']) / 100;
+    }
+    return ListView(physics: const AlwaysScrollableScrollPhysics(), padding: const EdgeInsets.all(18), children: [
+      Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(_greeting(), style: const TextStyle(color: _muted, fontSize: 12)),
+          const SizedBox(height: 5),
+          const Text('Your command center', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4),
+          const Text('A clear view of your APEX operations.', style: TextStyle(color: _muted, fontSize: 12)),
+        ])),
+        IconButton.filledTonal(onPressed: onChanged, icon: const Icon(Icons.refresh_rounded), tooltip: 'Refresh dashboard'),
+      ]),
+      const SizedBox(height: 18),
+      if (data.runtimeControls['emergency_lockdown'] == true)
+        const _MessageBanner(text: 'Emergency lockdown is enabled. Review runtime controls.', isError: true),
+      GlassPanel(child: Row(children: [
+        const Icon(Icons.auto_awesome_rounded, color: Color(0xFF9AD9FF), size: 28),
+        const SizedBox(width: 12),
+        const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('APEX overview', style: TextStyle(fontWeight: FontWeight.w800)),
+          SizedBox(height: 3),
+          Text('Owner workspace · refreshes every 30 seconds', style: TextStyle(color: _muted, fontSize: 11)),
+        ])),
+        const Icon(Icons.circle, color: Color(0xFF8FE0B4), size: 9),
+        const SizedBox(width: 6),
+        const Text('AUTO-SYNC', style: TextStyle(color: Color(0xFF8FE0B4), fontSize: 9, fontWeight: FontWeight.w900)),
+      ])),
+      const SizedBox(height: 20),
+      const _SectionHeading(eyebrow: 'PERFORMANCE SNAPSHOT', title: 'At a glance'),
+      GlassPanel(child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Icon(Icons.info_outline_rounded, color: _cyan, size: 18),
+        const SizedBox(width: 10),
+        const Expanded(child: Text('Dashboard totals use the latest 100 inquiries, 100 invoices and 500 site events loaded for this workspace. They are not lifetime totals.', style: TextStyle(color: _muted, fontSize: 11, height: 1.45))),
+      ])),
+      const SizedBox(height: 10),
+      LayoutBuilder(builder: (context, c) {
+        final cols = c.maxWidth > 1000 ? 4 : c.maxWidth > 620 ? 3 : 2;
+        return GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: cols,
+          crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: c.maxWidth < 380 ? 1.15 : 1.45,
+          children: [
+            GlassStatsCard(title: 'Recent leads', value: '${data.inquiries.length}', note: 'Latest 100 loaded', icon: Icons.groups_outlined, color: const Color(0xFF7BC8FF)),
+            GlassStatsCard(title: 'Contacts', value: '$contacts', note: 'Unique prospects', icon: Icons.person_search, color: _goldLight),
+            GlassStatsCard(title: 'Conversations', value: '${data.conversations.length}', note: '$unread unread', icon: Icons.forum_outlined, color: const Color(0xFFB69CFF)),
+            GlassStatsCard(title: 'Paid invoices', value: '${paid.length}', note: 'Confirmed payments', icon: Icons.verified_outlined, color: const Color(0xFF8FE0B4)),
+            GlassStatsCard(title: 'EGP revenue', value: _compactMoney(egpMinor / 100), note: 'Paid EGP only', icon: Icons.account_balance_wallet_outlined, color: const Color(0xFF8FE0B4)),
+            GlassStatsCard(title: 'Pending', value: '$pending', note: 'Awaiting payment', icon: Icons.hourglass_top, color: const Color(0xFFFFC46B)),
+            GlassStatsCard(title: 'Recent events', value: '${data.events.length}', note: 'Latest 500 loaded', icon: Icons.insights, color: _cyan),
+            GlassStatsCard(title: 'Payment issues', value: '$failed', note: 'Failed / cancelled', icon: Icons.warning_amber, color: _red),
+          ]);
+      }),
+      const SizedBox(height: 18),
+      LayoutBuilder(builder: (context, c) {
+        final bars = GlassPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Agency revenue', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          const SizedBox(height: 4),
+          const Text('Paid EGP invoices · last six months', style: TextStyle(color: _muted, fontSize: 11)),
+          const SizedBox(height: 15),
+          SizedBox(height: 185, child: ApexMiniBars(labels: months.map((x) => _monthLabel(x.month)).toList(), values: revenue)),
+        ]));
+        final donut = GlassPanel(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Payment breakdown', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          const SizedBox(height: 4),
+          const Text('Invoice status distribution', style: TextStyle(color: _muted, fontSize: 11)),
+          const SizedBox(height: 12),
+          Center(child: ApexDonut(values: [paid.length.toDouble(), pending.toDouble(), failed.toDouble()])),
+          const SizedBox(height: 12),
+          _DashboardLegend(color: const Color(0xFF70D9A4), label: 'Paid', value: '${paid.length}'),
+          _DashboardLegend(color: const Color(0xFFFFC46B), label: 'Pending', value: '$pending'),
+          _DashboardLegend(color: const Color(0xFFFF6D72), label: 'Failed / cancelled', value: '$failed'),
+        ]));
+        return c.maxWidth >= 760
+          ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(flex: 3, child: bars), const SizedBox(width: 12), Expanded(flex: 2, child: donut)])
+          : Column(children: [bars, const SizedBox(height: 12), donut]);
+      }),
+      const SizedBox(height: 20),
+      const _SectionHeading(eyebrow: 'CLIENT PIPELINE', title: 'Recent inquiries'),
+      if (data.inquiries.isEmpty) const _EmptyState(icon: Icons.inbox_outlined, title: 'No inquiries yet', subtitle: 'New client requests will appear here.')
+      else ...data.inquiries.take(4).map((x) => _InquiryCard(item: x)),
+      const SizedBox(height: 18),
+      const _SectionHeading(eyebrow: 'MESSAGING', title: 'Recent conversations'),
+      if (data.conversations.isEmpty) const _EmptyState(icon: Icons.forum_outlined, title: 'Inbox is clear', subtitle: 'Website conversations will appear here.')
+      else ...data.conversations.take(4).map((x) => _ConversationCard(item: x, onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ConversationDetailPage(repository: repository, conversation: x, onChanged: onChanged),
+      )))),
+      const SizedBox(height: 14),
+      Text('Last synced: ${_dateTime(data.lastSync)}', style: const TextStyle(color: _muted, fontSize: 11), textAlign: TextAlign.end),
+    ]);
+  }
+}
 
+String _greeting() {
+  final hour = DateTime.now().hour;
+  return hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+}
+String _monthLabel(int month) => const ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month - 1];
+String _compactMoney(double v) => v >= 1000000 ? 'EGP ${(v/1000000).toStringAsFixed(1)}M' : v >= 1000 ? 'EGP ${(v/1000).toStringAsFixed(1)}K' : 'EGP ${v.toStringAsFixed(0)}';
+
+class _DashboardLegend extends StatelessWidget {
+  const _DashboardLegend({required this.color, required this.label, required this.value});
+  final Color color; final String label, value;
+  @override
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: 7), child: Row(children: [
+    Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+    const SizedBox(width: 8), Expanded(child: Text(label, style: const TextStyle(color: _muted, fontSize: 11))),
+    Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11)),
+  ]));
+}
+
+class LeadsPage extends StatefulWidget {
+  const LeadsPage({super.key, required this.inquiries, required this.onChangeStatus});
+
+  final List<Map<String, dynamic>> inquiries;
+  final Future<void> Function(String id, String status) onChangeStatus;
+
+  @override
+  State<LeadsPage> createState() => _LeadsPageState();
+}
+
+class _LeadsPageState extends State<LeadsPage> {
+  static const _filters = [
+    ('all', 'All'),
+    ('new', 'New'),
+    ('contacted', 'Contacted'),
+    ('in_progress', 'In progress'),
+    ('completed', 'Completed'),
+    ('cancelled', 'Cancelled'),
+  ];
+
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+  String _status = 'all';
+
+  List<Map<String, dynamic>> get _visibleInquiries {
+    final query = _query.trim().toLowerCase();
+    return widget.inquiries.where((item) {
+      final matchesStatus = _status == 'all' || _string(item['status'], 'new') == _status;
+      if (!matchesStatus) return false;
+      if (query.isEmpty) return true;
+      final searchable = [
+        item['client_name'],
+        item['client_email'],
+        item['client_phone'],
+        item['project_type'],
+        item['brief'],
+      ].whereType<Object>().join(' ').toLowerCase();
+      return searchable.contains(query);
+    }).toList(growable: false);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = _visibleInquiries;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(18),
       children: [
         const _SectionHeading(
-          eyebrow: 'PRIVATE OWNER WORKSPACE',
-          title: 'Command center',
-          subtitle: 'Live visibility across your website and client operations.',
+          eyebrow: 'CLIENT PIPELINE',
+          title: 'Project inquiries',
+          subtitle: 'Search requests, filter by status and keep each lead moving.',
         ),
-        if (locked) const _MessageBanner(text: 'Emergency lockdown is currently enabled.', isError: true),
-        const SizedBox(height: 18),
-        LayoutBuilder(builder: (context, constraints) {
-          final columns = constraints.maxWidth > 1000 ? 4 : constraints.maxWidth > 600 ? 3 : 2;
-          return GridView.count(
-            crossAxisCount: columns,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.7,
-            children: [
-              _MetricCard(label: 'Client leads', value: data.inquiries.length.toString(), icon: Icons.inbox_outlined, accent: _gold),
-              _MetricCard(label: 'Unique client contacts', value: uniqueContacts.toString(), icon: Icons.groups_outlined, accent: _red),
-              _MetricCard(label: 'Conversations', value: data.conversations.length.toString(), icon: Icons.forum_outlined, accent: _cyan),
-              _MetricCard(label: 'Unread messages', value: unread.toString(), icon: Icons.mark_chat_unread_outlined, accent: const Color(0xFF8FE0B4)),
-              _MetricCard(label: 'Invoices', value: data.invoices.length.toString(), icon: Icons.receipt_long_outlined, accent: const Color(0xFFB6A0FF)),
-              _MetricCard(label: 'Paid invoices', value: paid.toString(), icon: Icons.verified_outlined, accent: const Color(0xFF8FE0B4)),
-              _MetricCard(label: 'Tracked events', value: data.events.length.toString(), icon: Icons.insights_outlined, accent: const Color(0xFFFF9D73)),
-            ],
-          );
-        }),
-        const SizedBox(height: 24),
-        const _SectionHeading(eyebrow: 'CLIENT PIPELINE', title: 'New inquiries'),
-        if (data.inquiries.isEmpty)
-          const _EmptyState(icon: Icons.inbox_outlined, title: 'No inquiries yet', subtitle: 'New client requests from the website will appear here.')
+        TextField(
+          key: const ValueKey('lead-search-field'),
+          controller: _searchController,
+          onChanged: (value) => setState(() => _query = value),
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Search name, email, phone, project or brief',
+            prefixIcon: const Icon(Icons.search_rounded, color: _muted),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear search',
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _query = '');
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _filters.map((filter) {
+              final value = filter.$1;
+              final label = filter.$2;
+              return Padding(
+                padding: const EdgeInsets.only(right: 7),
+                child: ChoiceChip(
+                  key: ValueKey('lead-filter-$value'),
+                  label: Text(label),
+                  selected: _status == value,
+                  onSelected: (_) => setState(() => _status = value),
+                  selectedColor: _gold.withValues(alpha: .2),
+                  labelStyle: TextStyle(
+                    color: _status == value ? _goldLight : _muted,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                  side: BorderSide(
+                    color: _status == value ? _gold.withValues(alpha: .65) : Colors.white12,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${visible.length} of ${widget.inquiries.length} inquiries',
+                style: const TextStyle(color: _muted, fontSize: 11),
+              ),
+            ),
+            if (_query.isNotEmpty || _status != 'all')
+              TextButton(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    _query = '';
+                    _status = 'all';
+                  });
+                },
+                child: const Text('Clear filters'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        if (widget.inquiries.isEmpty)
+          const _EmptyState(
+            icon: Icons.inbox_outlined,
+            title: 'No client leads',
+            subtitle: 'Website inquiry submissions will show up here.',
+          )
+        else if (visible.isEmpty)
+          const _EmptyState(
+            icon: Icons.search_off_rounded,
+            title: 'No matching inquiries',
+            subtitle: 'Try another search or clear the selected filters.',
+          )
         else
-          ...data.inquiries.take(5).map((item) => _InquiryCard(item: item)),
-        const SizedBox(height: 24),
-        const _SectionHeading(eyebrow: 'MESSAGING', title: 'Recent conversations'),
-        if (data.conversations.isEmpty)
-          const _EmptyState(icon: Icons.forum_outlined, title: 'Inbox is clear', subtitle: 'Website conversations will appear here.')
-        else
-          ...data.conversations.take(5).map((item) => _ConversationCard(
-            item: item,
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => ConversationDetailPage(repository: repository, conversation: item, onChanged: onChanged),
-            )),
-          )),
-        const SizedBox(height: 16),
-        Text('Last synced: ${_dateTime(data.lastSync)}', style: const TextStyle(color: _muted, fontSize: 11), textAlign: TextAlign.end),
-      ],
-    );
-  }
-}
-
-class LeadsPage extends StatelessWidget {
-  const LeadsPage({super.key, required this.inquiries, required this.onChangeStatus});
-
-  final List<Map<String, dynamic>> inquiries;
-  final Future<void> Function(String id, String status) onChangeStatus;
-  static const statuses = ['new', 'contacted', 'in_progress', 'completed', 'cancelled'];
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(18),
-      children: [
-        const _SectionHeading(eyebrow: 'CLIENT PIPELINE', title: 'Project inquiries', subtitle: 'Review requests and keep each lead status up to date.'),
-        if (inquiries.isEmpty)
-          const _EmptyState(icon: Icons.inbox_outlined, title: 'No client leads', subtitle: 'Website inquiry submissions will show up here.'),
-        ...inquiries.map((item) => _InquiryCard(
-          item: item,
-          statuses: statuses,
-          onChangeStatus: (status) => onChangeStatus(_string(item['id'], ''), status),
-        )),
+          ...visible.map((item) => _InquiryCard(
+                item: item,
+                statuses: const ['new', 'contacted', 'in_progress', 'completed', 'cancelled'],
+                onChangeStatus: (status) => widget.onChangeStatus(_string(item['id'], ''), status),
+              )),
       ],
     );
   }
@@ -1131,7 +1520,7 @@ class _InquiryCard extends StatelessWidget {
   }
 }
 
-class InboxPage extends StatelessWidget {
+class InboxPage extends StatefulWidget {
   const InboxPage({super.key, required this.repository, required this.conversations, required this.onChanged});
 
   final AdminRepository repository;
@@ -1139,20 +1528,110 @@ class InboxPage extends StatelessWidget {
   final Future<void> Function() onChanged;
 
   @override
+  State<InboxPage> createState() => _InboxPageState();
+}
+
+class _InboxPageState extends State<InboxPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+  bool _unreadOnly = false;
+
+  List<Map<String, dynamic>> get _visibleConversations {
+    final query = _query.trim().toLowerCase();
+    return widget.conversations.where((item) {
+      if (_unreadOnly && _integer(item['unreadCount']) == 0) return false;
+      if (query.isEmpty) return true;
+      final last = _asMap(item['lastMessage']);
+      final searchable = [
+        item['clientName'],
+        item['clientEmail'],
+        item['subject'],
+        last['body'],
+      ].whereType<Object>().join(' ').toLowerCase();
+      return searchable.contains(query);
+    }).toList(growable: false);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final visible = _visibleConversations;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(18),
       children: [
-        const _SectionHeading(eyebrow: 'CLIENT COMMUNICATION', title: 'Inbox', subtitle: 'Messages from the website and APEX AI are stored centrally.'),
-        if (conversations.isEmpty)
-          const _EmptyState(icon: Icons.forum_outlined, title: 'No conversations', subtitle: 'New website chats will appear here automatically.'),
-        ...conversations.map((item) => _ConversationCard(
-          item: item,
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ConversationDetailPage(repository: repository, conversation: item, onChanged: onChanged),
-          )),
-        )),
+        const _SectionHeading(
+          eyebrow: 'CLIENT COMMUNICATION',
+          title: 'Inbox',
+          subtitle: 'Messages from the website and APEX AI are stored centrally.',
+        ),
+        TextField(
+          key: const ValueKey('inbox-search-field'),
+          controller: _searchController,
+          onChanged: (value) => setState(() => _query = value),
+          decoration: InputDecoration(
+            hintText: 'Search client, email, subject or message',
+            prefixIcon: const Icon(Icons.search_rounded, color: _muted),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear inbox search',
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _query = '');
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(children: [
+          ChoiceChip(
+            key: const ValueKey('inbox-filter-all'),
+            label: const Text('All messages'),
+            selected: !_unreadOnly,
+            onSelected: (_) => setState(() => _unreadOnly = false),
+          ),
+          const SizedBox(width: 8),
+          ChoiceChip(
+            key: const ValueKey('inbox-filter-unread'),
+            label: const Text('Unread'),
+            selected: _unreadOnly,
+            onSelected: (_) => setState(() => _unreadOnly = true),
+          ),
+          const Spacer(),
+          Text('${visible.length} / ${widget.conversations.length}',
+              style: const TextStyle(color: _muted, fontSize: 11)),
+        ]),
+        const SizedBox(height: 10),
+        if (widget.conversations.isEmpty)
+          const _EmptyState(
+            icon: Icons.forum_outlined,
+            title: 'No conversations',
+            subtitle: 'New website chats will appear here automatically.',
+          )
+        else if (visible.isEmpty)
+          const _EmptyState(
+            icon: Icons.mark_chat_unread_outlined,
+            title: 'No matching messages',
+            subtitle: 'Try another search or switch back to all messages.',
+          )
+        else
+          ...visible.map((item) => _ConversationCard(
+                item: item,
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => ConversationDetailPage(
+                    repository: widget.repository,
+                    conversation: item,
+                    onChanged: widget.onChanged,
+                  ),
+                )),
+              )),
       ],
     );
   }
@@ -1774,26 +2253,6 @@ class _SectionHeading extends StatelessWidget {
           ),
           if (trailing != null) ...[const SizedBox(width: 8), trailing!],
         ]),
-      );
-}
-
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.label, required this.value, required this.icon, required this.accent});
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(13),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Icon(icon, color: accent, size: 21),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 24)),
-            Text(label, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _muted, fontSize: 10)),
-          ]),
-        ),
       );
 }
 

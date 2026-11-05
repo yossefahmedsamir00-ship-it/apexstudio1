@@ -54,6 +54,8 @@ class ApexHome extends StatefulWidget {
 class _ApexHomeState extends State<ApexHome> {
   bool ar = false;
   String filter = 'All';
+  List<Project> _projects = projects;
+  List<(String, String, String)>? _cmsServices;
   final workKey = GlobalKey();
   final servicesKey = GlobalKey();
   final contactKey = GlobalKey();
@@ -61,10 +63,49 @@ class _ApexHomeState extends State<ApexHome> {
   void go(GlobalKey key) => Scrollable.ensureVisible(key.currentContext!, duration: const Duration(milliseconds: 600), curve: Curves.easeOutCubic);
 
   @override
+  void initState() {
+    super.initState();
+    _loadPublishedContent();
+  }
+
+  Future<void> _loadPublishedContent() async {
+    try {
+      final rows = await Supabase.instance.client
+          .from('apex_site_content')
+          .select('title,summary,content_type,body')
+          .eq('status', 'published')
+          .inFilter('content_type', ['project', 'service'])
+          .order('sort_order');
+      final loadedProjects = <Project>[];
+      final loadedServices = <(String, String, String)>[];
+      for (final raw in rows) {
+        final row = Map<String, dynamic>.from(raw);
+        final body = row['body'] is Map ? Map<String, dynamic>.from(row['body'] as Map) : <String, dynamic>{};
+        final title = (row['title'] ?? '').toString().trim();
+        final summary = (row['summary'] ?? '').toString().trim();
+        if (title.isEmpty) continue;
+        if (row['content_type'] == 'project') {
+          final category = (body['category'] ?? 'Web').toString();
+          loadedProjects.add(Project(title, category, summary));
+        } else if (row['content_type'] == 'service') {
+          loadedServices.add(('0${loadedServices.length + 1}'.padLeft(2, '0'), title, summary));
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        if (loadedProjects.isNotEmpty) _projects = loadedProjects;
+        if (loadedServices.isNotEmpty) _cmsServices = loadedServices;
+      });
+    } catch (_) {
+      // Keep the curated Flutter content visible until the CMS migration is installed.
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final mobile = width < 900;
-    final shown = filter == 'All' ? projects : projects.where((p) => p.category == filter).toList();
+    final shown = filter == 'All' ? _projects : _projects.where((p) => p.category == filter).toList();
     return Directionality(
       textDirection: ar ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -72,7 +113,7 @@ class _ApexHomeState extends State<ApexHome> {
         body: CustomScrollView(slivers: [
           SliverToBoxAdapter(child: _Hero(mobile: mobile, ar: ar, onWork: () => go(workKey), onContact: () => go(contactKey))),
           SliverToBoxAdapter(child: _Statement(ar: ar)),
-          SliverToBoxAdapter(key: servicesKey, child: _Services(ar: ar)),
+          SliverToBoxAdapter(key: servicesKey, child: _Services(ar: ar, items: _cmsServices)),
           SliverToBoxAdapter(key: workKey, child: _Work(ar: ar, filter: filter, shown: shown, onFilter: (v) => setState(() => filter = v))),
           SliverToBoxAdapter(child: _Process(ar: ar)),
           SliverToBoxAdapter(
@@ -183,7 +224,28 @@ class _Hero extends StatelessWidget {
 
 class _Statement extends StatelessWidget { final bool ar; const _Statement({required this.ar}); @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30), decoration: const BoxDecoration(border: Border.symmetric(horizontal: BorderSide(color: Color(0xFF1D1D1D)))), child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1160), child: Row(children: [Text('01', style: const TextStyle(color: Color(0xFFD7A83E))), const SizedBox(width: 30), Expanded(child: Text(ar ? 'لا قوالب جاهزة. لا ضوضاء. فقط عمل رقمي له هدف.' : 'NO TEMPLATES. NO NOISE. JUST PURPOSEFUL DIGITAL WORK.', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2))), const Text('↘', style: TextStyle(fontSize: 26, color: Color(0xFFD7A83E)))])))); }
 
-class _Services extends StatelessWidget { final bool ar; const _Services({required this.ar}); @override Widget build(BuildContext context) => _Section(eyebrow: ar ? 'ماذا نبني؟' : 'WHAT WE BUILD', title: ar ? 'من أول فكرة إلى منتج حقيقي.' : 'From first thought to something people can use.', child: LayoutBuilder(builder: (context, c) { final cols = c.maxWidth > 850 ? 2 : 1; final data = ar ? const [('01','أنظمة الويب','مواقع، صفحات هبوط، بوابات ولوحات تحكم.'),('02','تطبيقات Flutter','تطبيقات موبايل وويب وديسكتوب من قاعدة Flutter.'),('03','أنظمة AI','مساعدات ووكلاء وأتمتة وسير عمل ذكي.'),('04','الأنظمة الرقمية','Backend وبيانات وتكاملات وأدوات تشغيلية.')] : const [('01','Web Systems','Websites, landing pages, portals and dashboards.'),('02','Flutter Applications','Mobile, web and desktop applications from one Flutter stack.'),('03','AI Systems','Assistants, agents, automation and intelligent workflows.'),('04','Digital Systems','Backend, data, integrations and operational tools.')]; return GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: data.length, gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: cols, mainAxisExtent: 190, crossAxisSpacing: 18, mainAxisSpacing: 18), itemBuilder: (_, i) => _Card(index: data[i].$1, title: data[i].$2, body: data[i].$3)); })); }
+class _Services extends StatelessWidget {
+  final bool ar;
+  final List<(String, String, String)>? items;
+  const _Services({required this.ar, this.items});
+  @override
+  Widget build(BuildContext context) => _Section(
+    eyebrow: ar ? 'ماذا نبني؟' : 'WHAT WE BUILD',
+    title: ar ? 'من أول فكرة إلى منتج حقيقي.' : 'From first thought to something people can use.',
+    child: LayoutBuilder(builder: (context, c) {
+      final cols = c.maxWidth > 850 ? 2 : 1;
+      final fallback = ar
+          ? const [('01','أنظمة الويب','مواقع، صفحات هبوط، بوابات ولوحات تحكم.'),('02','تطبيقات Flutter','تطبيقات موبايل وويب وديسكتوب من قاعدة Flutter.'),('03','أنظمة AI','مساعدات ووكلاء وأتمتة وسير عمل ذكي.'),('04','الأنظمة الرقمية','Backend وبيانات وتكاملات وأدوات تشغيلية.')]
+          : const [('01','Web Systems','Websites, landing pages, portals and dashboards.'),('02','Flutter Applications','Mobile, web and desktop applications from one Flutter stack.'),('03','AI Systems','Assistants, agents, automation and intelligent workflows.'),('04','Digital Systems','Backend, data, integrations and operational tools.')];
+      final data = items?.isNotEmpty == true ? items! : fallback;
+      return GridView.builder(
+        shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: data.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: cols, mainAxisExtent: 190, crossAxisSpacing: 18, mainAxisSpacing: 18),
+        itemBuilder: (_, i) => _Card(index: data[i].$1, title: data[i].$2, body: data[i].$3),
+      );
+    }),
+  );
+}
 
 class _Work extends StatelessWidget {
   final bool ar;

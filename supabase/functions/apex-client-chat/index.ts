@@ -50,6 +50,114 @@ async function ipRateLimitSubject(req: Request, salt: string): Promise<string | 
   const hex = chars.join("");
   return hex.slice(0,8)+"-"+hex.slice(8,12)+"-"+hex.slice(12,16)+"-"+hex.slice(16,20)+"-"+hex.slice(20);
 }
+
+function base64UrlEncode(value: Uint8Array | string): string {
+  const bytes = typeof value === "string" ? new TextEncoder().encode(value) : value;
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_");
+}
+
+async function getFcmAccessToken(serviceAccount: Record<string, string>): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64UrlEncode(JSON.stringify({alg:"RS256",typ:"JWT"}));
+  const claims = base64UrlEncode(JSON.stringify({
+    iss:serviceAccount.client_email,
+    scope:"https://www.googleapis.com/auth/firebase.messaging",
+    aud:"https://oauth2.googleapis.com/token",
+    iat:now,
+    exp:now + 3600,
+  }));
+  const unsigned = header + "." + claims;
+  const pem = serviceAccount.private_key
+    .split("-----BEGIN PRIVATE KEY-----").join("")
+    .split("-----END PRIVATE KEY-----").join("")
+    .replaceAll(String.fromCharCode(10), "").replaceAll(String.fromCharCode(13), "").replaceAll(" ", "");
+  const binary = atob(pem);
+  const keyBytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) keyBytes[index] = binary.charCodeAt(index);
+  const key = await crypto.subtle.importKey(
+    "pkcs8", keyBytes.buffer,
+    {name:"RSASSA-PKCS1-v1_5",hash:"SHA-256"},
+    false, ["sign"],
+  );
+  const signature = new Uint8Array(await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(unsigned),
+  ));
+  const assertion = unsigned + "." + base64UrlEncode(signature);
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams({
+      grant_type:"urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion,
+    }),
+  });
+  const payload = await response.json().catch(() => ({})) as Record<string,unknown>;
+  if (!response.ok || typeof payload.access_token !== "string") {
+    throw new Error("FCM OAuth token request failed");
+  }
+  return payload.access_token;
+}
+
+async function sendOwnerPush(
+  admin: ReturnType<typeof createClient>,
+  ownerUserId: string | null,
+  conversationId: string,
+): Promise<void> {
+  if (!ownerUserId) return;
+  const rawServiceAccount = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
+  if (!rawServiceAccount) return; // Push is optional until Firebase is configured.
+  try {
+    const serviceAccount = JSON.parse(rawServiceAccount) as Record<string,string>;
+    if (!serviceAccount.project_id || !serviceAccount.client_email || !serviceAccount.private_key) {
+      throw new Error("Invalid Firebase service account configuration");
+    }
+    const {data:devices,error} = await admin.from("apex_owner_push_devices")
+      .select("id,fcm_token").eq("owner_user_id",ownerUserId).limit(20);
+    if (error || !devices?.length) return;
+    const accessToken = await getFcmAccessToken(serviceAccount);
+    const results = await Promise.all(devices.map(async (device) => {
+      const response = await fetch(
+        `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
+        {
+          method:"POST",
+          headers:{
+            "Authorization":`Bearer ${accessToken}`,
+            "Content-Type":"application/json",
+          },
+          body:JSON.stringify({
+            message:{
+              token:device.fcm_token,
+              notification:{
+                title:"APEX STUDIO",
+                body:"You have a new client message.",
+              },
+              data:{
+                type:"client_message",
+                conversation_id:conversationId,
+              },
+              android:{
+                priority:"high",
+                notification:{channel_id:"apex_client_messages"},
+              },
+              apns:{payload:{aps:{sound:"default"}}},
+            },
+          }),
+        },
+      );
+      if (!response.ok) {
+        const details = await response.text().catch(() => "");
+        console.error("APEX FCM delivery failed",response.status,details.slice(0,240));
+      }
+      return response.ok;
+    }));
+    console.log("APEX push delivery attempted",results.filter(Boolean).length,devices.length);
+  } catch (error) {
+    console.error("APEX push sender unavailable",error instanceof Error ? error.name : "unknown");
+  }
+}
+
 class BodyTooLargeError extends Error {}
 
 async function readBoundedText(stream: ReadableStream<Uint8Array> | null, maxBytes: number, declaredLength?: string | null): Promise<string> {
@@ -336,6 +444,12 @@ Deno.serve(async (req: Request) => {
         last_client_message_at:now,updated_at:now,status:"waiting_owner",
       }).eq("id",conversationId);
       await writeAudit(admin,user.id,"client_message_sent","conversation",conversationId,{messageId:clientMessage.id,bodyLength:body.length});
+      // Send a privacy-preserving push only after the message is durably stored.
+      EdgeRuntime.waitUntil(sendOwnerPush(
+        admin,
+        typeof conversation.owner_user_id === "string" ? conversation.owner_user_id : null,
+        conversationId,
+      ));
 
       // Direct owner chat is saved to the same secure inbox, but must never generate an AI reply.
       if (input.mode === "owner") {
