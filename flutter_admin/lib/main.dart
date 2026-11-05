@@ -953,8 +953,8 @@ class _AdminShellState extends State<AdminShell> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
                 child: Row(children: [
-                  Icon(selected ? item.selectedIcon.icon : item.icon.icon,
-                    color: selected ? const Color(0xFF9AD9FF) : const Color(0xFF8798AD), size: 20),
+                  IconTheme(data: IconThemeData(color: selected ? const Color(0xFF9AD9FF) : const Color(0xFF8798AD), size: 20),
+                    child: selected ? (item.selectedIcon ?? item.icon) : item.icon),
                   const SizedBox(width: 13),
                   Expanded(child: Text(item.label,
                     style: TextStyle(color: selected ? const Color(0xFFB8E4FF) : const Color(0xFFA6B4C7),
@@ -996,7 +996,7 @@ class _AdminShellState extends State<AdminShell> {
                 ),
                 child: ListTile(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  leading: Icon(item.icon.icon, color: _cyan),
+                  leading: IconTheme(data: const IconThemeData(color: _cyan), child: item.icon),
                   title: Text(item.label, style: const TextStyle(fontWeight: FontWeight.w700)),
                   trailing: const Icon(Icons.chevron_right_rounded, color: _muted),
                   onTap: () {
