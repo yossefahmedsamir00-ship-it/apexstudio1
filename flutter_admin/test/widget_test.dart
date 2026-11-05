@@ -56,6 +56,11 @@ void main() {
 
     expect(find.text('Mona Ali'), findsOneWidget);
     expect(find.text('Omar Hassan'), findsNothing);
+
+    await tester.tap(find.byTooltip('Clear search'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mona Ali'), findsOneWidget);
+    expect(find.text('Omar Hassan'), findsOneWidget);
   });
 
   testWidgets('lead status filter shows only matching inquiries', (tester) async {
