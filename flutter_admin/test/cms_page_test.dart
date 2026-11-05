@@ -11,20 +11,34 @@ void main() {
     expect(find.text('Homepage hero'), findsOneWidget);
   });
 
-  testWidgets('opens editor with a slug field', (tester) async {
+  testWidgets('opens editor with a slug field and structured body editor', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: Scaffold(body: CmsPage(demoMode: true))));
     await tester.tap(find.text('New content')); await tester.pumpAndSettle();
     expect(find.text('Create content'), findsOneWidget);
     expect(find.text('URL slug (lowercase-with-dashes)'), findsOneWidget);
+    expect(find.text('Body JSON (object)'), findsOneWidget);
     expect(find.text('Save draft'), findsOneWidget);
   });
 
-  testWidgets('saves a draft in explicit demo mode', (tester) async {
+  testWidgets('rejects invalid body JSON without closing the editor', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: Scaffold(body: CmsPage(demoMode: true))));
     await tester.tap(find.text('New content')); await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), 'Launch announcement');
     await tester.enterText(find.byType(TextField).at(1), 'launch-announcement');
     await tester.enterText(find.byType(TextField).at(2), 'A new studio update.');
+    await tester.enterText(find.byType(TextField).at(3), '{invalid json');
+    await tester.tap(find.text('Save draft')); await tester.pumpAndSettle();
+    expect(find.text('Body must be a valid JSON object.'), findsOneWidget);
+    expect(find.text('Create content'), findsOneWidget);
+  });
+
+  testWidgets('saves a draft with structured body data in explicit demo mode', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: Scaffold(body: CmsPage(demoMode: true))));
+    await tester.tap(find.text('New content')); await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(0), 'Launch announcement');
+    await tester.enterText(find.byType(TextField).at(1), 'launch-announcement');
+    await tester.enterText(find.byType(TextField).at(2), 'A new studio update.');
+    await tester.enterText(find.byType(TextField).at(3), '{"category":"AI","url":"https://example.com"}');
     await tester.tap(find.text('Save draft')); await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Launch announcement'), 250, scrollable: find.byType(Scrollable).first);
     expect(find.text('Launch announcement'), findsOneWidget);
