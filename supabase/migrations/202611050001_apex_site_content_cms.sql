@@ -1,4 +1,21 @@
 -- APEX STUDIO owner-managed public content.
+-- The owner helper reads a table that is intentionally not directly granted to clients.
+-- SECURITY DEFINER is required so existing and new owner-only RLS policies can evaluate it.
+create or replace function public.apex_owner_is_configured()
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public
+as $
+  select exists (
+    select 1 from public.apex_owner_settings s
+    where s.id = true and s.owner_user_id = (select auth.uid())
+  );
+$;
+revoke all on function public.apex_owner_is_configured() from public, anon;
+grant execute on function public.apex_owner_is_configured() to authenticated;
+
 -- Apply only after review; this file is not deployed automatically.
 create table if not exists public.apex_site_content (
   id uuid primary key default extensions.gen_random_uuid(),
