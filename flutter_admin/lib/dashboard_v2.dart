@@ -43,7 +43,7 @@ class ApexMiniBars extends StatelessWidget {
   final List<String> labels; final List<double> values;
   @override
   Widget build(BuildContext context) {
-    final maxValue = values.fold<double>(0, (max, v) => math.max(max, v));
+    final maxValue = values.fold<double>(0, (max, v) => max > v ? max : v);
     return Row(crossAxisAlignment: CrossAxisAlignment.end, children: List.generate(values.length, (i) => Expanded(child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
