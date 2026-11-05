@@ -102,3 +102,38 @@
 .ownerChatComposer .primary{flex:0 0 auto;padding:12px 15px;gap:8px}
 .ownerChatComposer .primary:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:600px){.chatFabStack{right:12px;bottom:12px;gap:8px}.ownerChatFab,.chatFabStack .askFab{font-size:10px;padding:11px 13px}.ownerChatModal{height:88vh;min-height:360px}.ownerChatHead{padding:23px 18px 16px}.ownerChatMessages{padding:16px}.ownerChatComposer{padding:12px;gap:7px}.ownerChatComposer .primary{padding:12px}.ownerChatStatus{padding:10px 14px}}
+
+
+/* APEX motion system: completes the existing IntersectionObserver reveal contract. */
+.app{position:relative;isolation:isolate}
+.app:before{content:"";position:fixed;inset:-24%;z-index:-1;pointer-events:none;opacity:.42;background:radial-gradient(ellipse at 18% 28%,rgba(255,84,61,.10),transparent 34%),radial-gradient(ellipse at 78% 20%,rgba(92,141,255,.14),transparent 36%),radial-gradient(ellipse at 55% 82%,rgba(215,170,91,.10),transparent 38%);filter:blur(30px);transform:translate3d(0,0,0);animation:apexAmbientDrift 26s ease-in-out infinite alternate}
+.apex-reveal{opacity:0;transform:translate3d(0,18px,0);transition:opacity .68s var(--ease),transform .68s var(--ease);transition-delay:var(--apex-reveal-delay,0ms)}
+.apex-reveal.apex-reveal-left{transform:translate3d(18px,0,0)}
+.apex-reveal.apex-reveal-scale{transform:scale(.975)}
+.apex-reveal.apex-revealed{opacity:1;transform:translate3d(0,0,0) scale(1)}
+@keyframes apexAmbientDrift{0%{transform:translate3d(-1.5%,0,0) scale(1)}100%{transform:translate3d(1.5%,-1%,0) scale(1.035)}}
+@keyframes apexMenuEnter{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+.app button:not(:disabled):active{transform:scale(.985);filter:brightness(1.07);box-shadow:0 0 0 1px rgba(215,170,91,.18),0 0 20px rgba(92,141,255,.12)}
+.navMore{position:relative;display:inline-flex;align-items:center}
+.navMoreToggle{display:inline-flex;align-items:center;gap:6px}
+.moreMenu{position:absolute;top:calc(100% + 16px);right:0;z-index:80;width:min(330px,calc(100vw - 36px));padding:15px;border:1px solid rgba(215,170,91,.25);background:rgba(8,10,11,.97);box-shadow:0 24px 65px rgba(0,0,0,.5);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .2s ease,transform .2s ease,visibility .2s}
+.moreMenu.open{opacity:1;visibility:visible;transform:translateY(0)}
+.moreGroup+.moreGroup{margin-top:13px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+.moreGroupTitle{display:block;margin:0 0 7px;color:var(--gold);font:600 9px 'Space Grotesk','IBM Plex Sans Arabic',sans-serif;letter-spacing:.15em;text-transform:uppercase}
+.moreGroupItems{display:grid;gap:3px}
+.moreGroupItems button{width:100%;min-height:38px;padding:9px 10px;display:flex;align-items:center;justify-content:space-between;text-align:start;color:#c4c8c4;font-size:11px;border:1px solid transparent;opacity:0;transform:translateY(7px)}
+.moreMenu.open .moreGroupItems button{animation:apexMenuEnter .28s var(--ease) both;animation-delay:var(--menu-delay,0ms)}
+.moreGroupItems button:hover{border-color:rgba(215,170,91,.18);background:rgba(215,170,91,.06);color:var(--gold2)}
+@media(max-width:720px){
+ .nav.open .navMore{display:block;width:100%}
+ .nav.open .navMoreToggle{width:100%;justify-content:space-between;text-align:left;padding:13px}
+ .nav.open .moreMenu{position:static;width:100%;margin-top:5px;padding:10px;box-shadow:none;background:rgba(255,255,255,.025);backdrop-filter:none;-webkit-backdrop-filter:none}
+ .nav.open .moreGroupItems button{padding:11px 12px}
+}
+@media(prefers-reduced-motion:reduce){
+ .app:before{animation:none;filter:none;opacity:.22}
+ .apex-reveal,.apex-reveal.apex-reveal-left,.apex-reveal.apex-reveal-scale{opacity:1;transform:none;transition:none}
+ .moreMenu,.moreMenu.open{transition:none;transform:none}
+ .moreGroupItems button,.moreMenu.open .moreGroupItems button{opacity:1;transform:none;animation:none}
+ .app button:not(:disabled):active{transform:none;box-shadow:none;filter:none}
+}
