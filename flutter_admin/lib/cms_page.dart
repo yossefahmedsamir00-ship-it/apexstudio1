@@ -97,7 +97,7 @@ class _CmsPageState extends State<CmsPage> {
         saved = _CmsEntry.fromMap(row); _entries = [saved, ..._entries];
       } else {
         final row = await _client!.from('apex_site_content').update(result.toMap()).eq('id', entry.id!)
-          .select('id,slug,title,content_type,summary,status,sort_order').single();
+          .select('id,slug,title,content_type,summary,status,sort_order,body').single();
         saved = _CmsEntry.fromMap(row); _entries = _entries.map((item) => item.id == saved.id ? saved : item).toList();
       }
       if (!mounted) return;
@@ -118,7 +118,7 @@ class _CmsPageState extends State<CmsPage> {
         summary: entry.summary, status: status, sortOrder: entry.sortOrder, body: entry.body);
       if (!widget.demoMode) {
         final row = await _client!.from('apex_site_content').update({'status': status}).eq('id', entry.id!)
-          .select('id,slug,title,content_type,summary,status,sort_order').single();
+          .select('id,slug,title,content_type,summary,status,sort_order,body').single();
         updated = _CmsEntry.fromMap(row);
       }
       if (mounted) setState(() => _entries = _entries.map((item) => item.id == entry.id ? updated : item).toList());
