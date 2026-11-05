@@ -1520,7 +1520,7 @@ class _InquiryCard extends StatelessWidget {
   }
 }
 
-class InboxPage extends StatelessWidget {
+class InboxPage extends StatefulWidget {
   const InboxPage({super.key, required this.repository, required this.conversations, required this.onChanged});
 
   final AdminRepository repository;
@@ -1528,20 +1528,110 @@ class InboxPage extends StatelessWidget {
   final Future<void> Function() onChanged;
 
   @override
+  State<InboxPage> createState() => _InboxPageState();
+}
+
+class _InboxPageState extends State<InboxPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+  bool _unreadOnly = false;
+
+  List<Map<String, dynamic>> get _visibleConversations {
+    final query = _query.trim().toLowerCase();
+    return widget.conversations.where((item) {
+      if (_unreadOnly && _integer(item['unreadCount']) == 0) return false;
+      if (query.isEmpty) return true;
+      final last = _asMap(item['lastMessage']);
+      final searchable = [
+        item['clientName'],
+        item['clientEmail'],
+        item['subject'],
+        last['body'],
+      ].whereType<Object>().join(' ').toLowerCase();
+      return searchable.contains(query);
+    }).toList(growable: false);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final visible = _visibleConversations;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(18),
       children: [
-        const _SectionHeading(eyebrow: 'CLIENT COMMUNICATION', title: 'Inbox', subtitle: 'Messages from the website and APEX AI are stored centrally.'),
-        if (conversations.isEmpty)
-          const _EmptyState(icon: Icons.forum_outlined, title: 'No conversations', subtitle: 'New website chats will appear here automatically.'),
-        ...conversations.map((item) => _ConversationCard(
-          item: item,
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ConversationDetailPage(repository: repository, conversation: item, onChanged: onChanged),
-          )),
-        )),
+        const _SectionHeading(
+          eyebrow: 'CLIENT COMMUNICATION',
+          title: 'Inbox',
+          subtitle: 'Messages from the website and APEX AI are stored centrally.',
+        ),
+        TextField(
+          key: const ValueKey('inbox-search-field'),
+          controller: _searchController,
+          onChanged: (value) => setState(() => _query = value),
+          decoration: InputDecoration(
+            hintText: 'Search client, email, subject or message',
+            prefixIcon: const Icon(Icons.search_rounded, color: _muted),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear inbox search',
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _query = '');
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(children: [
+          ChoiceChip(
+            key: const ValueKey('inbox-filter-all'),
+            label: const Text('All messages'),
+            selected: !_unreadOnly,
+            onSelected: (_) => setState(() => _unreadOnly = false),
+          ),
+          const SizedBox(width: 8),
+          ChoiceChip(
+            key: const ValueKey('inbox-filter-unread'),
+            label: const Text('Unread'),
+            selected: _unreadOnly,
+            onSelected: (_) => setState(() => _unreadOnly = true),
+          ),
+          const Spacer(),
+          Text('${visible.length} / ${widget.conversations.length}',
+              style: const TextStyle(color: _muted, fontSize: 11)),
+        ]),
+        const SizedBox(height: 10),
+        if (widget.conversations.isEmpty)
+          const _EmptyState(
+            icon: Icons.forum_outlined,
+            title: 'No conversations',
+            subtitle: 'New website chats will appear here automatically.',
+          )
+        else if (visible.isEmpty)
+          const _EmptyState(
+            icon: Icons.mark_chat_unread_outlined,
+            title: 'No matching messages',
+            subtitle: 'Try another search or switch back to all messages.',
+          )
+        else
+          ...visible.map((item) => _ConversationCard(
+                item: item,
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => ConversationDetailPage(
+                    repository: widget.repository,
+                    conversation: item,
+                    onChanged: widget.onChanged,
+                  ),
+                )),
+              )),
       ],
     );
   }
