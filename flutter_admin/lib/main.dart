@@ -1231,7 +1231,7 @@ class OverviewPage extends StatelessWidget {
         const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('APEX overview', style: TextStyle(fontWeight: FontWeight.w800)),
           SizedBox(height: 3),
-          Text('Connected owner workspace data', style: TextStyle(color: _muted, fontSize: 11)),
+          Text('Owner workspace · refreshes every 30 seconds', style: TextStyle(color: _muted, fontSize: 11)),
         ])),
         const Icon(Icons.circle, color: Color(0xFF8FE0B4), size: 9),
         const SizedBox(width: 6),
@@ -1383,7 +1383,7 @@ class _LeadsPageState extends State<LeadsPage> {
           onChanged: (value) => setState(() => _query = value),
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: 'Search name, email, project or brief',
+            hintText: 'Search name, email, phone, project or brief',
             prefixIcon: const Icon(Icons.search_rounded, color: _muted),
             suffixIcon: _query.isEmpty
                 ? null
