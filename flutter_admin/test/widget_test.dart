@@ -43,7 +43,7 @@ void main() {
             {'id': '1', 'client_name': 'Mona Ali', 'client_email': 'mona@example.com', 'project_type': 'Mobile app', 'brief': 'Flutter booking app', 'status': 'new', 'created_at': '2026-11-01T10:00:00Z'},
             {'id': '2', 'client_name': 'Omar Hassan', 'client_email': 'omar@example.com', 'project_type': 'Website', 'brief': 'Portfolio redesign', 'status': 'contacted', 'created_at': '2026-11-02T10:00:00Z'},
           ],
-          onChangeStatus: (_, __) async {},
+          onChangeStatus: (_, _) async {},
         ),
       ),
     ));
@@ -72,7 +72,7 @@ void main() {
             {'id': '1', 'client_name': 'Mona Ali', 'project_type': 'Mobile app', 'brief': 'Flutter app', 'status': 'new', 'created_at': '2026-11-01T10:00:00Z'},
             {'id': '2', 'client_name': 'Omar Hassan', 'project_type': 'Website', 'brief': 'Portfolio', 'status': 'contacted', 'created_at': '2026-11-02T10:00:00Z'},
           ],
-          onChangeStatus: (_, __) async {},
+          onChangeStatus: (_, _) async {},
         ),
       ),
     ));
