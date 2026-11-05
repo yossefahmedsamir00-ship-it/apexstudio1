@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -29,7 +27,7 @@ class ApexStudioApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
     title: 'APEX STUDIO',
-    theme: ThemeData(brightness: Brightness.dark, scaffoldBackgroundColor: const Color(0xFF050505), colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFD7AA5B), brightness: Brightness.dark), useMaterial3: true),
+    theme: ThemeData(brightness: Brightness.dark, scaffoldBackgroundColor: const Color(0xFF050505), colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFD7A83E), brightness: Brightness.dark), useMaterial3: true),
     home: const ApexHome(),
   );
 }
@@ -188,174 +186,40 @@ class _Nav extends StatelessWidget {
 }
 
 class _Hero extends StatelessWidget {
-  final bool mobile, ar;
-  final VoidCallback onWork, onContact;
+  final bool mobile, ar; final VoidCallback onWork, onContact;
   const _Hero({required this.mobile, required this.ar, required this.onWork, required this.onContact});
-
-  @override
-  Widget build(BuildContext context) {
-    final copy = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(children: [
-          Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFFD7AA5B), shape: BoxShape.circle, boxShadow: [BoxShadow(color: Color(0x99D7AA5B), blurRadius: 12)])),
-          const SizedBox(width: 10),
-          Flexible(child: Text(ar ? 'استوديو رقمي مستقل · القاهرة / عن بُعد' : 'INDEPENDENT DIGITAL STUDIO · CAIRO / REMOTE', style: const TextStyle(color: Color(0xFFD7AA5B), fontSize: 10, letterSpacing: 1.6, fontWeight: FontWeight.w700))),
-        ]),
-        const SizedBox(height: 26),
-        Text(ar ? 'حوّل فكرتك إلى\nواقع رقمي.' : 'TURN YOUR VISION INTO\nDIGITAL REALITY.', style: TextStyle(fontSize: mobile ? 49 : 68, height: .98, fontWeight: FontWeight.w900, letterSpacing: mobile ? -1.8 : -3.2, color: const Color(0xFFF7F3EA))),
-        const SizedBox(height: 22),
-        ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560), child: Text(ar ? 'استوديو تقني إبداعي يبني المواقع وتطبيقات الموبايل وحلول الذكاء الاصطناعي وتجارب رقمية تنقل فكرتك للواقع.' : 'A creative technology studio for websites, mobile apps, AI systems and digital experiences built to move your business forward.', style: const TextStyle(fontSize: 15, height: 1.85, color: Color(0xFFA7AAA6)))),
-        const SizedBox(height: 30),
-        Wrap(spacing: 18, runSpacing: 14, children: [
-          _GoldButton(label: ar ? 'ابدأ مشروعك' : 'START A PROJECT', onPressed: onContact),
-          TextButton.icon(onPressed: onWork, icon: const Icon(Icons.north_east, size: 17), label: Text(ar ? 'استكشف الأعمال' : 'EXPLORE SELECTED WORK'), style: TextButton.styleFrom(foregroundColor: const Color(0xFFE5E1D8), textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
-        ]),
-        const SizedBox(height: 42),
-        Container(height: 1, color: const Color(0xFF292824)),
-        const SizedBox(height: 16),
-        Wrap(spacing: 22, runSpacing: 10, children: (ar ? ['أنظمة الويب','تطبيقات Flutter','الذكاء الاصطناعي','الأتمتة'] : ['WEB SYSTEMS','FLUTTER APPS','AI SYSTEMS','AUTOMATION']).map((v) => Text(v, style: const TextStyle(color: Color(0xFF777A77), fontSize: 9, letterSpacing: 1.4, fontWeight: FontWeight.w600))).toList()),
-      ],
-    );
-    return Container(
-      padding: EdgeInsets.fromLTRB(mobile ? 22 : 56, mobile ? 58 : 78, mobile ? 22 : 56, mobile ? 56 : 78),
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(center: Alignment(0.82, -0.35), radius: 1.15, colors: [Color(0x182D6BFF), Color(0x0DFF543D), Color(0x00050505)]),
+  @override Widget build(BuildContext context) => Container(
+    padding: EdgeInsets.symmetric(horizontal: mobile ? 24 : 80, vertical: mobile ? 75 : 125),
+    decoration: const BoxDecoration(gradient: RadialGradient(center: Alignment(0.55, -0.2), radius: 1.15, colors: [Color(0x332B6BFF), Color(0x00050505)])),
+    child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1160), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(ar ? 'استوديو رقمي مستقل · القاهرة / عن بُعد' : 'INDEPENDENT DIGITAL STUDIO · CAIRO / REMOTE', style: const TextStyle(color: Color(0xFFD7A83E), letterSpacing: 1.8, fontWeight: FontWeight.w700)),
+      const SizedBox(height: 24),
+      Text(ar ? 'حوّل فكرتك إلى\nواقع رقمي.' : 'TURN YOUR VISION INTO\nDIGITAL REALITY.', style: TextStyle(fontSize: mobile ? 48 : 78, height: .98, fontWeight: FontWeight.w900, letterSpacing: -2)),
+      const SizedBox(height: 28),
+      SizedBox(width: 720, child: Text(ar ? 'استوديو تقني إبداعي نبني فيه المواقع والتطبيقات وأنظمة الذكاء الاصطناعي والتجارب الرقمية المصممة حول هدف حقيقي.' : 'A creative technology studio building websites, Flutter applications, AI systems and digital experiences around real goals.', style: const TextStyle(fontSize: 18, height: 1.65, color: Color(0xFFB7B7B7)))),
+      const SizedBox(height: 36),
+      Wrap(spacing: 14, runSpacing: 14, children: [
+        FilledButton.icon(onPressed: onContact, icon: const Icon(Icons.arrow_outward), label: Text(ar ? 'ابدأ مشروعك' : 'START A PROJECT'), style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD7A83E), foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18))),
+        OutlinedButton(onPressed: onWork, style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18)), child: Text(ar ? 'استكشف الأعمال' : 'EXPLORE WORK')),
+      ]),
+      const SizedBox(height: 70),
+      Container(height: 1, color: const Color(0xFF262626)),
+      const SizedBox(height: 18),
+      Wrap(
+        spacing: 30,
+        runSpacing: 12,
+        children: [
+          ar ? 'ويب' : 'WEB',
+          ar ? 'تطبيقات Flutter' : 'FLUTTER APPS',
+          ar ? 'ذكاء اصطناعي' : 'AI SYSTEMS',
+          ar ? 'أتمتة' : 'AUTOMATION',
+        ].map((label) => Text(
+          label,
+          style: const TextStyle(color: Color(0xFF777777), letterSpacing: 1.4),
+        )).toList(),
       ),
-      child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1280),
-        child: mobile
-          ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [copy, const SizedBox(height: 42), const _ImmersiveScene(height: 390)])
-          : Row(crossAxisAlignment: CrossAxisAlignment.center, children: [Expanded(flex: 11, child: copy), const SizedBox(width: 42), const Expanded(flex: 9, child: _ImmersiveScene(height: 610))]),
-      )),
-    );
-  }
-}
-
-
-class _Reveal extends StatelessWidget {
-  final Widget child;
-  const _Reveal({required this.child});
-  @override
-  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
-    tween: Tween(begin: 0, end: 1),
-    duration: const Duration(milliseconds: 850),
-    curve: Curves.easeOutCubic,
-    child: child,
-    builder: (context, value, child) => Opacity(
-      opacity: value,
-      child: Transform.translate(offset: Offset(0, 24 * (1 - value)), child: child),
-    ),
+    ]))),
   );
-}
-
-class _PressScale extends StatefulWidget {
-  final Widget child;
-  const _PressScale({required this.child});
-  @override State<_PressScale> createState() => _PressScaleState();
-}
-class _PressScaleState extends State<_PressScale> {
-  bool pressed = false;
-  @override
-  Widget build(BuildContext context) => Listener(
-    onPointerDown: (_) => setState(() => pressed = true),
-    onPointerUp: (_) => setState(() => pressed = false),
-    onPointerCancel: (_) => setState(() => pressed = false),
-    child: AnimatedScale(scale: pressed ? .97 : 1, duration: const Duration(milliseconds: 130), curve: Curves.easeOut, child: widget.child),
-  );
-}
-
-class _GoldButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-  const _GoldButton({required this.label, required this.onPressed});
-  @override
-  Widget build(BuildContext context) => _PressScale(child: FilledButton.icon(
-    onPressed: onPressed,
-    icon: const Icon(Icons.north_east, size: 17),
-    label: Text(label),
-    style: FilledButton.styleFrom(
-      backgroundColor: const Color(0xFFD7AA5B),
-      foregroundColor: const Color(0xFF100D07),
-      padding: const EdgeInsets.symmetric(horizontal: 21, vertical: 19),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero, side: BorderSide(color: Color(0x99FFE2A1))),
-      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: .4),
-      elevation: 0,
-    ),
-  ));
-}
-
-class _ImmersiveScene extends StatefulWidget {
-  final double height;
-  const _ImmersiveScene({required this.height});
-  @override State<_ImmersiveScene> createState() => _ImmersiveSceneState();
-}
-
-class _ImmersiveSceneState extends State<_ImmersiveScene> with SingleTickerProviderStateMixin {
-  late final AnimationController _motion = AnimationController(vsync: this, duration: const Duration(seconds: 24))..repeat();
-  double _pointerX = 0, _pointerY = 0;
-
-  @override
-  void dispose() { _motion.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) => MouseRegion(
-    onHover: (event) { final box = context.findRenderObject() as RenderBox?; if (box == null) return; final p = box.globalToLocal(event.position); setState(() { _pointerX = (p.dx / box.size.width - .5) * .08; _pointerY = (p.dy / box.size.height - .5) * -.08; }); },
-    onExit: (_) => setState(() { _pointerX = 0; _pointerY = 0; }),
-    child: AnimatedBuilder(
-      animation: _motion,
-      builder: (context, _) {
-        final phase = _motion.value * math.pi * 2;
-        return Transform(
-          alignment: Alignment.center,
-          transform: Matrix4.identity()..setEntry(3, 2, .001)..rotateX(_pointerY + math.sin(phase) * .018)..rotateY(_pointerX + math.cos(phase) * .025),
-          child: Container(
-            height: widget.height,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0x55D7AA5B)),
-              gradient: const RadialGradient(center: Alignment(.05, -.12), radius: 1.15, colors: [Color(0xFF242016), Color(0xFF101319), Color(0xFF050608)]),
-              boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 45, offset: Offset(0, 24)), BoxShadow(color: Color(0x22D7AA5B), blurRadius: 35)],
-            ),
-            child: Stack(fit: StackFit.expand, children: [
-              CustomPaint(painter: _SceneGridPainter()),
-              Positioned(right: -55, top: -35, child: Container(width: 190, height: 190, decoration: const BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0x445C8DFF), Color(0x005C8DFF)])))),
-              Positioned(left: -65, bottom: -50, child: Container(width: 220, height: 220, decoration: const BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0x33FF543D), Color(0x00FF543D)])))),
-              Center(child: Transform.rotate(
-                angle: phase * .12,
-                child: Container(
-                  width: widget.height * .55, height: widget.height * .55,
-                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x66D7AA5B), width: 1.2), boxShadow: const [BoxShadow(color: Color(0x22D7AA5B), blurRadius: 28)]),
-                  child: Center(child: Transform.rotate(angle: -phase * .22, child: Container(width: widget.height * .42, height: widget.height * .42, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x665C8DFF)), gradient: const RadialGradient(colors: [Color(0x223B5E9C), Color(0x00050608)]))))),
-                ),
-              )),
-              Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Transform.translate(offset: Offset(0, math.sin(phase) * 8), child: const Text('A', style: TextStyle(fontSize: 112, height: .9, fontWeight: FontWeight.w900, color: Color(0xFFD7AA5B), shadows: [Shadow(color: Color(0x88D7AA5B), blurRadius: 28)]))),
-                const SizedBox(height: 8),
-                const Text('APEX', style: TextStyle(fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: 9, color: Color(0xFFF7F3EA))),
-                const SizedBox(height: 7),
-                const Text('DIGITAL REALITY', style: TextStyle(fontSize: 9, letterSpacing: 4, color: Color(0xFFD7AA5B))),
-              ])),
-              const Positioned(left: 18, top: 18, child: Text('APEX STUDIO / 001', style: TextStyle(fontSize: 8, letterSpacing: 2, color: Color(0xFF9B9E99)))),
-              const Positioned(right: 18, bottom: 18, child: Text('IDEAS → DIGITAL REALITY', style: TextStyle(fontSize: 8, letterSpacing: 1.5, color: Color(0xFF9B9E99)))),
-              Positioned(left: 0, right: 0, bottom: 58, child: Center(child: Container(width: 90, height: 1, color: const Color(0x88D7AA5B)))),
-            ]),
-          ),
-        );
-      },
-    ),
-  );
-}
-
-class _SceneGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = const Color(0x12D7AA5B)..strokeWidth = .7;
-    for (double x = 0; x < size.width; x += 38) { canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint); }
-    for (double y = 0; y < size.height; y += 38) { canvas.drawLine(Offset(0, y), Offset(size.width, y), paint); }
-  }
-  @override bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _Statement extends StatelessWidget { final bool ar; const _Statement({required this.ar}); @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30), decoration: const BoxDecoration(border: Border.symmetric(horizontal: BorderSide(color: Color(0xFF1D1D1D)))), child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1160), child: Row(children: [Text('01', style: const TextStyle(color: Color(0xFFD7A83E))), const SizedBox(width: 30), Expanded(child: Text(ar ? 'لا قوالب جاهزة. لا ضوضاء. فقط عمل رقمي له هدف.' : 'NO TEMPLATES. NO NOISE. JUST PURPOSEFUL DIGITAL WORK.', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 1.2))), const Text('↘', style: TextStyle(fontSize: 26, color: Color(0xFFD7A83E)))])))); }
@@ -566,24 +430,6 @@ class _Contact extends StatelessWidget {
 
 class _Footer extends StatelessWidget { final bool ar; const _Footer({required this.ar}); @override Widget build(BuildContext context) => Padding(padding: const EdgeInsets.fromLTRB(24, 20, 24, 45), child: Center(child: Text('Created by Ansta · APEX STUDIO', style: const TextStyle(color: Color(0xFF6D6D6D), letterSpacing: 1.5)))); }
 
-class _Card extends StatelessWidget { final String index, title, body; const _Card({required this.index, required this.title, required this.body}); @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.all(28), decoration: BoxDecoration(color: const Color(0xFF0D0D0F), border: Border.all(color: const Color(0xFF252525)), borderRadius: BorderRadius.circular(3)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(index, style: const TextStyle(color: Color(0xFFD7A83E), fontWeight: FontWeight.w800)), const Spacer(), Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)), const SizedBox(height: 8), Text(body, style: const TextStyle(color: Color(0xFF929292), height: 1.45))])); }
+class _Card extends StatelessWidget { final String index, title, body; const _Card({required this.index, required this.title, required this.body}); @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.all(28), decoration: BoxDecoration(color: const Color(0xFF0D0D0F), border: Border.all(color: const Color(0xFF252525)), borderRadius: BorderRadius.circular(20)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(index, style: const TextStyle(color: Color(0xFFD7A83E), fontWeight: FontWeight.w800)), const Spacer(), Text(title, style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800)), const SizedBox(height: 8), Text(body, style: const TextStyle(color: Color(0xFF929292), height: 1.45))])); }
 
-class _Section extends StatelessWidget {
-  final String eyebrow, title;
-  final Widget child;
-  const _Section({required this.eyebrow, required this.title, required this.child});
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(24, 90, 24, 30),
-    child: Center(child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 1160),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(eyebrow, style: const TextStyle(color: Color(0xFFD7AA5B), letterSpacing: 2.2, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 12),
-        Text(title, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w900, letterSpacing: -1.4)),
-        const SizedBox(height: 30),
-        _Reveal(child: child),
-      ]),
-    )),
-  );
-}
+class _Section extends StatelessWidget { final String eyebrow, title; final Widget child; const _Section({required this.eyebrow, required this.title, required this.child}); @override Widget build(BuildContext context) => Padding(padding: const EdgeInsets.fromLTRB(24, 90, 24, 30), child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 1160), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(eyebrow, style: const TextStyle(color: Color(0xFFD7A83E), letterSpacing: 2.2, fontWeight: FontWeight.w700)), const SizedBox(height: 12), Text(title, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w900)), const SizedBox(height: 30), child])))); }
