@@ -72,7 +72,7 @@ async function getFcmAccessToken(serviceAccount: Record<string, string>): Promis
   const pem = serviceAccount.private_key
     .split("-----BEGIN PRIVATE KEY-----").join("")
     .split("-----END PRIVATE KEY-----").join("")
-    .replaceAll("\\n", "").replaceAll("\\r", "").replaceAll(" ", "");
+    .replaceAll(String.fromCharCode(10), "").replaceAll(String.fromCharCode(13), "").replaceAll(" ", "");
   const binary = atob(pem);
   const keyBytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
   const key = await crypto.subtle.importKey(
