@@ -17,7 +17,8 @@ class CmsPage extends StatefulWidget {
 class _CmsEntry {
   const _CmsEntry({required this.id, required this.slug, required this.title, required this.kind,
     required this.summary, required this.status, this.sortOrder = 0});
-  final String? id, slug, title, kind, summary, status;
+  final String? id;
+  final String slug, title, kind, summary, status;
   final int sortOrder;
 
   factory _CmsEntry.fromMap(Map<String, dynamic> row) => _CmsEntry(
@@ -200,7 +201,6 @@ class _CmsPageState extends State<CmsPage> {
               onPressed: _saving ? null : () => _setPublished(entry, entry.status != 'published'),
               icon: Icon(entry.status == 'published' ? Icons.unpublished_outlined : Icons.publish_outlined, color: _cmsGold)),
           ])))),
-        ),
       ],
     ]);
   }
@@ -239,7 +239,7 @@ class _CmsEditorDialogState extends State<_CmsEditorDialog> {
     content: SizedBox(width: 440, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
       TextField(controller: _title, decoration: const InputDecoration(labelText: 'Content title')),
       const SizedBox(height: 12), TextField(controller: _slug, decoration: const InputDecoration(labelText: 'URL slug (lowercase-with-dashes)')),
-      const SizedBox(height: 12), DropdownButtonFormField<String>(value: _kind,
+      const SizedBox(height: 12), DropdownButtonFormField<String>(initialValue: _kind,
         decoration: const InputDecoration(labelText: 'Content type'),
         items: const [DropdownMenuItem(value: 'page_section', child: Text('Page section')),
           DropdownMenuItem(value: 'project', child: Text('Project')), DropdownMenuItem(value: 'service', child: Text('Service')),
