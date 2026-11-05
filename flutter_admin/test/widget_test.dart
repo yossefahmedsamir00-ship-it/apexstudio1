@@ -92,9 +92,7 @@ void main() {
       'test-anon-key',
       authOptions: const AuthClientOptions(autoRefreshToken: false),
     );
-    addTearDown(() async {
-      await client.dispose();
-    });
+    addTearDown(client.auth.stopAutoRefresh);
     final repository = AdminRepository(client);
     await tester.pumpWidget(MaterialApp(
       theme: ThemeData.dark(),
