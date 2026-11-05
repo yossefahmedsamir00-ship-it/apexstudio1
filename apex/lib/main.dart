@@ -1,4 +1,6 @@
-import 'dart:math' as math;\n\nimport 'package:flutter/material.dart';
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'ai_chat_page.dart';
@@ -202,7 +204,9 @@ class _Hero extends StatelessWidget {
           Flexible(child: Text(ar ? 'استوديو رقمي مستقل · القاهرة / عن بُعد' : 'INDEPENDENT DIGITAL STUDIO · CAIRO / REMOTE', style: const TextStyle(color: Color(0xFFD7AA5B), fontSize: 10, letterSpacing: 1.6, fontWeight: FontWeight.w700))),
         ]),
         const SizedBox(height: 26),
-        Text(ar ? 'حوّل فكرتك إلى\nواقع رقمي.' : 'TURN YOUR VISION INTO\nDIGITAL REALITY.', style: TextStyle(fontSize: mobile ? 49 : 68, height: .98, fontWeight: FontWeight.w900, letterSpacing: mobile ? -1.8 : -3.2, color: const Color(0xFFF7F3EA))),
+        Text(ar ? 'حوّل فكرتك إلى
+واقع رقمي.' : 'TURN YOUR VISION INTO
+DIGITAL REALITY.', style: TextStyle(fontSize: mobile ? 49 : 68, height: .98, fontWeight: FontWeight.w900, letterSpacing: mobile ? -1.8 : -3.2, color: const Color(0xFFF7F3EA))),
         const SizedBox(height: 22),
         ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560), child: Text(ar ? 'استوديو تقني إبداعي يبني المواقع وتطبيقات الموبايل وحلول الذكاء الاصطناعي وتجارب رقمية تنقل فكرتك للواقع.' : 'A creative technology studio for websites, mobile apps, AI systems and digital experiences built to move your business forward.', style: const TextStyle(fontSize: 15, height: 1.85, color: Color(0xFFA7AAA6)))),
         const SizedBox(height: 30),
