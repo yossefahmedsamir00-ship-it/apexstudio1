@@ -1,12 +1,12 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui' show ImageFilter;
-import 'dashboard_v2.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cms_page.dart';
+import 'dashboard_v2.dart';
 import 'push_notifications.dart';
 
 const supabaseUrl = String.fromEnvironment(
