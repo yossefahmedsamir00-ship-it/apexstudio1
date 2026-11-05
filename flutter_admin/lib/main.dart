@@ -720,6 +720,11 @@ class _AdminShellState extends State<AdminShell> {
     }
   }
 
+  Future<void> _signOut() async {
+    await _pushNotifications.unregisterCurrentDevice();
+    await Supabase.instance.client.auth.signOut();
+  }
+
   Future<void> _enablePushNotifications() async {
     if (!_pushReady) {
       _toast('Background alerts need Firebase app configuration first.', isError: true);
@@ -1002,7 +1007,7 @@ class _AdminShellState extends State<AdminShell> {
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.refresh),
           ),
-          IconButton(tooltip: 'Sign out', onPressed: () => Supabase.instance.client.auth.signOut(), icon: const Icon(Icons.logout)),
+          IconButton(tooltip: 'Sign out', onPressed: _signOut, icon: const Icon(Icons.logout)),
           const SizedBox(width: 6),
         ],
       ),
