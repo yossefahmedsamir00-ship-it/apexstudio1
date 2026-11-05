@@ -734,11 +734,17 @@ class _AdminShellState extends State<AdminShell> {
 
   Future<void> _openConversationFromPush(String conversationId) async {
     if (!mounted) return;
-    var item = (_data?.conversations ?? const <Map<String, dynamic>>[]).where((row) => row['id']?.toString() == conversationId).firstOrNull;
+    Map<String, dynamic>? findConversation() {
+      for (final row in _data?.conversations ?? const <Map<String, dynamic>>[]) {
+        if (row['id']?.toString() == conversationId) return row;
+      }
+      return null;
+    }
+    var item = findConversation();
     if (item == null) {
       await _refresh();
       if (!mounted) return;
-      item = (_data?.conversations ?? const <Map<String, dynamic>>[]).where((row) => row['id']?.toString() == conversationId).firstOrNull;
+      item = findConversation();
     }
     if (item == null) {
       _toast('The conversation is no longer available in your owner inbox.', isError: true);
