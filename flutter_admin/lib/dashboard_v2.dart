@@ -85,7 +85,7 @@ class _DonutPainter extends CustomPainter {
     for (var i=0; i<values.length && i<colors.length; i++) {
       if (values[i] <= 0) continue;
       final sweep = values[i] / total * math.pi*2;
-      canvas.drawArc(rect.deflate(9), start, math.max(0, sweep-.035), false, p..color=colors[i]);
+      canvas.drawArc(rect.deflate(9), start, (sweep - .035 > 0 ? sweep - .035 : 0.0), false, p..color=colors[i]);
       start += sweep;
     }
   }
