@@ -16,21 +16,23 @@ class CmsPage extends StatefulWidget {
 
 class _CmsEntry {
   const _CmsEntry({required this.id, required this.slug, required this.title, required this.kind,
-    required this.summary, required this.status, this.sortOrder = 0});
+    required this.summary, required this.status, this.sortOrder = 0, this.body = const {}});
   final String? id;
   final String slug, title, kind, summary, status;
   final int sortOrder;
+  final Map<String, dynamic> body;
 
   factory _CmsEntry.fromMap(Map<String, dynamic> row) => _CmsEntry(
     id: row['id'] as String?, slug: row['slug'] as String, title: row['title'] as String,
     kind: row['content_type'] as String, summary: (row['summary'] as String?) ?? '',
     status: row['status'] as String, sortOrder: (row['sort_order'] as num?)?.toInt() ?? 0,
+    body: row['body'] is Map ? Map<String, dynamic>.from(row['body'] as Map) : const {},
   );
 
   Map<String, dynamic> toMap({bool includeId = true}) => {
     if (includeId && id != null) 'id': id, 'slug': slug, 'title': title,
     'content_type': kind, 'summary': summary, 'status': status,
-    'sort_order': sortOrder, 'body': <String, dynamic>{},
+    'sort_order': sortOrder, 'body': body,
   };
 }
 
@@ -111,7 +113,7 @@ class _CmsPageState extends State<CmsPage> {
     try {
       final status = publish ? 'published' : 'draft';
       var updated = _CmsEntry(id: entry.id, slug: entry.slug, title: entry.title, kind: entry.kind,
-        summary: entry.summary, status: status, sortOrder: entry.sortOrder);
+        summary: entry.summary, status: status, sortOrder: entry.sortOrder, body: entry.body);
       if (!widget.demoMode) {
         final row = await _client!.from('apex_site_content').update({'status': status}).eq('id', entry.id!)
           .select('id,slug,title,content_type,summary,status,sort_order').single();
@@ -231,7 +233,7 @@ class _CmsEditorDialogState extends State<_CmsEditorDialog> {
     final old = widget.entry;
     Navigator.pop(context, _CmsEntry(id: old?.id, slug: slug, title: title, kind: _kind,
       summary: _summary.text.trim(), status: old?.status == 'published' ? 'draft' : (old?.status ?? 'draft'),
-      sortOrder: old?.sortOrder ?? 0));
+      sortOrder: old?.sortOrder ?? 0, body: old?.body ?? const {}));
   }
   @override
   Widget build(BuildContext context) => AlertDialog(backgroundColor: _cmsPanel,
