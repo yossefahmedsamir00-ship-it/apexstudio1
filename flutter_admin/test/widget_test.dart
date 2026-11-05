@@ -87,9 +87,15 @@ void main() {
 
 
   testWidgets('inbox search and unread filter narrow conversations', (tester) async {
-    final repository = AdminRepository(
-      SupabaseClient('https://example.supabase.co', 'test-anon-key'),
+    final client = SupabaseClient(
+      'https://example.supabase.co',
+      'test-anon-key',
+      authOptions: const AuthClientOptions(autoRefreshToken: false),
     );
+    addTearDown(() async {
+      await client.dispose();
+    });
+    final repository = AdminRepository(client);
     await tester.pumpWidget(MaterialApp(
       theme: ThemeData.dark(),
       home: Scaffold(
