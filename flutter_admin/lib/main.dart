@@ -1235,23 +1235,28 @@ class OverviewPage extends StatelessWidget {
         ])),
         const Icon(Icons.circle, color: Color(0xFF8FE0B4), size: 9),
         const SizedBox(width: 6),
-        const Text('LIVE DATA', style: TextStyle(color: Color(0xFF8FE0B4), fontSize: 9, fontWeight: FontWeight.w900)),
+        const Text('AUTO-SYNC', style: TextStyle(color: Color(0xFF8FE0B4), fontSize: 9, fontWeight: FontWeight.w900)),
       ])),
       const SizedBox(height: 20),
       const _SectionHeading(eyebrow: 'PERFORMANCE SNAPSHOT', title: 'At a glance'),
+      GlassPanel(child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Icon(Icons.info_outline_rounded, color: _cyan, size: 18),
+        const SizedBox(width: 10),
+        const Expanded(child: Text('Dashboard totals use the latest 100 inquiries, 100 invoices and 500 site events loaded for this workspace. They are not lifetime totals.', style: TextStyle(color: _muted, fontSize: 11, height: 1.45))),
+      ])),
       const SizedBox(height: 10),
       LayoutBuilder(builder: (context, c) {
         final cols = c.maxWidth > 1000 ? 4 : c.maxWidth > 620 ? 3 : 2;
         return GridView.count(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisCount: cols,
           crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: c.maxWidth < 380 ? 1.15 : 1.45,
           children: [
-            GlassStatsCard(title: 'Client leads', value: '${data.inquiries.length}', note: 'Project requests', icon: Icons.groups_outlined, color: const Color(0xFF7BC8FF)),
+            GlassStatsCard(title: 'Recent leads', value: '${data.inquiries.length}', note: 'Latest 100 loaded', icon: Icons.groups_outlined, color: const Color(0xFF7BC8FF)),
             GlassStatsCard(title: 'Contacts', value: '$contacts', note: 'Unique prospects', icon: Icons.person_search, color: _goldLight),
             GlassStatsCard(title: 'Conversations', value: '${data.conversations.length}', note: '$unread unread', icon: Icons.forum_outlined, color: const Color(0xFFB69CFF)),
             GlassStatsCard(title: 'Paid invoices', value: '${paid.length}', note: 'Confirmed payments', icon: Icons.verified_outlined, color: const Color(0xFF8FE0B4)),
             GlassStatsCard(title: 'EGP revenue', value: _compactMoney(egpMinor / 100), note: 'Paid EGP only', icon: Icons.account_balance_wallet_outlined, color: const Color(0xFF8FE0B4)),
             GlassStatsCard(title: 'Pending', value: '$pending', note: 'Awaiting payment', icon: Icons.hourglass_top, color: const Color(0xFFFFC46B)),
-            GlassStatsCard(title: 'Tracked events', value: '${data.events.length}', note: 'Stored site events', icon: Icons.insights, color: _cyan),
+            GlassStatsCard(title: 'Recent events', value: '${data.events.length}', note: 'Latest 500 loaded', icon: Icons.insights, color: _cyan),
             GlassStatsCard(title: 'Payment issues', value: '$failed', note: 'Failed / cancelled', icon: Icons.warning_amber, color: _red),
           ]);
       }),
