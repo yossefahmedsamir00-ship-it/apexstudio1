@@ -18,7 +18,10 @@ create table if not exists public.apex_site_content (
 create index if not exists apex_site_content_public_order_idx on public.apex_site_content(status, sort_order, updated_at desc);
 alter table public.apex_site_content enable row level security;
 drop policy if exists "public_read_published_apex_content" on public.apex_site_content;
-create policy "public_read_published_apex_content" on public.apex_site_content for select to anon, authenticated
+drop policy if exists "authenticated_read_apex_content" on public.apex_site_content;
+create policy "public_read_published_apex_content" on public.apex_site_content for select to anon
+  using (status = 'published');
+create policy "authenticated_read_apex_content" on public.apex_site_content for select to authenticated
   using (status = 'published' or public.apex_owner_is_configured());
 drop policy if exists "owner_manage_apex_content" on public.apex_site_content;
 create policy "owner_manage_apex_content" on public.apex_site_content for all to authenticated
