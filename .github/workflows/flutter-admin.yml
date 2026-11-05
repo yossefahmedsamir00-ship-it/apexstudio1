@@ -28,6 +28,27 @@ jobs:
           cache: true
       - name: Generate Android platform files
         run: flutter create --platforms=android --project-name apex_studio_admin --org com.apexstudio .
+      - name: Enable Android core library desugaring for notifications
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          gradle = Path("android/app/build.gradle.kts")
+          source = gradle.read_text()
+          if "isCoreLibraryDesugaringEnabled = true" not in source:
+              source, count = re.subn(
+                  r"compileOptions\\s*\\{",
+                  "compileOptions {\\n        isCoreLibraryDesugaringEnabled = true",
+                  source,
+                  count=1,
+              )
+              if count != 1:
+                  raise SystemExit("Could not find Android compileOptions block")
+          if "coreLibraryDesugaring(" not in source:
+              source += '\\ndependencies {\\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\\n}\\n'
+          gradle.write_text(source)
+          PY
       - name: Pub get
         run: flutter pub get
       - name: Analyze
