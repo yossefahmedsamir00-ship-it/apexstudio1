@@ -74,9 +74,10 @@ async function getFcmAccessToken(serviceAccount: Record<string, string>): Promis
     .split("-----END PRIVATE KEY-----").join("")
     .replaceAll(String.fromCharCode(10), "").replaceAll(String.fromCharCode(13), "").replaceAll(" ", "");
   const binary = atob(pem);
-  const keyBytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  const keyBytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) keyBytes[index] = binary.charCodeAt(index);
   const key = await crypto.subtle.importKey(
-    "pkcs8", keyBytes,
+    "pkcs8", keyBytes.buffer,
     {name:"RSASSA-PKCS1-v1_5",hash:"SHA-256"},
     false, ["sign"],
   );
