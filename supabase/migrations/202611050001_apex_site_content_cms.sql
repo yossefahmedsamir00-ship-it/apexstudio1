@@ -7,12 +7,12 @@ language sql
 stable
 security definer
 set search_path = pg_catalog, public
-as $
+as $$
   select exists (
     select 1 from public.apex_owner_settings s
     where s.id = true and s.owner_user_id = (select auth.uid())
   );
-$;
+$$;
 revoke all on function public.apex_owner_is_configured() from public, anon;
 grant execute on function public.apex_owner_is_configured() to authenticated;
 
