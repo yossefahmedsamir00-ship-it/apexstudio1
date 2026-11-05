@@ -27,6 +27,7 @@ const _muted = Color(0xFF92958F);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabasePublishableKey);
+  await ApexPushNotifications.configureBackgroundHandler();
   runApp(const ApexAdminApp());
 }
 
