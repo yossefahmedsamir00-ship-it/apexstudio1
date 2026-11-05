@@ -1313,27 +1313,140 @@ class _DashboardLegend extends StatelessWidget {
   ]));
 }
 
-class LeadsPage extends StatelessWidget {
+class LeadsPage extends StatefulWidget {
   const LeadsPage({super.key, required this.inquiries, required this.onChangeStatus});
 
   final List<Map<String, dynamic>> inquiries;
   final Future<void> Function(String id, String status) onChangeStatus;
-  static const statuses = ['new', 'contacted', 'in_progress', 'completed', 'cancelled'];
+
+  @override
+  State<LeadsPage> createState() => _LeadsPageState();
+}
+
+class _LeadsPageState extends State<LeadsPage> {
+  static const _filters = [
+    ('all', 'All'),
+    ('new', 'New'),
+    ('contacted', 'Contacted'),
+    ('in_progress', 'In progress'),
+    ('completed', 'Completed'),
+    ('cancelled', 'Cancelled'),
+  ];
+
+  String _query = '';
+  String _status = 'all';
+
+  List<Map<String, dynamic>> get _visibleInquiries {
+    final query = _query.trim().toLowerCase();
+    return widget.inquiries.where((item) {
+      final matchesStatus = _status == 'all' || _string(item['status'], 'new') == _status;
+      if (!matchesStatus) return false;
+      if (query.isEmpty) return true;
+      final searchable = [
+        item['client_name'],
+        item['client_email'],
+        item['client_phone'],
+        item['project_type'],
+        item['brief'],
+      ].whereType<Object>().join(' ').toLowerCase();
+      return searchable.contains(query);
+    }).toList(growable: false);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final visible = _visibleInquiries;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(18),
       children: [
-        const _SectionHeading(eyebrow: 'CLIENT PIPELINE', title: 'Project inquiries', subtitle: 'Review requests and keep each lead status up to date.'),
-        if (inquiries.isEmpty)
-          const _EmptyState(icon: Icons.inbox_outlined, title: 'No client leads', subtitle: 'Website inquiry submissions will show up here.'),
-        ...inquiries.map((item) => _InquiryCard(
-          item: item,
-          statuses: statuses,
-          onChangeStatus: (status) => onChangeStatus(_string(item['id'], ''), status),
-        )),
+        const _SectionHeading(
+          eyebrow: 'CLIENT PIPELINE',
+          title: 'Project inquiries',
+          subtitle: 'Search requests, filter by status and keep each lead moving.',
+        ),
+        TextField(
+          key: const ValueKey('lead-search-field'),
+          onChanged: (value) => setState(() => _query = value),
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Search name, email, project or brief',
+            prefixIcon: const Icon(Icons.search_rounded, color: _muted),
+            suffixIcon: _query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear search',
+                    onPressed: () => setState(() => _query = ''),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _filters.map((filter) {
+              final value = filter.$1;
+              final label = filter.$2;
+              return Padding(
+                padding: const EdgeInsets.only(right: 7),
+                child: ChoiceChip(
+                  key: ValueKey('lead-filter-$value'),
+                  label: Text(label),
+                  selected: _status == value,
+                  onSelected: (_) => setState(() => _status = value),
+                  selectedColor: _gold.withValues(alpha: .2),
+                  labelStyle: TextStyle(
+                    color: _status == value ? _goldLight : _muted,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                  side: BorderSide(
+                    color: _status == value ? _gold.withValues(alpha: .65) : Colors.white12,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${visible.length} of ${widget.inquiries.length} inquiries',
+                style: const TextStyle(color: _muted, fontSize: 11),
+              ),
+            ),
+            if (_query.isNotEmpty || _status != 'all')
+              TextButton(
+                onPressed: () => setState(() {
+                  _query = '';
+                  _status = 'all';
+                }),
+                child: const Text('Clear filters'),
+              ),
+          ],
+        ),
+        const SizedBox(height: 5),
+        if (widget.inquiries.isEmpty)
+          const _EmptyState(
+            icon: Icons.inbox_outlined,
+            title: 'No client leads',
+            subtitle: 'Website inquiry submissions will show up here.',
+          )
+        else if (visible.isEmpty)
+          const _EmptyState(
+            icon: Icons.search_off_rounded,
+            title: 'No matching inquiries',
+            subtitle: 'Try another search or clear the selected filters.',
+          )
+        else
+          ...visible.map((item) => _InquiryCard(
+                item: item,
+                statuses: const ['new', 'contacted', 'in_progress', 'completed', 'cancelled'],
+                onChangeStatus: (status) => widget.onChangeStatus(_string(item['id'], ''), status),
+              )),
       ],
     );
   }
