@@ -66,8 +66,8 @@ Acceptance:
 
 External setup required before live delivery:
 - Firebase project with Android package `com.apexstudio.apex_studio_admin` (confirm actual applicationId from generated Gradle config) and iOS bundle ID.
-- Android `google-services.json` and iOS `GoogleService-Info.plist` supplied through secure CI/release configuration, not committed as secrets.
-- Firebase service account credentials stored only as Supabase Edge Function secrets.
+- Build the Flutter Admin app with `FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_PROJECT_ID`, and (for iOS) `FIREBASE_IOS_BUNDLE_ID` supplied as secure `--dart-define` values. Do not commit these configuration files or values.
+- Store the Firebase service-account JSON only as the Supabase Edge Function secret `FCM_SERVICE_ACCOUNT_JSON`; never put it in Flutter or browser code.
 - Apple APNs authentication key/certificate linked in Firebase for iOS delivery.
 
 ## Phase 4 — Quality, security, and delivery
