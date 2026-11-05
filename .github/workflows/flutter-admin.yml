@@ -1,5 +1,9 @@
 name: Flutter Admin CI
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [feature/flutter-admin-app, main]
@@ -51,6 +55,15 @@ jobs:
               source += "}" + newline
           gradle.write_text(source)
           PY
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('flutter_admin/android/**/*.gradle*', 'flutter_admin/android/gradle/wrapper/gradle-wrapper.properties', 'flutter_admin/pubspec.yaml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
       - name: Pub get
         run: flutter pub get
       - name: Analyze
