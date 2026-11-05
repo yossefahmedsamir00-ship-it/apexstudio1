@@ -55,7 +55,7 @@ function base64UrlEncode(value: Uint8Array | string): string {
   const bytes = typeof value === "string" ? new TextEncoder().encode(value) : value;
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
+  return btoa(binary).replaceAll("=", "").replaceAll("+", "-").replaceAll("/", "_");
 }
 
 async function getFcmAccessToken(serviceAccount: Record<string, string>): Promise<string> {
@@ -69,7 +69,10 @@ async function getFcmAccessToken(serviceAccount: Record<string, string>): Promis
     exp:now + 3600,
   }));
   const unsigned = header + "." + claims;
-  const pem = serviceAccount.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\\s/g, "");
+  const pem = serviceAccount.private_key
+    .split("-----BEGIN PRIVATE KEY-----").join("")
+    .split("-----END PRIVATE KEY-----").join("")
+    .replaceAll("\\n", "").replaceAll("\\r", "").replaceAll(" ", "");
   const binary = atob(pem);
   const keyBytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
   const key = await crypto.subtle.importKey(
