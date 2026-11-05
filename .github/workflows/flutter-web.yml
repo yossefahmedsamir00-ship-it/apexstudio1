@@ -1,0 +1,42 @@
+name: Flutter Web CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apex/lib/**'
+      - 'apex/test/**'
+      - 'apex/pubspec.yaml'
+      - 'apex/pubspec.lock'
+      - '.github/workflows/flutter-web.yml'
+  pull_request:
+    paths:
+      - 'apex/lib/**'
+      - 'apex/test/**'
+      - 'apex/pubspec.yaml'
+      - 'apex/pubspec.lock'
+      - '.github/workflows/flutter-web.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apex
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - name: Pub get
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        run: flutter test
+      - name: Build Flutter Web
+        run: flutter build web --release
