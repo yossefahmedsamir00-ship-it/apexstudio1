@@ -84,4 +84,55 @@ void main() {
     expect(find.text('Mona Ali'), findsNothing);
   });
 
+
+  testWidgets('inbox search and unread filter narrow conversations', (tester) async {
+    final repository = AdminRepository(
+      SupabaseClient('https://example.supabase.co', 'test-anon-key'),
+    );
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData.dark(),
+      home: Scaffold(
+        body: InboxPage(
+          repository: repository,
+          conversations: [
+            {
+              'id': '1',
+              'clientName': 'Mona Ali',
+              'clientEmail': 'mona@example.com',
+              'subject': 'Flutter booking app',
+              'unreadCount': 2,
+              'lastMessage': {'body': 'Need a booking app'},
+              'updatedAt': '2026-11-01T10:00:00Z',
+            },
+            {
+              'id': '2',
+              'clientName': 'Omar Hassan',
+              'clientEmail': 'omar@example.com',
+              'subject': 'Portfolio website',
+              'unreadCount': 0,
+              'lastMessage': {'body': 'Thanks for the update'},
+              'updatedAt': '2026-11-02T10:00:00Z',
+            },
+          ],
+          onChanged: () async {},
+        ),
+      ),
+    ));
+
+    expect(find.text('Mona Ali'), findsOneWidget);
+    expect(find.text('Omar Hassan'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('inbox-filter-unread')));
+    await tester.pumpAndSettle();
+    expect(find.text('Mona Ali'), findsOneWidget);
+    expect(find.text('Omar Hassan'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('inbox-filter-all')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('inbox-search-field')), 'portfolio');
+    await tester.pumpAndSettle();
+    expect(find.text('Omar Hassan'), findsOneWidget);
+    expect(find.text('Mona Ali'), findsNothing);
+  });
+
 }
