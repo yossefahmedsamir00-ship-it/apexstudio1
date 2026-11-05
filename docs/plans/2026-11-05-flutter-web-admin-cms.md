@@ -49,7 +49,7 @@ Acceptance:
 ## Phase 3 — Background push notifications for Flutter Admin
 
 1. Add explicit notification-permission onboarding and a settings screen for enabling/disabling alerts.
-2. Integrate Firebase Cloud Messaging for Android/iOS, including foreground presentation and notification-tap routing into the correct conversation.
+2. Keep Supabase as the system of record and control plane for messages, owner identity, device registrations, authorization, and notification triggers. Use Firebase Cloud Messaging (FCM) strictly as the Android/iOS transport required by the mobile operating systems; do not add Firebase Auth, Firestore, Analytics, Storage, or other Firebase backend products. This transport dependency is necessary for reliable native push delivery when the app is backgrounded or terminated.
 3. Register per-device FCM tokens only after server-side owner verification; support token refresh, logout cleanup, and multiple devices.
 4. Store tokens in a dedicated table with strict owner-only RLS; never accept arbitrary user IDs from the client.
 5. Send pushes from a Supabase Edge Function/server-side sender after a new client message is durably stored. Never put FCM service-account credentials in Flutter or website code.
@@ -63,7 +63,7 @@ Acceptance:
 - A denied permission or missing provider configuration fails gracefully without blocking login or messages.
 - Push sender credentials remain server-only; RLS prevents clients from listing or modifying arbitrary device tokens.
 
-External setup required before live delivery:
+External setup required before live delivery (FCM transport only; all application data and business logic remain in Supabase):
 - Firebase project with Android package `com.apexstudio.apex_studio_admin` (confirm actual applicationId from generated Gradle config) and iOS bundle ID.
 - Build the Flutter Admin app with `FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_PROJECT_ID`, and (for iOS) `FIREBASE_IOS_BUNDLE_ID` supplied as secure `--dart-define` values. Do not commit these configuration files or values.
 - Store the Firebase service-account JSON only as the Supabase Edge Function secret `FCM_SERVICE_ACCOUNT_JSON`; never put it in Flutter or browser code.
