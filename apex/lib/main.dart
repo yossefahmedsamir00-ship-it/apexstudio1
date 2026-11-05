@@ -75,7 +75,15 @@ class _ApexHomeState extends State<ApexHome> {
           SliverToBoxAdapter(key: servicesKey, child: _Services(ar: ar)),
           SliverToBoxAdapter(key: workKey, child: _Work(ar: ar, filter: filter, shown: shown, onFilter: (v) => setState(() => filter = v))),
           SliverToBoxAdapter(child: _Process(ar: ar)),
-          SliverToBoxAdapter(key: contactKey, child: _Contact(ar: ar)),
+          SliverToBoxAdapter(
+            key: contactKey,
+            child: _Contact(
+              ar: ar,
+              onChat: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ApexAiChatPage()),
+              ),
+            ),
+          ),
           SliverToBoxAdapter(child: _Footer(ar: ar)),
         ]),
       ),
@@ -312,7 +320,8 @@ class _Process extends StatelessWidget {
 
 class _Contact extends StatelessWidget {
   final bool ar;
-  const _Contact({required this.ar});
+  final VoidCallback onChat;
+  const _Contact({required this.ar, required this.onChat});
 
   @override
   Widget build(BuildContext context) => Container(
@@ -340,7 +349,7 @@ class _Contact extends StatelessWidget {
                   ),
                   const SizedBox(height: 28),
                   FilledButton.icon(
-                    onPressed: () {},
+                    onPressed: onChat,
                     icon: const Icon(Icons.arrow_outward),
                     label: Text(ar ? 'ابدأ طلب مشروع' : 'BUILD MY BRIEF'),
                     style: FilledButton.styleFrom(
