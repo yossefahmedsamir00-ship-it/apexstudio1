@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ai_chat_page.dart';
 
 void main() => runApp(const ApexStudioApp());
 
@@ -44,12 +45,12 @@ class _ApexHomeState extends State<ApexHome> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final mobile = width < 760;
+    final mobile = width < 900;
     final shown = filter == 'All' ? projects : projects.where((p) => p.category == filter).toList();
     return Directionality(
       textDirection: ar ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        appBar: PreferredSize(preferredSize: Size.fromHeight(mobile ? 74 : 86), child: _Nav(mobile: mobile, ar: ar, onLang: () => setState(() => ar = !ar), onWork: () => go(workKey), onServices: () => go(servicesKey), onContact: () => go(contactKey))),
+        appBar: PreferredSize(preferredSize: Size.fromHeight(mobile ? 74 : 86), child: _Nav(mobile: mobile, ar: ar, onLang: () => setState(() => ar = !ar), onWork: () => go(workKey), onServices: () => go(servicesKey), onContact: () => go(contactKey), onChat: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ApexAiChatPage())))),
         body: CustomScrollView(slivers: [
           SliverToBoxAdapter(child: _Hero(mobile: mobile, ar: ar, onWork: () => go(workKey), onContact: () => go(contactKey))),
           SliverToBoxAdapter(child: _Statement(ar: ar)),
@@ -65,25 +66,56 @@ class _ApexHomeState extends State<ApexHome> {
 }
 
 class _Nav extends StatelessWidget {
-  final bool mobile, ar; final VoidCallback onLang, onWork, onServices, onContact;
-  const _Nav({required this.mobile, required this.ar, required this.onLang, required this.onWork, required this.onServices, required this.onContact});
-  @override Widget build(BuildContext context) => Container(
-    padding: EdgeInsets.symmetric(horizontal: mobile ? 18 : 54, vertical: 16),
-    decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF1D1D1D)))),
-    child: Row(children: [
-      const Text('APEX', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900, letterSpacing: 3)),
-      const SizedBox(width: 8), const Text('STUDIO', style: TextStyle(color: Color(0xFFD7A83E), letterSpacing: 3, fontSize: 12)),
-      const Spacer(),
-      if (!mobile) ...[
-        TextButton(onPressed: onWork, child: Text(ar ? 'الأعمال' : 'WORK')),
-        TextButton(onPressed: onServices, child: Text(ar ? 'الخدمات' : 'SERVICES')),
-        TextButton(onPressed: onContact, child: Text(ar ? 'تواصل' : 'CONTACT')),
-        const SizedBox(width: 8),
-      ],
-      IconButton(onPressed: onLang, tooltip: ar ? 'English' : 'العربية', icon: const Icon(Icons.language)),
-      FilledButton(onPressed: onContact, style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD7A83E), foregroundColor: Colors.black), child: Text(ar ? 'ابدأ مشروعك' : 'START A PROJECT')),
-    ]),
-  );
+  final bool mobile, ar;
+  final VoidCallback onLang, onWork, onServices, onContact, onChat;
+
+  const _Nav({
+    required this.mobile,
+    required this.ar,
+    required this.onLang,
+    required this.onWork,
+    required this.onServices,
+    required this.onContact,
+    required this.onChat,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: EdgeInsets.symmetric(horizontal: mobile ? 18 : 54, vertical: 12),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFF1D1D1D))),
+        ),
+        child: Row(
+          children: [
+            const Text('APEX', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900, letterSpacing: 3)),
+            const SizedBox(width: 8),
+            const Text('STUDIO', style: TextStyle(color: Color(0xFFD7A83E), letterSpacing: 3, fontSize: 12)),
+            const Spacer(),
+            if (!mobile) ...[
+              TextButton(onPressed: onWork, child: Text(ar ? 'الأعمال' : 'WORK')),
+              TextButton(onPressed: onServices, child: Text(ar ? 'الخدمات' : 'SERVICES')),
+              TextButton(onPressed: onContact, child: Text(ar ? 'تواصل' : 'CONTACT')),
+              const SizedBox(width: 8),
+            ],
+            IconButton(
+              onPressed: onChat,
+              tooltip: ar ? 'محادثة الذكاء الاصطناعي' : 'AI Chat',
+              icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFD7A83E)),
+            ),
+            IconButton(
+              onPressed: onLang,
+              tooltip: ar ? 'English' : 'العربية',
+              icon: const Icon(Icons.language),
+            ),
+            if (!mobile)
+              FilledButton(
+                onPressed: onContact,
+                style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD7A83E), foregroundColor: Colors.black),
+                child: Text(ar ? 'ابدأ مشروعك' : 'START A PROJECT'),
+              ),
+          ],
+        ),
+      );
 }
 
 class _Hero extends StatelessWidget {
