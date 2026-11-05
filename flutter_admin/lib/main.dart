@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'cms_page.dart';
+import 'push_notifications.dart';
 
 const supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
@@ -685,6 +686,8 @@ class _AdminShellState extends State<AdminShell> {
   String? _error;
   int _selectedIndex = 0;
   Timer? _notificationRefresh;
+  late final ApexPushNotifications _pushNotifications;
+  bool _pushReady = false;
 
   int get _unreadMessages => unreadMessageCount(_data?.conversations ?? const []);
 
@@ -692,6 +695,8 @@ class _AdminShellState extends State<AdminShell> {
   void initState() {
     super.initState();
     _repository = AdminRepository(Supabase.instance.client);
+    _pushNotifications = ApexPushNotifications(Supabase.instance.client);
+    unawaited(_initializePushNotifications());
     unawaited(_refresh(initial: true));
     _notificationRefresh = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted && !_refreshing) unawaited(_refresh());
@@ -701,7 +706,48 @@ class _AdminShellState extends State<AdminShell> {
   @override
   void dispose() {
     _notificationRefresh?.cancel();
+    unawaited(_pushNotifications.dispose());
     super.dispose();
+  }
+
+  Future<void> _initializePushNotifications() async {
+    try {
+      final ready = await _pushNotifications.initialize(onConversationTap: _openConversationFromPush);
+      if (mounted) setState(() => _pushReady = ready);
+    } catch (_) {
+      if (mounted) setState(() => _pushReady = false);
+    }
+  }
+
+  Future<void> _enablePushNotifications() async {
+    if (!_pushReady) {
+      _toast('Background alerts need Firebase app configuration first.', isError: true);
+      return;
+    }
+    try {
+      final enabled = await _pushNotifications.requestPermissionAndRegister();
+      _toast(enabled ? 'Push alerts enabled on this device.' : 'Permission was not granted. You can enable it in device settings.');
+    } catch (_) {
+      _toast('Could not register this device for push alerts. Check the CMS/push database migration.', isError: true);
+    }
+  }
+
+  Future<void> _openConversationFromPush(String conversationId) async {
+    if (!mounted) return;
+    var item = (_data?.conversations ?? const <Map<String, dynamic>>[]).where((row) => row['id']?.toString() == conversationId).firstOrNull;
+    if (item == null) {
+      await _refresh();
+      if (!mounted) return;
+      item = (_data?.conversations ?? const <Map<String, dynamic>>[]).where((row) => row['id']?.toString() == conversationId).firstOrNull;
+    }
+    if (item == null) {
+      _toast('The conversation is no longer available in your owner inbox.', isError: true);
+      return;
+    }
+    setState(() => _selectedIndex = 2);
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ConversationDetailPage(
+      repository: _repository, conversation: item!, onChanged: _refresh,
+    )));
   }
 
   Future<void> _openNotifications() async {
@@ -732,6 +778,11 @@ class _AdminShellState extends State<AdminShell> {
                       child: Text('Notifications', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
                     ),
                     Text('${unread.length} unread', style: const TextStyle(color: _muted, fontSize: 12)),
+                    IconButton(
+                      tooltip: _pushReady ? 'Enable background push alerts' : 'Firebase setup required for background alerts',
+                      onPressed: _pushReady ? _enablePushNotifications : null,
+                      icon: Icon(Icons.notifications_active_outlined, color: _pushReady ? _gold : _muted),
+                    ),
                     IconButton(
                       tooltip: 'Close notifications',
                       onPressed: () => Navigator.pop(sheetContext),
