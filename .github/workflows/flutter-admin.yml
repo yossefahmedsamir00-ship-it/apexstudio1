@@ -1,5 +1,9 @@
 name: Flutter Admin CI
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [feature/flutter-admin-app, main]
@@ -28,6 +32,38 @@ jobs:
           cache: true
       - name: Generate Android platform files
         run: flutter create --platforms=android --project-name apex_studio_admin --org com.apexstudio .
+      - name: Enable Android core library desugaring for notifications
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          gradle = Path("android/app/build.gradle.kts")
+          source = gradle.read_text()
+          newline = chr(10)
+          marker = "compileOptions {"
+          if "isCoreLibraryDesugaringEnabled = true" not in source:
+              if marker not in source:
+                  raise SystemExit("Could not find Android compileOptions block")
+              source = source.replace(
+                  marker,
+                  marker + newline + "        isCoreLibraryDesugaringEnabled = true",
+                  1,
+              )
+          if "coreLibraryDesugaring(" not in source:
+              source += newline + "dependencies {" + newline
+              source += '    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")' + newline
+              source += "}" + newline
+          gradle.write_text(source)
+          PY
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('flutter_admin/android/**/*.gradle*', 'flutter_admin/android/gradle/wrapper/gradle-wrapper.properties', 'flutter_admin/pubspec.yaml') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
       - name: Pub get
         run: flutter pub get
       - name: Analyze

@@ -7,7 +7,7 @@ void main() {
 
     expect(find.text('APEX'), findsOneWidget);
     expect(find.text('STUDIO'), findsOneWidget);
-    expect(find.text('DIGITAL STUDIO / TECHNOLOGY'), findsOneWidget);
-    expect(find.text('START A PROJECT'), findsOneWidget);
+    expect(find.textContaining('INDEPENDENT DIGITAL STUDIO'), findsOneWidget);
+    expect(find.byTooltip('AI Chat'), findsOneWidget);
   });
 }
