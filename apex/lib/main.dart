@@ -202,7 +202,7 @@ class _Hero extends StatelessWidget {
           Flexible(child: Text(ar ? 'استوديو رقمي مستقل · القاهرة / عن بُعد' : 'INDEPENDENT DIGITAL STUDIO · CAIRO / REMOTE', style: const TextStyle(color: Color(0xFFD7AA5B), fontSize: 10, letterSpacing: 1.6, fontWeight: FontWeight.w700))),
         ]),
         const SizedBox(height: 26),
-        Text(ar ? 'حوّل فكرتك إلى\\nواقع رقمي.' : 'TURN YOUR VISION INTO\\nDIGITAL REALITY.', style: TextStyle(fontSize: mobile ? 49 : 68, height: .98, fontWeight: FontWeight.w900, letterSpacing: mobile ? -1.8 : -3.2, color: const Color(0xFFF7F3EA))),
+        Text(ar ? 'حوّل فكرتك إلى\nواقع رقمي.' : 'TURN YOUR VISION INTO\nDIGITAL REALITY.', style: TextStyle(fontSize: mobile ? 49 : 68, height: .98, fontWeight: FontWeight.w900, letterSpacing: mobile ? -1.8 : -3.2, color: const Color(0xFFF7F3EA))),
         const SizedBox(height: 22),
         ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560), child: Text(ar ? 'استوديو تقني إبداعي يبني المواقع وتطبيقات الموبايل وحلول الذكاء الاصطناعي وتجارب رقمية تنقل فكرتك للواقع.' : 'A creative technology studio for websites, mobile apps, AI systems and digital experiences built to move your business forward.', style: const TextStyle(fontSize: 15, height: 1.85, color: Color(0xFFA7AAA6)))),
         const SizedBox(height: 30),
@@ -229,6 +229,39 @@ class _Hero extends StatelessWidget {
       )),
     );
   }
+}
+
+
+class _Reveal extends StatelessWidget {
+  final Widget child;
+  const _Reveal({required this.child});
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    tween: Tween(begin: 0, end: 1),
+    duration: const Duration(milliseconds: 850),
+    curve: Curves.easeOutCubic,
+    child: child,
+    builder: (context, value, child) => Opacity(
+      opacity: value,
+      child: Transform.translate(offset: Offset(0, 24 * (1 - value)), child: child),
+    ),
+  );
+}
+
+class _PressScale extends StatefulWidget {
+  final Widget child;
+  const _PressScale({required this.child});
+  @override State<_PressScale> createState() => _PressScaleState();
+}
+class _PressScaleState extends State<_PressScale> {
+  bool pressed = false;
+  @override
+  Widget build(BuildContext context) => Listener(
+    onPointerDown: (_) => setState(() => pressed = true),
+    onPointerUp: (_) => setState(() => pressed = false),
+    onPointerCancel: (_) => setState(() => pressed = false),
+    child: AnimatedScale(scale: pressed ? .97 : 1, duration: const Duration(milliseconds: 130), curve: Curves.easeOut, child: widget.child),
+  );
 }
 
 class _GoldButton extends StatelessWidget {
