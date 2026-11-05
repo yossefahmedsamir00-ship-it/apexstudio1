@@ -44,6 +44,11 @@ class ApexPushNotifications {
   StreamSubscription<String>? _tokenSubscription;
   void Function(String conversationId)? _onConversationTap;
 
+  static Future<void> configureBackgroundHandler() async {
+    if (!firebasePushConfigured) return;
+    await configureBackgroundHandler();
+  }
+
   static const _channel = AndroidNotificationChannel(
     'apex_client_messages',
     'APEX client messages',
