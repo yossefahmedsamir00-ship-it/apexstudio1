@@ -1,7 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'ai_chat_page.dart';
 
-void main() => runApp(const ApexStudioApp());
+const _supabaseUrl = String.fromEnvironment(
+  'SUPABASE_URL',
+  defaultValue: 'https://dyoaiszrmfrdxgouzgzq.supabase.co',
+);
+const _supabasePublishableKey = String.fromEnvironment(
+  'SUPABASE_PUBLISHABLE_KEY',
+  defaultValue: 'sb_publishable_VD3iKy4zbt4pJFfZkO4YFA_rj5sS1Ui',
+);
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: _supabaseUrl,
+    publishableKey: _supabasePublishableKey,
+  );
+  runApp(const ApexStudioApp());
+}
 
 class ApexStudioApp extends StatelessWidget {
   const ApexStudioApp({super.key});
