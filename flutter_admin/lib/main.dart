@@ -1027,7 +1027,12 @@ class _AdminShellState extends State<AdminShell> {
               const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 16), child: Divider(color: Color(0x333D8CC8))),
               Expanded(child: NavigationRail(
                 selectedIndex: _selectedIndex, onDestinationSelected: (v) => setState(() => _selectedIndex = v),
-                labelType: NavigationRailLabelType.all, backgroundColor: Colors.transparent,
+                labelType: null, backgroundColor: Colors.transparent,
+                selectedIconTheme: const IconThemeData(color: Color(0xFF9AD9FF), size: 23),
+                unselectedIconTheme: const IconThemeData(color: Color(0xFF8798AD), size: 21),
+                selectedLabelTextStyle: const TextStyle(color: Color(0xFFB8E4FF), fontSize: 11, fontWeight: FontWeight.w800),
+                unselectedLabelTextStyle: const TextStyle(color: Color(0xFFA6B4C7), fontSize: 11),
+                indicatorColor: const Color(0xFF328AC8).withValues(alpha: .24),
                 minWidth: 72, minExtendedWidth: 220, extended: true,
                 destinations: _destinations.map((item) => NavigationRailDestination(icon: item.icon, selectedIcon: item.selectedIcon, label: Text(item.label))).toList(),
               )),
