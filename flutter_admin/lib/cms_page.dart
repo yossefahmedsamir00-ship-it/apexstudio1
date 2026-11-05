@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -66,7 +68,7 @@ class _CmsPageState extends State<CmsPage> {
     }
     try {
       final rows = await _client!.from('apex_site_content')
-        .select('id,slug,title,content_type,summary,status,sort_order')
+        .select('id,slug,title,content_type,summary,status,sort_order,body')
         .order('sort_order').order('updated_at', ascending: false);
       if (!mounted) return;
       setState(() {
@@ -91,7 +93,7 @@ class _CmsPageState extends State<CmsPage> {
         _entries = [result, ..._entries.where((item) => item.id != result.id)];
       } else if (entry == null) {
         final row = await _client!.from('apex_site_content').insert(result.toMap(includeId: false))
-          .select('id,slug,title,content_type,summary,status,sort_order').single();
+          .select('id,slug,title,content_type,summary,status,sort_order,body').single();
         saved = _CmsEntry.fromMap(row); _entries = [saved, ..._entries];
       } else {
         final row = await _client!.from('apex_site_content').update(result.toMap()).eq('id', entry.id!)
@@ -215,25 +217,38 @@ class _CmsEditorDialog extends StatefulWidget {
   State<_CmsEditorDialog> createState() => _CmsEditorDialogState();
 }
 class _CmsEditorDialogState extends State<_CmsEditorDialog> {
-  late final TextEditingController _title, _slug, _summary;
+  late final TextEditingController _title, _slug, _summary, _body;
   late String _kind;
+  String? _bodyError;
   @override
   void initState() {
     super.initState();
     _title = TextEditingController(text: widget.entry?.title ?? '');
     _slug = TextEditingController(text: widget.entry?.slug ?? '');
     _summary = TextEditingController(text: widget.entry?.summary ?? '');
+    _body = TextEditingController(text: jsonEncode(widget.entry?.body ?? const {}));
     _kind = widget.entry?.kind ?? 'page_section';
   }
   @override
-  void dispose() { _title.dispose(); _slug.dispose(); _summary.dispose(); super.dispose(); }
+  void dispose() { _title.dispose(); _slug.dispose(); _summary.dispose(); _body.dispose(); super.dispose(); }
   void _save() {
     final title = _title.text.trim(), slug = _slug.text.trim().toLowerCase();
     if (title.isEmpty || !RegExp(r'^[a-z0-9]+(?:-[a-z0-9]+)*$').hasMatch(slug)) return;
+    final dynamic decodedBody;
+    try {
+      decodedBody = jsonDecode(_body.text);
+    } on FormatException {
+      setState(() => _bodyError = 'Body must be a valid JSON object.');
+      return;
+    }
+    if (decodedBody is! Map) {
+      setState(() => _bodyError = 'Body must be a valid JSON object.');
+      return;
+    }
     final old = widget.entry;
     Navigator.pop(context, _CmsEntry(id: old?.id, slug: slug, title: title, kind: _kind,
       summary: _summary.text.trim(), status: old?.status == 'published' ? 'draft' : (old?.status ?? 'draft'),
-      sortOrder: old?.sortOrder ?? 0, body: old?.body ?? const {}));
+      sortOrder: old?.sortOrder ?? 0, body: Map<String, dynamic>.from(decodedBody)));
   }
   @override
   Widget build(BuildContext context) => AlertDialog(backgroundColor: _cmsPanel,
@@ -249,6 +264,10 @@ class _CmsEditorDialogState extends State<_CmsEditorDialog> {
         onChanged: (v) { if (v != null) setState(() => _kind = v); }),
       const SizedBox(height: 12), TextField(controller: _summary, minLines: 3, maxLines: 5,
         decoration: const InputDecoration(labelText: 'Summary / content brief')),
+      const SizedBox(height: 12), TextField(controller: _body, minLines: 4, maxLines: 8,
+        keyboardType: TextInputType.multiline,
+        decoration: InputDecoration(labelText: 'Body JSON (object)', errorText: _bodyError,
+          helperText: 'Structured fields used by the public website, for example category or project URL.')),
     ]))),
     actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
       FilledButton(onPressed: _save, child: const Text('Save draft'))]);
