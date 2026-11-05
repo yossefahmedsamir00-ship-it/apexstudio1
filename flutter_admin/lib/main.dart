@@ -1141,7 +1141,28 @@ class _AdminShellState extends State<AdminShell> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: _MessageBanner(text: _error!, isError: true),
               ),
-            Expanded(child: RefreshIndicator(onRefresh: _refresh, child: _selectedPage(data))),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 320),
+                  reverseDuration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: const Offset(.025, .012), end: Offset.zero).animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  child: KeyedSubtree(
+                    key: ValueKey<int>(_selectedIndex),
+                    child: _selectedPage(data),
+                  ),
+                ),
+              ),
+            ),
           ]),
         ),
       ])),
