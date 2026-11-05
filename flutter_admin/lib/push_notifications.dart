@@ -107,6 +107,24 @@ class ApexPushNotifications {
     return true;
   }
 
+  /// Removes only this installation's token before the owner signs out.
+  /// A failed cleanup must never prevent the owner from signing out.
+  Future<void> unregisterCurrentDevice() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null || token.isEmpty) return;
+      await _client
+          .from('apex_owner_push_devices')
+          .delete()
+          .eq('owner_user_id', user.id)
+          .eq('fcm_token', token);
+    } catch (_) {
+      // The next owner session can safely overwrite this installation's token.
+    }
+  }
+
   Future<void> _saveToken(String token) async {
     final user = _client.auth.currentUser;
     if (user == null || token.isEmpty) return;
