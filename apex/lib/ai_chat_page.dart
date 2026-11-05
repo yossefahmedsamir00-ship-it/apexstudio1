@@ -116,7 +116,11 @@ class _ApexAiChatPageState extends State<ApexAiChatPage> {
       _notice = null;
     });
     try {
-      await _client.auth.signInWithOAuth(provider, redirectTo: _redirectTo);
+      final launched = await _client.auth.signInWithOAuth(
+        provider,
+        redirectTo: _redirectTo,
+      );
+      if (!launched) throw Exception('Could not open the sign-in provider. Please try again.');
     } catch (error) {
       if (mounted) setState(() => _error = _messageFor(error));
     } finally {
