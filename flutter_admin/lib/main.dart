@@ -1911,26 +1911,6 @@ class _SectionHeading extends StatelessWidget {
       );
 }
 
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.label, required this.value, required this.icon, required this.accent});
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(13),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Icon(icon, color: accent, size: 21),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 24)),
-            Text(label, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _muted, fontSize: 10)),
-          ]),
-        ),
-      );
-}
-
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.status});
   final String status;
