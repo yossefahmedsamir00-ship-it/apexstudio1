@@ -308,7 +308,7 @@ class _ApexAiChatPageState extends State<ApexAiChatPage> {
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
                     onPressed: _opening ? null : () => _signInWithProvider(OAuthProvider.apple),
-                    icon: const Icon(Icons.apple_rounded, size: 22),
+                    icon: const Icon(Icons.phone_iphone_rounded, size: 22),
                     label: const Text('Continue with Apple'),
                     style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15)),
                   ),
