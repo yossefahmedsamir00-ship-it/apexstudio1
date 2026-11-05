@@ -249,6 +249,18 @@ Deno.serve(async (req: Request) => {
   if (input.conversationId && !conversationId) return respond({error:"Invalid conversation reference."},400,headers);
 
   try {
+    if (action === "client_list") {
+      const allowed = await consumeRateLimit(admin, req, user.id, "client_chat_list", 60);
+      if (!allowed) return respond({error:"Too many chat history requests. Please wait."},429,headers);
+      const {data:rows,error} = await admin.from("client_conversations")
+        .select("id,owner_user_id,client_user_id,client_name,client_email,subject,status,created_at,updated_at,last_client_message_at,last_owner_message_at")
+        .eq("client_user_id",user.id)
+        .order("updated_at",{ascending:false})
+        .limit(20);
+      if (error) return respond({error:"Could not load your chat history."},500,headers);
+      return respond({conversations:(rows ?? []).map((row) => safeConversation(row as Record<string,unknown>))},200,headers);
+    }
+
     if (action === "open") {
       if (conversationId) {
         const conversation = await requireClientConversation(admin,conversationId,user.id,req);
