@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,6 +27,7 @@ class _ApexAiChatPageState extends State<ApexAiChatPage> {
   String? _conversationId;
   List<Map<String, dynamic>> _messages = [];
   bool _opening = false;
+  bool _loadingConversation = false;
   bool _sending = false;
   bool _emailSent = false;
   String? _error;
@@ -122,9 +125,9 @@ class _ApexAiChatPageState extends State<ApexAiChatPage> {
   }
 
   Future<void> _openConversation() async {
-    if (_opening || _conversationId != null || _user == null) return;
+    if (_loadingConversation || _conversationId != null || _user == null) return;
     setState(() {
-      _opening = true;
+      _loadingConversation = true;
       _error = null;
       _notice = null;
     });
@@ -151,7 +154,7 @@ class _ApexAiChatPageState extends State<ApexAiChatPage> {
     } catch (error) {
       if (mounted) setState(() => _error = _messageFor(error));
     } finally {
-      if (mounted) setState(() => _opening = false);
+      if (mounted) setState(() => _loadingConversation = false);
     }
   }
 
@@ -357,7 +360,7 @@ class _ApexAiChatPageState extends State<ApexAiChatPage> {
             ),
           ),
           Expanded(
-            child: _opening && _conversationId == null
+            child: _loadingConversation && _conversationId == null
                 ? const Center(child: CircularProgressIndicator(color: _chatGold))
                 : ListView.builder(
                     controller: _scroll,
