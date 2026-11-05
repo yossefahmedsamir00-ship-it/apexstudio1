@@ -1,8 +1,8 @@
-# APEX STUDIO — Static Website + Flutter CMS Implementation Plan
+# APEX STUDIO — Flutter Web + Flutter Admin CMS Implementation Plan
 
 ## Approved architecture
 
-- Public website: semantic HTML, CSS, and vanilla JavaScript; no React runtime on the public entry page.
+- Public website: the existing `apex/` Flutter + Dart application, built for Flutter Web (and its supported mobile/desktop targets). Do not migrate the public experience to React or a separate vanilla-JS application.
 - Owner application: the existing `flutter_admin/` Flutter + Dart app.
 - Shared backend: the existing Supabase project and existing authenticated Edge Functions/tables where appropriate.
 - Existing React-based admin, payment, and social AI entry points remain separate unless a focused compatibility change is required.
@@ -16,11 +16,11 @@
 - CMS content must be owner-authorized on the server/database; public visitors may only read published content.
 - Do not claim push notifications while the app is closed unless a real push-delivery service is configured and tested.
 
-## Phase 1 — Public website migration
+## Phase 1 — Public Flutter Web experience
 
-1. Replace the public `apex/index.html` entry with semantic HTML and load only `apex/styles.css` + `apex/app.js`.
-2. Preserve the approved APEX visual direction: graphite/black, gold, electric blue, restrained red, responsive layouts, subtle motion, and reduced-motion support.
-3. Port the current public-site behavior: project filtering and detail modal, Arabic/English toggle with RTL/LTR, request form, client AI chat entry, payments navigation, section navigation, and analytics event capture.
+1. Treat `apex/lib/main.dart` as the public website source of truth and build it with Flutter Web. Keep React/Vite entry points only for the separately scoped legacy admin/payment/social surfaces; do not use them for the public website.
+2. Preserve the approved APEX visual direction in Flutter: graphite/black, gold, electric blue, restrained red, responsive layouts, subtle motion, and accessible motion behavior.
+3. Complete the public Flutter experience: project filtering and detail view, Arabic/English toggle with RTL/LTR, durable project inquiry form, client AI chat entry, payments navigation, section navigation, and analytics event capture.
 4. Use existing Supabase client/backend contracts; do not invent table names or bypass validated RPC/Edge Function boundaries.
 5. Keep admin/payment/social entry pages working as separate build inputs.
 
