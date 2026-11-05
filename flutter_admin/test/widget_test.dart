@@ -71,7 +71,7 @@ void main() {
       ),
     ));
 
-    await tester.tap(find.text('Contacted'));
+    await tester.tap(find.byKey(const ValueKey('lead-filter-contacted')));
     await tester.pumpAndSettle();
 
     expect(find.text('Omar Hassan'), findsOneWidget);
