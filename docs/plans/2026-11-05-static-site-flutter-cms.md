@@ -47,7 +47,30 @@ Acceptance:
 - Public role cannot read drafts or write content.
 - Tests cover repository success/failure and access boundaries.
 
-## Phase 3 — Quality, security, and delivery
+## Phase 3 — Background push notifications for Flutter Admin
+
+1. Add explicit notification-permission onboarding and a settings screen for enabling/disabling alerts.
+2. Integrate Firebase Cloud Messaging for Android/iOS, including foreground presentation and notification-tap routing into the correct conversation.
+3. Register per-device FCM tokens only after server-side owner verification; support token refresh, logout cleanup, and multiple devices.
+4. Store tokens in a dedicated table with strict owner-only RLS; never accept arbitrary user IDs from the client.
+5. Send pushes from a Supabase Edge Function/server-side sender after a new client message is durably stored. Never put FCM service-account credentials in Flutter or website code.
+6. Keep notification previews privacy-aware (generic text by default; avoid exposing full private message bodies on lock screens).
+7. Test foreground, background, terminated-app, permission-denied, token-refresh, duplicate-delivery, and notification-tap flows on a physical Android device; test iOS when Apple/Firebase app configuration is available.
+
+Acceptance:
+- Owner can grant or deny notification permission; the app explains how to enable it later.
+- A new client message produces a push while the app is backgrounded or terminated, after provider configuration is complete.
+- Tapping the push opens the matching conversation after owner access is revalidated.
+- A denied permission or missing provider configuration fails gracefully without blocking login or messages.
+- Push sender credentials remain server-only; RLS prevents clients from listing or modifying arbitrary device tokens.
+
+External setup required before live delivery:
+- Firebase project with Android package `com.apexstudio.apex_studio_admin` (confirm actual applicationId from generated Gradle config) and iOS bundle ID.
+- Android `google-services.json` and iOS `GoogleService-Info.plist` supplied through secure CI/release configuration, not committed as secrets.
+- Firebase service account credentials stored only as Supabase Edge Function secrets.
+- Apple APNs authentication key/certificate linked in Firebase for iOS delivery.
+
+## Phase 4 — Quality, security, and delivery
 
 1. Update GitHub Actions so the public site is built as static assets and Flutter Admin is analyzed/tested/built independently.
 2. Keep existing payment/social/admin build inputs functional.
