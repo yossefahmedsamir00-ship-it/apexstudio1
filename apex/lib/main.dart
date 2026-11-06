@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'ai_chat_page.dart';
 
@@ -34,7 +35,16 @@ class ApexStudioApp extends StatelessWidget {
 
 class Project {
   final String title, category, description;
-  const Project(this.title, this.category, this.description);
+  final String? previewUrl;
+  const Project(this.title, this.category, this.description, {this.previewUrl});
+
+  Uri? get validPreviewUri {
+    final raw = previewUrl?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    final uri = Uri.tryParse(raw);
+    if (uri == null || !uri.hasAuthority || (uri.scheme != 'https' && uri.scheme != 'http')) return null;
+    return uri;
+  }
 }
 
 const projects = <Project>[
@@ -86,7 +96,8 @@ class _ApexHomeState extends State<ApexHome> {
         if (title.isEmpty) continue;
         if (row['content_type'] == 'project') {
           final category = (body['category'] ?? 'Web').toString();
-          loadedProjects.add(Project(title, category, summary));
+          final previewUrl = (body['preview_url'] ?? '').toString().trim();
+          loadedProjects.add(Project(title, category, summary, previewUrl: previewUrl.isEmpty ? null : previewUrl));
         } else if (row['content_type'] == 'service') {
           loadedServices.add(('0${loadedServices.length + 1}'.padLeft(2, '0'), title, summary));
         }
@@ -294,17 +305,47 @@ class _Work extends StatelessWidget {
                   ),
                   itemBuilder: (context, index) {
                     final project = shown[index];
-                    return InkWell(
+                    return Semantics(
+                      button: true,
+                      label: ar ? 'تفاصيل مشروع ${project.title}' : 'View ${project.title} project details',
+                      child: InkWell(
                       onTap: () => showDialog(
                         context: context,
                         builder: (dialogContext) => AlertDialog(
+                          backgroundColor: const Color(0xFF111116),
                           title: Text(project.title),
-                          content: Text(project.description),
+                          content: Text(
+                            project.description.isEmpty
+                                ? (ar ? 'تفاصيل المشروع ستتوفر قريبًا.' : 'Project details will be available soon.')
+                                : project.description,
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(dialogContext),
-                              child: const Text('Close'),
+                              child: Text(ar ? 'إغلاق' : 'CLOSE'),
                             ),
+                            if (project.validPreviewUri != null)
+                              FilledButton.icon(
+                                onPressed: () async {
+                                  final uri = project.validPreviewUri!;
+                                  final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  if (!dialogContext.mounted) return;
+                                  if (!opened) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(ar ? 'تعذر فتح المعاينة.' : 'Could not open the project preview.')),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                                label: Text(ar ? 'شاهد المشروع' : 'OPEN LIVE PREVIEW'),
+                                style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD7A83E), foregroundColor: Colors.black),
+                              )
+                            else
+                              TextButton.icon(
+                                onPressed: null,
+                                icon: const Icon(Icons.hourglass_top_rounded, size: 17),
+                                label: Text(ar ? 'المعاينة قيد التجهيز' : 'PREVIEW COMING SOON'),
+                              ),
                           ],
                         ),
                       ),
@@ -338,6 +379,7 @@ class _Work extends StatelessWidget {
                           ],
                         ),
                       ),
+                    ),
                     );
                   },
                 );
