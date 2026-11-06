@@ -379,6 +379,7 @@ class _Work extends StatelessWidget {
                           ],
                         ),
                       ),
+                    ),
                     );
                   },
                 );
