@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'ai_chat_page.dart';
+import 'site_pages.dart';
 
 const _supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
@@ -34,7 +36,16 @@ class ApexStudioApp extends StatelessWidget {
 
 class Project {
   final String title, category, description;
-  const Project(this.title, this.category, this.description);
+  final String? previewUrl;
+  const Project(this.title, this.category, this.description, {this.previewUrl});
+
+  Uri? get validPreviewUri {
+    final raw = previewUrl?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    final uri = Uri.tryParse(raw);
+    if (uri == null || !uri.hasAuthority || (uri.scheme != 'https' && uri.scheme != 'http')) return null;
+    return uri;
+  }
 }
 
 const projects = <Project>[
@@ -62,6 +73,14 @@ class _ApexHomeState extends State<ApexHome> {
 
   void go(GlobalKey key) => Scrollable.ensureVisible(key.currentContext!, duration: const Duration(milliseconds: 600), curve: Curves.easeOutCubic);
 
+  void openPage(ApexPage page) => Navigator.of(context).push(
+    PageRouteBuilder<void>(
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (_, animation, secondaryAnimation) => ApexContentPage(page: page, ar: ar),
+      transitionsBuilder: (_, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+    ),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -86,7 +105,8 @@ class _ApexHomeState extends State<ApexHome> {
         if (title.isEmpty) continue;
         if (row['content_type'] == 'project') {
           final category = (body['category'] ?? 'Web').toString();
-          loadedProjects.add(Project(title, category, summary));
+          final previewUrl = (body['preview_url'] ?? '').toString().trim();
+          loadedProjects.add(Project(title, category, summary, previewUrl: previewUrl.isEmpty ? null : previewUrl));
         } else if (row['content_type'] == 'service') {
           loadedServices.add(('0${loadedServices.length + 1}'.padLeft(2, '0'), title, summary));
         }
@@ -109,9 +129,9 @@ class _ApexHomeState extends State<ApexHome> {
     return Directionality(
       textDirection: ar ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        appBar: PreferredSize(preferredSize: Size.fromHeight(mobile ? 74 : 86), child: _Nav(mobile: mobile, ar: ar, onLang: () => setState(() => ar = !ar), onWork: () => go(workKey), onServices: () => go(servicesKey), onContact: () => go(contactKey), onChat: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ApexAiChatPage())))),
+        appBar: PreferredSize(preferredSize: Size.fromHeight(mobile ? 74 : 86), child: _Nav(mobile: mobile, ar: ar, onLang: () => setState(() => ar = !ar), onWork: () => openPage(ApexPage.work), onServices: () => openPage(ApexPage.services), onAbout: () => openPage(ApexPage.about), onContact: () => openPage(ApexPage.contact), onChat: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ApexAiChatPage())))),
         body: CustomScrollView(slivers: [
-          SliverToBoxAdapter(child: _Hero(mobile: mobile, ar: ar, onWork: () => go(workKey), onContact: () => go(contactKey))),
+          SliverToBoxAdapter(child: _Hero(mobile: mobile, ar: ar, onWork: () => openPage(ApexPage.work), onContact: () => openPage(ApexPage.contact))),
           SliverToBoxAdapter(child: _Statement(ar: ar)),
           SliverToBoxAdapter(key: servicesKey, child: _Services(ar: ar, items: _cmsServices)),
           SliverToBoxAdapter(key: workKey, child: _Work(ar: ar, filter: filter, shown: shown, onFilter: (v) => setState(() => filter = v))),
@@ -134,7 +154,7 @@ class _ApexHomeState extends State<ApexHome> {
 
 class _Nav extends StatelessWidget {
   final bool mobile, ar;
-  final VoidCallback onLang, onWork, onServices, onContact, onChat;
+  final VoidCallback onLang, onWork, onServices, onAbout, onContact, onChat;
 
   const _Nav({
     required this.mobile,
@@ -142,6 +162,7 @@ class _Nav extends StatelessWidget {
     required this.onLang,
     required this.onWork,
     required this.onServices,
+    required this.onAbout,
     required this.onContact,
     required this.onChat,
   });
@@ -161,9 +182,28 @@ class _Nav extends StatelessWidget {
             if (!mobile) ...[
               TextButton(onPressed: onWork, child: Text(ar ? 'الأعمال' : 'WORK')),
               TextButton(onPressed: onServices, child: Text(ar ? 'الخدمات' : 'SERVICES')),
+              TextButton(onPressed: onAbout, child: Text(ar ? 'عنّا' : 'ABOUT')),
               TextButton(onPressed: onContact, child: Text(ar ? 'تواصل' : 'CONTACT')),
               const SizedBox(width: 8),
-            ],
+            ] else
+              PopupMenuButton<String>(
+                tooltip: ar ? 'فتح الصفحات' : 'Open pages',
+                onSelected: (value) {
+                  switch (value) {
+                    case 'work': onWork();
+                    case 'services': onServices();
+                    case 'about': onAbout();
+                    case 'contact': onContact();
+                  }
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(value: 'work', child: Text(ar ? 'الأعمال' : 'WORK')),
+                  PopupMenuItem(value: 'services', child: Text(ar ? 'الخدمات' : 'SERVICES')),
+                  PopupMenuItem(value: 'about', child: Text(ar ? 'عنّا' : 'ABOUT')),
+                  PopupMenuItem(value: 'contact', child: Text(ar ? 'تواصل' : 'CONTACT')),
+                ],
+                icon: const Icon(Icons.menu_rounded),
+              ),
             IconButton(
               onPressed: onChat,
               tooltip: ar ? 'محادثة الذكاء الاصطناعي' : 'AI Chat',
@@ -294,17 +334,47 @@ class _Work extends StatelessWidget {
                   ),
                   itemBuilder: (context, index) {
                     final project = shown[index];
-                    return InkWell(
+                    return Semantics(
+                      button: true,
+                      label: ar ? 'تفاصيل مشروع ${project.title}' : 'View ${project.title} project details',
+                      child: InkWell(
                       onTap: () => showDialog(
                         context: context,
                         builder: (dialogContext) => AlertDialog(
+                          backgroundColor: const Color(0xFF111116),
                           title: Text(project.title),
-                          content: Text(project.description),
+                          content: Text(
+                            project.description.isEmpty
+                                ? (ar ? 'تفاصيل المشروع ستتوفر قريبًا.' : 'Project details will be available soon.')
+                                : project.description,
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(dialogContext),
-                              child: const Text('Close'),
+                              child: Text(ar ? 'إغلاق' : 'CLOSE'),
                             ),
+                            if (project.validPreviewUri != null)
+                              FilledButton.icon(
+                                onPressed: () async {
+                                  final uri = project.validPreviewUri!;
+                                  final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  if (!dialogContext.mounted) return;
+                                  if (!opened) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(ar ? 'تعذر فتح المعاينة.' : 'Could not open the project preview.')),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                                label: Text(ar ? 'شاهد المشروع' : 'OPEN LIVE PREVIEW'),
+                                style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD7A83E), foregroundColor: Colors.black),
+                              )
+                            else
+                              TextButton.icon(
+                                onPressed: null,
+                                icon: const Icon(Icons.hourglass_top_rounded, size: 17),
+                                label: Text(ar ? 'المعاينة قيد التجهيز' : 'PREVIEW COMING SOON'),
+                              ),
                           ],
                         ),
                       ),
@@ -338,6 +408,7 @@ class _Work extends StatelessWidget {
                           ],
                         ),
                       ),
+                    ),
                     );
                   },
                 );
