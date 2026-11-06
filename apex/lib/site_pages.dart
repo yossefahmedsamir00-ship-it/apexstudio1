@@ -50,7 +50,7 @@ class ApexContentPage extends StatelessWidget {
         title: const Text('APEX STUDIO', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
         actions: [
           IconButton(tooltip: ar ? 'الرئيسية' : 'Home', onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst), icon: const Icon(Icons.home_outlined)),
-          IconButton(tooltip: ar ? 'تبديل اللغة' : 'Switch language', onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back_rounded)),
+          IconButton(tooltip: ar ? 'رجوع' : 'Back', onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back_rounded)),
         ],
       ),
       body: SafeArea(
