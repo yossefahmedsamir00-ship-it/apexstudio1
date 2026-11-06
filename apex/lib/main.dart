@@ -185,7 +185,25 @@ class _Nav extends StatelessWidget {
               TextButton(onPressed: onAbout, child: Text(ar ? 'عنّا' : 'ABOUT')),
               TextButton(onPressed: onContact, child: Text(ar ? 'تواصل' : 'CONTACT')),
               const SizedBox(width: 8),
-            ],
+            ] else
+              PopupMenuButton<String>(
+                tooltip: ar ? 'فتح الصفحات' : 'Open pages',
+                onSelected: (value) {
+                  switch (value) {
+                    case 'work': onWork();
+                    case 'services': onServices();
+                    case 'about': onAbout();
+                    case 'contact': onContact();
+                  }
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(value: 'work', child: Text(ar ? 'الأعمال' : 'WORK')),
+                  PopupMenuItem(value: 'services', child: Text(ar ? 'الخدمات' : 'SERVICES')),
+                  PopupMenuItem(value: 'about', child: Text(ar ? 'عنّا' : 'ABOUT')),
+                  PopupMenuItem(value: 'contact', child: Text(ar ? 'تواصل' : 'CONTACT')),
+                ],
+                icon: const Icon(Icons.menu_rounded),
+              ),
             IconButton(
               onPressed: onChat,
               tooltip: ar ? 'محادثة الذكاء الاصطناعي' : 'AI Chat',
