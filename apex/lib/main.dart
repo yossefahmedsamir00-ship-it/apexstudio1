@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'ai_chat_page.dart';
+import 'site_pages.dart';
 
 const _supabaseUrl = String.fromEnvironment(
   'SUPABASE_URL',
@@ -72,6 +73,14 @@ class _ApexHomeState extends State<ApexHome> {
 
   void go(GlobalKey key) => Scrollable.ensureVisible(key.currentContext!, duration: const Duration(milliseconds: 600), curve: Curves.easeOutCubic);
 
+  void openPage(ApexPage page) => Navigator.of(context).push(
+    PageRouteBuilder<void>(
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (_, animation, secondaryAnimation) => ApexContentPage(page: page, ar: ar),
+      transitionsBuilder: (_, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+    ),
+  );
+
   @override
   void initState() {
     super.initState();
@@ -120,9 +129,9 @@ class _ApexHomeState extends State<ApexHome> {
     return Directionality(
       textDirection: ar ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        appBar: PreferredSize(preferredSize: Size.fromHeight(mobile ? 74 : 86), child: _Nav(mobile: mobile, ar: ar, onLang: () => setState(() => ar = !ar), onWork: () => go(workKey), onServices: () => go(servicesKey), onContact: () => go(contactKey), onChat: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ApexAiChatPage())))),
+        appBar: PreferredSize(preferredSize: Size.fromHeight(mobile ? 74 : 86), child: _Nav(mobile: mobile, ar: ar, onLang: () => setState(() => ar = !ar), onWork: () => openPage(ApexPage.work), onServices: () => openPage(ApexPage.services), onAbout: () => openPage(ApexPage.about), onContact: () => openPage(ApexPage.contact), onChat: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ApexAiChatPage())))),
         body: CustomScrollView(slivers: [
-          SliverToBoxAdapter(child: _Hero(mobile: mobile, ar: ar, onWork: () => go(workKey), onContact: () => go(contactKey))),
+          SliverToBoxAdapter(child: _Hero(mobile: mobile, ar: ar, onWork: () => openPage(ApexPage.work), onContact: () => openPage(ApexPage.contact))),
           SliverToBoxAdapter(child: _Statement(ar: ar)),
           SliverToBoxAdapter(key: servicesKey, child: _Services(ar: ar, items: _cmsServices)),
           SliverToBoxAdapter(key: workKey, child: _Work(ar: ar, filter: filter, shown: shown, onFilter: (v) => setState(() => filter = v))),
@@ -145,7 +154,7 @@ class _ApexHomeState extends State<ApexHome> {
 
 class _Nav extends StatelessWidget {
   final bool mobile, ar;
-  final VoidCallback onLang, onWork, onServices, onContact, onChat;
+  final VoidCallback onLang, onWork, onServices, onAbout, onContact, onChat;
 
   const _Nav({
     required this.mobile,
@@ -153,6 +162,7 @@ class _Nav extends StatelessWidget {
     required this.onLang,
     required this.onWork,
     required this.onServices,
+    required this.onAbout,
     required this.onContact,
     required this.onChat,
   });
@@ -172,6 +182,7 @@ class _Nav extends StatelessWidget {
             if (!mobile) ...[
               TextButton(onPressed: onWork, child: Text(ar ? 'الأعمال' : 'WORK')),
               TextButton(onPressed: onServices, child: Text(ar ? 'الخدمات' : 'SERVICES')),
+              TextButton(onPressed: onAbout, child: Text(ar ? 'عنّا' : 'ABOUT')),
               TextButton(onPressed: onContact, child: Text(ar ? 'تواصل' : 'CONTACT')),
               const SizedBox(width: 8),
             ],
