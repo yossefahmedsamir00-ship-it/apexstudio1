@@ -15,7 +15,7 @@ void main() {
 
   testWidgets('work navigation opens a dedicated projects page', (tester) async {
     await tester.pumpWidget(const ApexStudioApp());
-    await tester.tap(find.text('WORK'));
+    await tester.tap(find.text('EXPLORE WORK'));
     await tester.pumpAndSettle();
 
     expect(find.text('Ideas, shaped into digital experiences.'), findsOneWidget);
