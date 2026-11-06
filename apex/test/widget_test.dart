@@ -31,12 +31,10 @@ void main() {
 
   testWidgets('project card clearly marks missing live previews', (tester) async {
     await tester.pumpWidget(const ApexStudioApp());
-    await tester.scrollUntilVisible(
-      find.text('APEX AI Studio'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('APEX AI Studio'));
+    final projectCard = find.text('APEX AI Studio');
+    await tester.ensureVisible(projectCard);
+    await tester.pumpAndSettle();
+    await tester.tap(projectCard);
     await tester.pumpAndSettle();
 
     expect(find.text('APEX AI Studio'), findsOneWidget);
