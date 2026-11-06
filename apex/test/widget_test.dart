@@ -1,5 +1,4 @@
 import 'package:apex_studio/main.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -12,6 +11,16 @@ void main() {
     expect(find.text('STUDIO').first, findsOneWidget);
     expect(find.textContaining('INDEPENDENT DIGITAL STUDIO'), findsOneWidget);
     expect(find.byTooltip('AI Chat'), findsOneWidget);
+  });
+
+  testWidgets('work navigation opens a dedicated projects page', (tester) async {
+    await tester.pumpWidget(const ApexStudioApp());
+    await tester.tap(find.text('WORK'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ideas, shaped into digital experiences.'), findsOneWidget);
+    expect(find.text('FAMILY STUDIO'), findsOneWidget);
+    expect(find.byTooltip('Home'), findsOneWidget);
   });
 
   test('project preview links accept only HTTP and HTTPS URLs', () {
