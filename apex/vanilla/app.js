@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem, buildAnalyticsPayload, formatChatTranscript, getChatHistoryCursor, mapPublishedProjects, mapPublishedServices } from './site-core.js';
+import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem, buildAnalyticsPayload, formatChatTranscript, getChatHistoryCursor, mapPublishedProjects, mapPublishedServices, getMessagesForPrepend } from './site-core.js';
 import { fallbackProjects } from './site-data.js';
 import { translations } from './translations.js';
 
@@ -169,7 +169,7 @@ function addChatMessage(text, senderType = 'ai', messageId = null, createdAt = n
 function addOlderChatMessages(messages) {
   const container = $('#chat-messages');
   const previousHeight = container.scrollHeight;
-  (Array.isArray(messages) ? messages : []).forEach((message) => {
+  getMessagesForPrepend(messages).forEach((message) => {
     addChatMessage(
       message.body,
       message.sender_type,
