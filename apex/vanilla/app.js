@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem, buildAnalyticsPayload, formatChatTranscript, getChatHistoryCursor, mapPublishedProjects, mapPublishedServices } from './site-core.js';
+import { fallbackProjects } from './site-data.js';
 
 const browserStorage = (() => {
   try { return window.localStorage; }
@@ -34,13 +35,6 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const supabase = SUPABASE_URL && SUPABASE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: safeStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } })
   : null;
-
-const fallbackProjects = [
-  { id:'apex-ai', category:'ai', mark:'✳', title:{en:'APEX AI Studio',ar:'APEX AI Studio'}, summary:{en:'An AI-assisted coding workspace and multi-agent product concept.',ar:'تصور لمساحة عمل برمجية مدعومة بالذكاء الاصطناعي وتنسيق الوكلاء.'}, tags:'AI · Agents · Product' },
-  { id:'loza-sokkar', category:'ecommerce', mark:'◇', title:{en:'Loza & Sokkar',ar:'لوزا و سكر'}, summary:{en:'An Arabic-first commerce experience for a growing product brand.',ar:'تجربة تجارة إلكترونية عربية لعلامة تجارية متنامية.'}, tags:'Commerce · Arabic · Store' },
-  { id:'family-studio', category:'web', mark:'⌂', title:{en:'FAMILY STUDIO',ar:'FAMILY STUDIO'}, summary:{en:'Personalized, story-led digital tribute experiences.',ar:'تجارب رقمية شخصية تحكي القصص والذكريات.'}, tags:'Story · Motion · Web' },
-  { id:'mobility-os', category:'apps', mark:'↗', title:{en:'AI Mobility Platform',ar:'منصة التنقل الذكي'}, summary:{en:'A future-facing mobility operating system concept.',ar:'تصور لمنصة تنقل ذكية برؤية مستقبلية.'}, tags:'Mobility · Maps · AI' },
-];
 
 let projects = [...fallbackProjects];
 let publishedServices = [];
@@ -145,7 +139,7 @@ function openProject(projectId) {
   selectedProject = project;
   $('#project-modal-title').textContent = project.title[locale];
   $('#project-modal-summary').textContent = project.summary[locale];
-  $('#project-modal-tags').textContent = project.tags;
+  $('#project-modal-tags').textContent = Array.isArray(project.tags) ? project.tags.join(' · ') : (project.tags ?? '');
   openDialog($('#project-modal'));
   void captureEvent('project_view', { projectId: project.id });
 }
