@@ -127,7 +127,16 @@ describe('published CMS content mapping', () => {
       title: { en: 'CMS Store', ar: 'متجر تجريبي' },
       summary: { en: 'A published store project.', ar: 'مشروع متجر منشور.' },
       tags: ['Commerce', 'Arabic'],
+      isCms: true,
     }]);
+  });
+
+
+  it('marks CMS projects as routable detail-page records', () => {
+    const mapped = siteCore.mapPublishedProjects?.([
+      { slug: 'published-project', title: 'Published project', summary: 'Public brief', content_type: 'project', body: {} },
+    ]);
+    expect(mapped?.[0].isCms).toBe(true);
   });
 
   it('uses curated fallback projects if the CMS has no valid published projects', () => {
