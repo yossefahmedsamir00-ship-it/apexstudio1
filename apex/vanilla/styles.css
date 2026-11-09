@@ -1951,3 +1951,49 @@ html[dir=rtl] body .service-page-card {
     margin-top: 75px;
   }
 }
+
+
+@media(max-width:850px) {
+  .site-header {
+    position: sticky;
+  }
+
+  .site-header .menu-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--line);
+  }
+
+  .site-header .menu-toggle span {
+    display: block;
+    width: 18px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .site-header .main-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding: 14px;
+    background: #10100e;
+    border: 1px solid var(--line);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .site-header .main-nav.is-open {
+    display: flex;
+  }
+
+  .site-header .main-nav a {
+    padding: 12px;
+  }
+}
