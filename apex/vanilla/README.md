@@ -57,6 +57,10 @@ Implemented in this isolated phase:
 - Separate direct client-to-owner chat using the existing `apex-client-chat` open/send/read contract and `mode: "owner"`
 - Analytics event capture with the project id mapped to the dedicated RPC argument
 - Reduced-motion support, focus states, and safe handling when browser storage is unavailable
+- Lightweight CSS-based immersive showroom with pointer parallax, responsive founder contact card, keyboard-accessible enter/exit controls, and Escape-key exit
+- Shared bilingual copy modules for the homepage, standalone pages, and project/service detail pages
+- Browser smoke tests for homepage boot, language direction, assistant mode and opening, and immersive showroom exit
+- Chat history pagination preserves chronological order when inserting older server-ordered messages
 
 CMS detail-page body fields currently supported:
 - Localized text: `title_en`, `title_ar`, `summary_en`, `summary_ar`
