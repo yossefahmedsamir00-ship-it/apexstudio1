@@ -155,6 +155,7 @@ export function mapPublishedServices(rows) {
         no: String(index + 1).padStart(2, '0'),
         title: localizedContent(body, 'title', row.title.trim()),
         body: localizedContent(body, 'summary', summary),
+        isCms: true,
       };
     });
 }
