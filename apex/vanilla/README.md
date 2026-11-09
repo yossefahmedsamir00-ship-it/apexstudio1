@@ -60,16 +60,15 @@ Implemented in this isolated phase:
 
 CMS detail-page body fields currently supported:
 - Localized text: `title_en`, `title_ar`, `summary_en`, `summary_ar`
-- Project metadata: `category`, `mark`, `tags`, `client`, `year`
+- Project/service metadata: `category`, `mark`, `tags`, `client`, `year`
 - Optional sections: `overview`, `challenge`, `approach`, `solution`, `results`, `features`, or `details` array with localized `title` and `description`
-- Optional HTTPS media/links: `cover_image_url` / `cover_url`, `gallery` array, `project_url` / `live_url`
-- Only HTTPS external links and images are rendered by project detail pages
+- Optional HTTPS media/links: `cover_image_url` / `cover_url`, `gallery` array, `project_url` / `live_url`, and `service_url` for service detail pages
+- Only HTTPS external links and images are rendered by detail pages
 
 Current CMS data state verified on 2026-11-09:
 - `apex_site_content` returned zero rows across content types and statuses, so the public site currently uses its curated fallback projects and static service content until the owner publishes CMS records.
 
 Not yet accepted as production parity:
-- Dedicated standalone About, Services, and Work page routes; the current home page still contains those sections
 - Browser/device QA, accessibility audit, real Supabase submission/chat smoke tests, and measured Core Web Vitals
 - Full rendering of every optional CMS field and full comparison against every existing React interaction
 - Switching the root `apex/index.html` entry point
