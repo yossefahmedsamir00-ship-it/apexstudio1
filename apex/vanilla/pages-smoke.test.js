@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
 function mountPage(fileName) {
+  try { window.localStorage.clear(); } catch { /* Storage may be disabled. */ }
   const html = readFileSync(resolve(process.cwd(), 'vanilla', fileName), 'utf8');
   document.open();
   document.write(html);
