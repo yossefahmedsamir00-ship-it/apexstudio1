@@ -21,6 +21,8 @@ const translations = {
     ctaTitle: 'Have an idea that should exist?',
     ctaBody: 'Tell us what you are trying to make. We will shape the rough thought into a clearer next step.',
     viewLiveProject: 'View project ↗',
+    viewService: 'Explore service ↗',
+    backToServices: '← Back to services',
     backTop: 'Back to top ↑',
     notFoundTitle: 'This project is not available.',
     notFoundBody: 'It may be unpublished or the link may be incorrect.',
@@ -45,6 +47,8 @@ const translations = {
     ctaTitle: 'عندك فكرة تستحق أن توجد؟',
     ctaBody: 'احكِ لنا ما تريد بناءه، وسنحوّل الفكرة الأولية إلى خطوة تالية أوضح.',
     viewLiveProject: 'عرض المشروع ↗',
+    viewService: 'استكشف الخدمة ↗',
+    backToServices: '← العودة إلى الخدمات',
     backTop: 'العودة للأعلى ↑',
     notFoundTitle: 'المشروع غير متاح.',
     notFoundBody: 'قد يكون غير منشور أو أن الرابط غير صحيح.',
@@ -63,6 +67,7 @@ const translations = {
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
 const slug = params.get('slug')?.trim() ?? '';
+const contentType = document.body.dataset.contentType === 'service' ? 'service' : 'project';
 let locale = readStorageItem(safeLocalStorage(), 'apex_locale', 'en') === 'ar' ? 'ar' : 'en';
 let projectRecord = null;
 
@@ -170,7 +175,7 @@ function renderProject(row) {
   document.title = `${title} | APEX STUDIO`;
   $('#project-title').textContent = title;
   $('#project-summary').textContent = summary;
-  $('#project-category').textContent = String(body.category ?? 'APEX / PROJECT').toUpperCase();
+  $('#project-category').textContent = String(body.category ?? `APEX / ${contentType.toUpperCase()}`).toUpperCase();
 
   const meta = $('#project-meta');
   meta.replaceChildren();
@@ -197,10 +202,13 @@ function renderProject(row) {
     cover.hidden = true;
   }
 
-  const liveUrl = safeHttpsUrl(body.project_url ?? body.live_url);
+  const liveUrl = contentType === 'service'
+    ? safeHttpsUrl(body.service_url ?? body.project_url ?? body.live_url)
+    : safeHttpsUrl(body.project_url ?? body.live_url);
   const liveLink = $('#project-live-link');
   if (liveUrl) {
     liveLink.href = liveUrl;
+    liveLink.textContent = contentType === 'service' ? t('viewService') : t('viewLiveProject');
     liveLink.hidden = false;
   } else {
     liveLink.hidden = true;
@@ -248,7 +256,7 @@ async function loadProject() {
       .from('apex_site_content')
       .select('slug,title,summary,content_type,body,status')
       .eq('slug', slug)
-      .eq('content_type', 'project')
+      .eq('content_type', contentType)
       .eq('status', 'published')
       .maybeSingle();
 
