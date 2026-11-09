@@ -17,7 +17,6 @@ const supabase = SUPABASE_URL && SUPABASE_KEY
     })
   : null;
 
-;
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
