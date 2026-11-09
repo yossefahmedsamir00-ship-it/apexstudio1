@@ -164,6 +164,7 @@ function addChatMessage(text, senderType = 'ai', messageId = null, createdAt = n
   if (prepend) container.insertBefore(bubble, container.firstElementChild);
   else container.append(bubble);
   if (!prepend) container.scrollTop = container.scrollHeight;
+  return bubble;
 }
 
 function addOlderChatMessages(messages) {
@@ -450,7 +451,7 @@ async function sendChatMessage(rawText) {
   if (message.length > 8000) return;
   chatBusy = true;
   $('#chat-status').textContent = '';
-  addChatMessage(message, 'client');
+  const pendingBubble = addChatMessage(message, 'client');
   $('#chat-input').value = '';
   try {
     await bootChat();
@@ -465,6 +466,8 @@ async function sendChatMessage(rawText) {
     void captureEvent('ai_message', { length: message.length });
   } catch (error) {
     console.error('APEX chat failed:', error);
+    pendingBubble?.remove();
+    if (!$('#chat-input').value) $('#chat-input').value = message;
     $('#chat-status').textContent = t('chatError');
   } finally {
     chatBusy = false;
@@ -531,6 +534,8 @@ async function sendOwnerMessage(rawText) {
     (response.data?.messages || []).filter((item) => item.sender_type !== 'client').forEach(addOwnerMessage);
   } catch (error) {
     console.error('APEX owner chat failed:', error);
+    bubble.remove();
+    if (!$('#owner-chat-input').value) $('#owner-chat-input').value = message;
     $('#owner-chat-status').textContent = locale === 'ar' ? 'تعذر إرسال الرسالة. حاول مرة أخرى.' : 'Could not send the message. Please try again.';
   } finally { ownerChatBusy = false; }
 }
