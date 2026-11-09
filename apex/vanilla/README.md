@@ -19,7 +19,7 @@ npm ci
 npm run dev
 ```
 
-Open the vanilla page at `/vanilla/` (Vite serves `vanilla/index.html`).
+Open the vanilla home page at `/vanilla/` (Vite serves `vanilla/index.html`). Published CMS projects open `/vanilla/project.html?slug=<project-slug>`.
 
 Set the same public Vite environment variables already used by the existing site in a local, untracked `.env.local` file:
 
@@ -34,6 +34,7 @@ The visitor AI chat uses the existing `apex-client-chat` Edge Function. Inquiry 
 
 ```bash
 node --check vanilla/app.js
+node --check vanilla/project.js
 npm test
 npm run build
 ```
@@ -43,18 +44,32 @@ A dedicated GitHub Actions workflow runs these checks for the migration branch a
 ## Current scope
 
 Implemented in this isolated phase:
-- Responsive black/gold landing page and mobile navigation
-- Arabic/English locale switching with document direction
-- Project category filters, accessible project detail dialog, and inquiry prefill
-- Service, process, about, and CTA sections
-- Inquiry validation and existing Supabase RPC submission
-- Visitor AI chat and direct client-to-owner chat using the existing `apex-client-chat` open/send/read contract
-- Analytics event capture and reduced-motion support
+- Responsive black/gold home page and mobile navigation
+- Arabic/English locale switching with document direction and safe storage fallback
+- Project category filters, keyboard-accessible project cards, and inquiry prefill
+- Service, process, about, payment-information, and CTA sections
+- Published CMS project/service loading from `apex_site_content`, falling back to curated showcase content when no published records exist
+- Dedicated CMS-backed project detail route at `project.html?slug=<slug>`; only published project records are addressable
+- Inquiry validation and existing `capture_project_inquiry` RPC submission
+- Visitor AI chat with support/technical modes, suggested prompts, saved history, older-message pagination, transcript copy, and conversation-to-project-brief conversion
+- Separate direct client-to-owner chat using the existing `apex-client-chat` open/send/read contract and `mode: "owner"`
+- Analytics event capture with the project id mapped to the dedicated RPC argument
+- Reduced-motion support, focus states, and safe handling when browser storage is unavailable
+
+CMS detail-page body fields currently supported:
+- Localized text: `title_en`, `title_ar`, `summary_en`, `summary_ar`
+- Project metadata: `category`, `mark`, `tags`, `client`, `year`
+- Optional sections: `overview`, `challenge`, `approach`, `solution`, `results`, `features`, or `details` array with localized `title` and `description`
+- Optional HTTPS media/links: `cover_image_url` / `cover_url`, `gallery` array, `project_url` / `live_url`
+- Only HTTPS external links and images are rendered by project detail pages
+
+Current CMS data state verified on 2026-11-09:
+- `apex_site_content` returned zero rows across content types and statuses, so the public site currently uses its curated fallback projects and static service content until the owner publishes CMS records.
 
 Not yet accepted as production parity:
-- Complete parity with every existing React interaction and owner/admin workflow edge cases
-- Admin-managed live project content and separate project-detail routes
+- Dedicated standalone About, Services, and Work page routes; the current home page still contains those sections
 - Browser/device QA, accessibility audit, real Supabase submission/chat smoke tests, and measured Core Web Vitals
+- Full rendering of every optional CMS field and full comparison against every existing React interaction
 - Switching the root `apex/index.html` entry point
 
 Do not switch the root public entry, merge the migration, or deploy until the parity checklist is complete and reviewed.
