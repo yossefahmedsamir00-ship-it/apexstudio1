@@ -1744,3 +1744,210 @@ html[dir=rtl] body .project-detail-section {
     margin-top: 70px;
   }
 }
+
+
+.subpage-main {
+  min-height: 70vh;
+  padding-top: clamp(60px, 8vw, 105px);
+  padding-bottom: 110px;
+}
+
+.subpage-hero {
+  max-width: 930px;
+  margin-bottom: 70px;
+}
+
+.subpage-hero h1 {
+  margin: 22px 0;
+  font-size: clamp(46px, 7vw, 82px);
+  line-height: 1.04;
+  letter-spacing: -.06em;
+  font-weight: 700;
+}
+
+.subpage-hero h1 em {
+  color: var(--gold);
+  font-family: Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -.05em;
+}
+
+.subpage-intro {
+  max-width: 780px;
+  color: var(--muted);
+  font-size: clamp(15px, 2vw, 19px);
+  line-height: 1.9;
+}
+
+.subpage-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.subpage-value {
+  min-height: 230px;
+  padding: 26px;
+  background: #11110f;
+  border: 1px solid var(--line);
+}
+
+.subpage-value > span {
+  color: var(--gold);
+  font-size: 11px;
+}
+
+.subpage-value h2 {
+  margin: 32px 0 12px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.subpage-value p,.service-page-card p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.subpage-process {
+  padding-top: 125px;
+}
+
+.subpage-cta {
+  margin-top: 110px;
+  padding: clamp(28px, 5vw, 54px);
+  background: #11110f;
+  border: 1px solid #d5b36a35;
+}
+
+.subpage-cta h2 {
+  max-width: 740px;
+  margin: 16px 0;
+  font-size: clamp(35px, 5vw, 58px);
+  line-height: 1.08;
+  letter-spacing: -.05em;
+}
+
+.subpage-cta h2 em {
+  color: var(--gold);
+  font-family: Georgia, serif;
+  font-weight: 400;
+}
+
+.subpage-cta > p:not(.eyebrow) {
+  max-width: 620px;
+  color: var(--muted);
+  line-height: 1.9;
+  margin-bottom: 27px;
+}
+
+.services-page-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.service-page-card {
+  min-height: 245px;
+  padding: 28px;
+  background: #11110f;
+  border: 1px solid var(--line);
+  transition: transform .2s,border-color .2s;
+}
+
+.service-page-card:hover {
+  transform: translateY(-3px);
+  border-color: #d5b36a77;
+}
+
+.service-page-card .service-number {
+  color: var(--gold);
+  font-size: 10px;
+}
+
+.service-page-card .service-icon {
+  float: right;
+  color: var(--gold);
+  font-size: 22px;
+}
+
+.service-page-card h2 {
+  margin: 44px 0 10px;
+  font-size: 23px;
+  font-weight: 600;
+}
+
+.service-page-card .text-link {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--gold-light);
+}
+
+.work-page-grid {
+  margin-top: 30px;
+}
+
+.empty-state {
+  margin: 25px 0;
+  padding: 28px;
+  text-align: center;
+  color: var(--muted);
+  background: #11110f;
+  border: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.empty-state[hidden] {
+  display: none !important;
+}
+
+html[dir=rtl] body .subpage-hero h1,
+html[dir=rtl] body .subpage-cta h2 {
+  letter-spacing: 0;
+}
+
+html[dir=rtl] body .subpage-value,
+html[dir=rtl] body .service-page-card {
+  text-align: right;
+}
+
+@media(max-width:850px) {
+  .subpage-values {
+    grid-template-columns: 1fr;
+  }
+
+  .subpage-value {
+    min-height: 0;
+  }
+
+  .subpage-value h2 {
+    margin-top: 20px;
+  }
+}
+
+@media(max-width:600px) {
+  .subpage-main {
+    padding-top: 60px;
+    padding-bottom: 80px;
+  }
+
+  .subpage-hero {
+    margin-bottom: 48px;
+  }
+
+  .services-page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .service-page-card {
+    min-height: 215px;
+  }
+
+  .subpage-process {
+    padding-top: 85px;
+  }
+
+  .subpage-cta {
+    margin-top: 75px;
+  }
+}
