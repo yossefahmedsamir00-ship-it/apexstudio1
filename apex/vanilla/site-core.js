@@ -20,3 +20,31 @@ export function validateInquiry({ name, email, description, consent }) {
   if (consent !== true) errors.push('consent');
   return errors;
 }
+
+export function readStorageItem(storage, key, fallback = null) {
+  try {
+    return storage?.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function writeStorageItem(storage, key, value) {
+  try {
+    if (!storage) return false;
+    storage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function removeStorageItem(storage, key) {
+  try {
+    if (!storage) return false;
+    storage.removeItem(key);
+    return true;
+  } catch {
+    return false;
+  }
+}
