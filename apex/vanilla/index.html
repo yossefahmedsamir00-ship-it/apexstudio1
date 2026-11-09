@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="APEX STUDIO builds purposeful websites, digital products, mobile apps and AI systems.">
+  <meta property="og:title" content="APEX STUDIO — Digital experiences with purpose">
+  <meta property="og:description" content="Websites, apps, commerce and AI systems built around real outcomes.">
+  <title>APEX STUDIO — Digital experiences with purpose</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="APEX STUDIO home"><span class="brand-symbol">A</span><span class="brand-name">APEX<small>STUDIO</small></span></a>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span></button>
+    <nav class="main-nav" id="main-nav">
+      <a href="#work" data-i18n="navWork">Work</a><a href="#services" data-i18n="navServices">Services</a><a href="#process" data-i18n="navProcess">Process</a><a href="#about" data-i18n="navAbout">About</a>
+    </nav>
+    <div class="header-actions"><button class="language-toggle" id="language-toggle" aria-label="Switch language">AR</button><button class="button button-gold button-small" data-open-inquiry data-i18n="startProject">Start a project <span>↗</span></button></div>
+  </header>
+
+  <main>
+    <section class="hero section-wrap" id="home">
+      <div class="hero-copy reveal">
+        <p class="eyebrow"><span class="status-dot"></span><span data-i18n="eyebrow">INDEPENDENT DIGITAL STUDIO · CAIRO / REMOTE</span></p>
+        <h1 data-i18n="heroTitle">Turn your vision into <em>digital reality.</em></h1>
+        <p class="hero-description" data-i18n="heroBody">A creative technology studio for websites, mobile apps, AI systems and digital experiences built to move your business forward.</p>
+        <div class="hero-actions"><button class="button button-gold" data-open-inquiry data-i18n="startProject">Start a project <span>↗</span></button><a class="text-link" href="#work" data-i18n="exploreWork">Explore selected work <span>↘</span></a></div>
+        <div class="hero-note"><span class="note-line"></span><span data-i18n="heroNote">No templates. No noise. Just purposeful digital work.</span></div>
+      </div>
+      <div class="hero-art reveal" aria-label="Abstract APEX studio visual">
+        <div class="art-orbit orbit-a"></div><div class="art-orbit orbit-b"></div><div class="art-core"><span>A</span></div>
+        <div class="art-label label-top">APEX / DIGITAL CRAFT</div><div class="art-label label-bottom">IDEAS INTO EXPERIENCE <b>✳</b></div>
+        <div class="art-coordinate">30°02' N<br>31°14' E</div><div class="art-index">001 — 026</div>
+      </div>
+      <div class="hero-bottom"><span>01 / 06</span><span class="scroll-cue"><span></span><span data-i18n="scroll">SCROLL TO EXPLORE</span></span><span>EST. 2026</span></div>
+    </section>
+
+    <section class="work-section section-wrap" id="work">
+      <div class="section-heading reveal"><div><p class="eyebrow">01 / <span data-i18n="selectedWork">SELECTED WORK</span></p><h2 data-i18n="workTitle">Ideas taking <em>shape.</em></h2></div><p data-i18n="workBody">A selection of concepts and digital experiences from the APEX universe.</p></div>
+      <div class="filter-row" id="project-filters" aria-label="Filter projects"><button class="filter-button is-active" data-category="all" data-i18n="filterAll">All work</button><button class="filter-button" data-category="web">Web</button><button class="filter-button" data-category="ecommerce" data-i18n="filterCommerce">Commerce</button><button class="filter-button" data-category="ai">AI</button><button class="filter-button" data-category="apps" data-i18n="filterApps">Apps</button></div>
+      <div class="project-grid" id="project-grid"></div>
+    </section>
+
+    <section class="services-section" id="services"><div class="section-wrap">
+      <div class="section-heading reveal"><div><p class="eyebrow">02 / <span data-i18n="whatWeBuild">WHAT WE BUILD</span></p><h2 data-i18n="servicesTitle">Digital, made <em>useful.</em></h2></div><p data-i18n="servicesBody">From a focused first release to a connected digital ecosystem.</p></div>
+      <div class="service-list">
+        <article class="service-item reveal"><span class="service-number">01</span><div class="service-icon">↗</div><div><h3 data-i18n="serviceWeb">Websites & platforms</h3><p data-i18n="serviceWebBody">Company websites, landing pages, portals and custom dashboards.</p></div><span class="service-arrow">↗</span></article>
+        <article class="service-item reveal"><span class="service-number">02</span><div class="service-icon">◇</div><div><h3 data-i18n="serviceCommerce">E-commerce experiences</h3><p data-i18n="serviceCommerceBody">Online stores designed around discovery, trust and conversion.</p></div><span class="service-arrow">↗</span></article>
+        <article class="service-item reveal"><span class="service-number">03</span><div class="service-icon">✳</div><div><h3 data-i18n="serviceAI">AI & automation</h3><p data-i18n="serviceAIBody">AI assistants, smart workflows and practical business automation.</p></div><span class="service-arrow">↗</span></article>
+        <article class="service-item reveal"><span class="service-number">04</span><div class="service-icon">▣</div><div><h3 data-i18n="serviceApps">Mobile & digital products</h3><p data-i18n="serviceAppsBody">Purpose-built applications shaped around real user needs.</p></div><span class="service-arrow">↗</span></article>
+      </div>
+    </div></section>
+
+    <section class="process-section section-wrap" id="process">
+      <div class="section-heading reveal"><div><p class="eyebrow">03 / <span data-i18n="ourApproach">OUR APPROACH</span></p><h2 data-i18n="processTitle">Clear thinking.<br><em>Careful execution.</em></h2></div><p data-i18n="processBody">A straightforward process that keeps the goal visible from the first conversation to launch.</p></div>
+      <div class="process-grid"><article class="reveal"><span>01</span><h3 data-i18n="stepDiscover">Discover</h3><p data-i18n="stepDiscoverBody">Understand the goal, audience and constraints.</p></article><article class="reveal"><span>02</span><h3 data-i18n="stepDefine">Define</h3><p data-i18n="stepDefineBody">Turn the idea into a focused scope and direction.</p></article><article class="reveal"><span>03</span><h3 data-i18n="stepDesign">Design</h3><p data-i18n="stepDesignBody">Shape the interface, content and interaction.</p></article><article class="reveal"><span>04</span><h3 data-i18n="stepBuild">Build</h3><p data-i18n="stepBuildBody">Develop, test and refine the real product.</p></article><article class="reveal"><span>05</span><h3 data-i18n="stepLaunch">Launch</h3><p data-i18n="stepLaunchBody">Ship with a clear handoff and next steps.</p></article></div>
+    </section>
+
+    <section class="about-section" id="about"><div class="section-wrap about-layout"><div class="about-visual reveal"><div class="about-ring"></div><span>APEX<br>STUDIO</span><small>BUILT WITH INTENT</small></div><div class="about-copy reveal"><p class="eyebrow">04 / <span data-i18n="theStudio">THE STUDIO</span></p><h2 data-i18n="aboutTitle">Small by design.<br><em>Serious about outcomes.</em></h2><p data-i18n="aboutBody">We build precise digital experiences tied to a real outcome. Technology and AI are tools in our process — the result is what matters.</p><div class="about-points"><span><b>01</b><span data-i18n="pointClarity">Clarity first</span></span><span><b>02</b><span data-i18n="pointCustom">Made for your context</span></span><span><b>03</b><span data-i18n="pointQuality">Built to last</span></span></div></div></div></section>
+
+    <section class="contact-cta section-wrap"><div class="cta-glow"></div><div class="cta-content reveal"><p class="eyebrow">05 / <span data-i18n="startSomething">START SOMETHING</span></p><h2 data-i18n="ctaTitle">Have an idea that<br><em>should exist?</em></h2><p data-i18n="ctaBody">Tell us what you are trying to make. We will turn the rough thought into a clearer next step.</p><div class="hero-actions"><button class="button button-gold" data-open-inquiry data-i18n="buildBrief">Build my project brief <span>↗</span></button><button class="button button-outline" data-open-ai data-i18n="askApex">Ask APEX</button></div></div></section>
+  </main>
+
+  <footer class="site-footer section-wrap"><div class="footer-top"><a class="brand" href="#home"><span class="brand-symbol">A</span><span class="brand-name">APEX<small>STUDIO</small></span></a><p data-i18n="footerLine">Turning thoughtful ideas into crafted digital experiences.</p><button class="back-top" id="back-top" data-i18n="backTop">BACK TO TOP ↑</button></div><div class="footer-bottom"><span>© 2026 APEX STUDIO</span><div><a href="mailto:yossefahmedsamir00@gmail.com">EMAIL ↗</a><a href="https://wa.me/201110568882" target="_blank" rel="noopener noreferrer">WHATSAPP ↗</a></div><span>CREATED BY ANSTA</span></div></footer>
+
+  <dialog class="modal" id="inquiry-modal"><form class="modal-card" id="inquiry-form"><button type="button" class="modal-close" data-close-modal aria-label="Close">×</button><p class="eyebrow">APEX / <span data-i18n="projectInquiry">PROJECT INQUIRY</span></p><h2 data-i18n="formTitle">Let's make it real.</h2><p class="modal-intro" data-i18n="formIntro">Share a few details and the studio can follow up with you.</p><div class="form-grid"><label><span data-i18n="fieldName">Your name</span><input name="name" autocomplete="name" required maxlength="120"></label><label><span data-i18n="fieldEmail">Email address</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label><label><span data-i18n="fieldService">What do you need?</span><select name="serviceType"><option value="website">Website</option><option value="ecommerce">E-commerce</option><option value="ai_solution">AI solution</option><option value="web_app">Web app</option><option value="mobile_app">Mobile app</option><option value="custom_system">Custom system</option><option value="not_sure">Not sure yet</option></select></label><label><span data-i18n="fieldBudget">Budget range</span><select name="budgetRange"><option value="not_sure">Not sure</option><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></label><label class="form-full"><span data-i18n="fieldBrief">Tell us about your idea</span><textarea name="description" rows="4" required minlength="20" maxlength="5000"></textarea></label><label><span data-i18n="fieldWhatsapp">WhatsApp (optional)</span><input name="whatsapp" type="tel" maxlength="40"></label><label><span data-i18n="fieldTimeline">Timeline</span><select name="timeline"><option value="asap">ASAP</option><option value="1_2_weeks">1–2 weeks</option><option value="1_month">1 month</option><option value="1_3_months">1–3 months</option><option value="flexible">Flexible</option></select></label></div><label class="consent"><input type="checkbox" name="consentToContact" required><span data-i18n="consent">I agree that APEX STUDIO may contact me about this request.</span></label><p class="form-status" id="form-status" role="status" aria-live="polite"></p><button class="button button-gold submit-button" type="submit" data-i18n="sendBrief">Send project brief ↗</button></form></dialog>
+
+  <dialog class="modal chat-modal" id="ai-modal"><section class="modal-card chat-card"><button type="button" class="modal-close" data-close-modal aria-label="Close">×</button><p class="eyebrow">APEX / AI GUIDE</p><h2 data-i18n="chatTitle">Let's explore your idea.</h2><p class="modal-intro" data-i18n="chatIntro">Ask about our services or how to shape your project.</p><div class="chat-messages" id="chat-messages" aria-live="polite"></div><div class="suggestion-row" id="chat-suggestions"><button type="button" data-prompt="What services do you offer?">What services do you offer?</button><button type="button" data-prompt="How do I start a project?">How do I start a project?</button></div><form id="chat-form" class="chat-composer"><input id="chat-input" maxlength="8000" autocomplete="off" placeholder="Write your message…" required><button class="button button-gold" type="submit" aria-label="Send">↑</button></form><p class="form-status" id="chat-status" role="status"></p></section></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
