@@ -15,16 +15,25 @@ describe('vanilla project filtering', () => {
   it('returns all projects for the all category and an empty query', () => {
     expect(filterProjects(sampleProjects, 'all', '  ', 'en')).toHaveLength(2);
   });
+
+  it('handles projects with missing tags without throwing', () => {
+    const projectsWithoutTags = [{ id: 'plain', category: 'web', title: { en: 'Plain site' }, summary: { en: 'A simple site' } }];
+    expect(filterProjects(projectsWithoutTags, 'all', 'plain', 'en').map((item) => item.id)).toEqual(['plain']);
+  });
 });
 
 describe('vanilla inquiry validation', () => {
   const valid = { name: 'Mina', email: 'mina@example.com', description: 'A business website with a services page.', consent: true };
 
-  it('accepts a complete inquiry', () => {
+  it('accepts a complete inquiry with a valid email address', () => {
     expect(validateInquiry(valid)).toEqual([]);
   });
 
-  it('rejects invalid email, short brief and missing consent', () => {
+  it('rejects malformed emails, short briefs and missing consent', () => {
     expect(validateInquiry({ ...valid, email: 'invalid', description: 'short', consent: false })).toEqual(['email', 'description', 'consent']);
+  });
+
+  it('rejects whitespace inside an email address', () => {
+    expect(validateInquiry({ ...valid, email: 'mina @example.com' })).toEqual(['email']);
   });
 });
