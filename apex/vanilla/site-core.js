@@ -159,3 +159,7 @@ export function mapPublishedServices(rows) {
       };
     });
 }
+
+export function getMessagesForPrepend(messages) {
+  return Array.isArray(messages) ? [...messages].reverse() : [];
+}
