@@ -6,7 +6,7 @@ export function filterProjects(projects, category = 'all', query = '', locale = 
     const searchableText = [
       project.title?.[locale] ?? '',
       project.summary?.[locale] ?? '',
-      ...(project.tags ?? []),
+      ...(Array.isArray(project.tags) ? project.tags : []),
     ].join(' ').toLocaleLowerCase(locale === 'ar' ? 'ar' : 'en');
     return searchableText.includes(normalizedQuery);
   });
@@ -15,7 +15,7 @@ export function filterProjects(projects, category = 'all', query = '', locale = 
 export function validateInquiry({ name, email, description, consent }) {
   const errors = [];
   if (!String(name ?? '').trim()) errors.push('name');
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(email ?? '').trim())) errors.push('email');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email ?? '').trim())) errors.push('email');
   if (String(description ?? '').trim().length < 20) errors.push('description');
   if (consent !== true) errors.push('consent');
   return errors;
