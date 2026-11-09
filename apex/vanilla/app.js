@@ -1,10 +1,38 @@
 import { createClient } from '@supabase/supabase-js';
-import { filterProjects, validateInquiry } from './site-core.js';
+import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem } from './site-core.js';
+
+const browserStorage = (() => {
+  try { return window.localStorage; }
+  catch { return null; }
+})();
+const memoryStorage = new Map();
+
+function readStoredValue(key, fallback = null) {
+  const storedValue = readStorageItem(browserStorage, key, null);
+  return storedValue ?? memoryStorage.get(key) ?? fallback;
+}
+
+function writeStoredValue(key, value) {
+  if (writeStorageItem(browserStorage, key, value)) memoryStorage.delete(key);
+  else memoryStorage.set(key, value);
+}
+
+function removeStoredValue(key) {
+  const removed = removeStorageItem(browserStorage, key);
+  memoryStorage.delete(key);
+  return removed;
+}
+
+const safeStorage = {
+  getItem: (key) => readStoredValue(key),
+  setItem: (key, value) => writeStoredValue(key, value),
+  removeItem: (key) => removeStoredValue(key),
+};
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const supabase = SUPABASE_URL && SUPABASE_KEY
-  ? createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } })
+  ? createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: safeStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } })
   : null;
 
 const projects = [
@@ -23,7 +51,7 @@ const translations = {
   }
 };
 
-let locale = localStorage.getItem('apex_locale') === 'ar' ? 'ar' : 'en';
+let locale = readStoredValue('apex_locale', 'en') === 'ar' ? 'ar' : 'en';
 let activeCategory = 'all';
 let conversationId = '';
 let chatBootPromise;
@@ -53,7 +81,7 @@ function showToast(message) {
 
 function applyLocale(nextLocale) {
   locale = nextLocale;
-  localStorage.setItem('apex_locale', locale);
+  writeStoredValue('apex_locale', locale);
   document.documentElement.lang = locale;
   document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
   $('#language-toggle').textContent = locale === 'ar' ? 'EN' : 'AR';
@@ -119,8 +147,8 @@ async function captureEvent(eventName, metadata = {}) {
   if (!supabase) return;
   try {
     await ensureSession();
-    const sessionId = localStorage.getItem('apex_session_id') || crypto.randomUUID();
-    localStorage.setItem('apex_session_id', sessionId);
+    const sessionId = readStoredValue('apex_session_id') || crypto.randomUUID();
+    writeStoredValue('apex_session_id', sessionId);
     const { error } = await supabase.rpc('capture_site_event', {
       p_event_name: eventName, p_project_id: null, p_session_id: sessionId,
       p_locale: locale, p_path: window.location.pathname, p_metadata: metadata
@@ -150,7 +178,8 @@ async function submitInquiry(event) {
   const email = String(data.get('email') || '').trim();
   const description = String(data.get('description') || '').trim();
   const consent = data.get('consentToContact') === 'on';
-  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || description.length < 20 || !consent) {
+  const validationErrors = validateInquiry({ name, email, description, consent });
+  if (validationErrors.length > 0) {
     status.textContent = t('formInvalid');
     return;
   }
@@ -192,19 +221,19 @@ async function bootChat() {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError || !userData.user) throw new Error('Could not confirm the visitor session.');
     const storageKey = `apex_chat_conversation_${userData.user.id}`;
-    const cachedId = localStorage.getItem(storageKey) || '';
+    const cachedId = readStoredValue(storageKey, '') || '';
     let result = await supabase.functions.invoke('apex-client-chat', {
       body: { action: 'open', ...(cachedId ? { conversationId: cachedId } : {}), subject: locale === 'ar' ? 'محادثة موقع APEX' : 'APEX website chat', locale }
     });
     if ((result.error || result.data?.error) && cachedId) {
-      localStorage.removeItem(storageKey);
+      removeStoredValue(storageKey);
       result = await supabase.functions.invoke('apex-client-chat', { body: { action: 'open', subject: 'APEX website chat', locale } });
     }
     if (result.error) throw result.error;
     if (result.data?.error) throw new Error(result.data.error);
     conversationId = result.data?.conversation?.id || '';
     if (!conversationId) throw new Error('Could not start the conversation.');
-    localStorage.setItem(storageKey, conversationId);
+    writeStoredValue(storageKey, conversationId);
     const messages = result.data?.messages || [];
     if (messages.length) messages.forEach((message) => addChatMessage(message.body, message.sender_type === 'client' ? 'user' : 'ai', message.id));
     else addChatMessage(t('chatWelcome'));
@@ -269,17 +298,17 @@ async function bootOwnerChat() {
     const userResult = await supabase.auth.getUser();
     if (userResult.error || !userResult.data.user) throw new Error('Could not confirm the visitor session.');
     const storageKey = 'apex_owner_chat_conversation_' + userResult.data.user.id;
-    const cachedId = localStorage.getItem(storageKey) || '';
+    const cachedId = readStoredValue(storageKey, '') || '';
     let result = await supabase.functions.invoke('apex-client-chat', { body: { action: 'open', ...(cachedId ? { conversationId: cachedId } : {}), subject: locale === 'ar' ? 'محادثة مباشرة مع صاحب الموقع' : 'Direct chat with website owner', locale } });
     if ((result.error || result.data?.error) && cachedId) {
-      localStorage.removeItem(storageKey);
+      removeStoredValue(storageKey);
       result = await supabase.functions.invoke('apex-client-chat', { body: { action: 'open', subject: 'Direct chat with website owner', locale } });
     }
     if (result.error) throw result.error;
     if (result.data?.error) throw new Error(result.data.error);
     ownerConversationId = result.data?.conversation?.id || '';
     if (!ownerConversationId) throw new Error('Could not open the owner conversation.');
-    localStorage.setItem(storageKey, ownerConversationId);
+    writeStoredValue(storageKey, ownerConversationId);
     (result.data?.messages || []).forEach(addOwnerMessage);
     if (!result.data?.messages?.length) {
       const welcome = document.createElement('div'); welcome.className = 'chat-bubble';
