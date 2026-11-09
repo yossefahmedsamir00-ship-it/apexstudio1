@@ -29,6 +29,7 @@ let conversationId = '';
 let chatBootPromise;
 let chatBusy = false;
 let selectedProject = null;
+let chatPollTimer = null;
 const seenChatMessageIds = new Set();
 let toastTimer;
 
@@ -88,7 +89,9 @@ function renderSuggestions() {
   $('#chat-suggestions').innerHTML = suggestions.map((prompt) => `<button type="button" data-prompt="${escapeHTML(prompt)}">${escapeHTML(prompt)}</button>`).join('');
 }
 
-function addChatMessage(text, sender = 'ai') {
+function addChatMessage(text, sender = 'ai', messageId = null) {
+  if (messageId && seenChatMessageIds.has(messageId)) return;
+  if (messageId) seenChatMessageIds.add(messageId);
   const bubble = document.createElement('div');
   bubble.className = `chat-bubble ${sender === 'user' ? 'user' : ''}`;
   bubble.textContent = text;
@@ -197,8 +200,20 @@ async function bootChat() {
     if (!conversationId) throw new Error('Could not start the conversation.');
     localStorage.setItem(storageKey, conversationId);
     const messages = result.data?.messages || [];
-    if (messages.length) messages.forEach((message) => addChatMessage(message.body, message.sender_type === 'client' ? 'user' : 'ai'));
+    if (messages.length) messages.forEach((message) => addChatMessage(message.body, message.sender_type === 'client' ? 'user' : 'ai', message.id));
     else addChatMessage(t('chatWelcome'));
+    if (!chatPollTimer) {
+      chatPollTimer = setInterval(async () => {
+        if (!conversationId || !$('#ai-modal').open || !supabase) return;
+        try {
+          const { data, error } = await supabase.functions.invoke('apex-client-chat', { body: { action: 'client_read', conversationId } });
+          if (error || data?.error) return;
+          (data?.messages || []).forEach((message) => addChatMessage(message.body, message.sender_type === 'client' ? 'user' : 'ai', message.id));
+        } catch (error) {
+          console.warn('APEX chat refresh unavailable:', error);
+        }
+      }, 15000);
+    }
   })();
   try { await chatBootPromise; }
   catch (error) { chatBootPromise = null; throw error; }
@@ -220,7 +235,7 @@ async function sendChatMessage(rawText) {
     });
     if (error) throw error;
     if (data?.error) throw new Error(data.error);
-    (data?.messages || []).filter((item) => item.sender_type !== 'client').forEach((item) => addChatMessage(item.body, 'ai'));
+    (data?.messages || []).forEach((item) => addChatMessage(item.body, item.sender_type === 'client' ? 'user' : 'ai', item.id));
     if (data?.aiUnavailable) $('#chat-status').textContent = t('chatUnavailable');
     void captureEvent('ai_message', { length: message.length });
   } catch (error) {
