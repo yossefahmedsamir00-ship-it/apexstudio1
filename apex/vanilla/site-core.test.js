@@ -7,6 +7,26 @@ const sampleProjects = [
   { id: 'assistant', category: 'ai', title: { en: 'Signal AI', ar: 'سيجنال الذكي' }, summary: { en: 'Customer assistant', ar: 'مساعد العملاء' }, tags: ['agent'] },
 ];
 
+
+describe('analytics RPC payload mapping', () => {
+  it('keeps project identifiers in the dedicated column instead of metadata', () => {
+    expect(siteCore.buildAnalyticsPayload?.({
+      eventName: 'project_view',
+      sessionId: 'session-123',
+      locale: 'en',
+      path: '/vanilla/',
+      metadata: { projectId: 'family-studio', source: 'project-card' },
+    })).toEqual({
+      p_event_name: 'project_view',
+      p_project_id: 'family-studio',
+      p_session_id: 'session-123',
+      p_locale: 'en',
+      p_path: '/vanilla/',
+      p_metadata: { source: 'project-card' },
+    });
+  });
+});
+
 describe('safe browser storage access', () => {
   it('reads, writes and removes values without throwing when storage is unavailable', () => {
     expect(siteCore.readStorageItem?.({ getItem: () => 'ar' }, 'apex_locale', 'en')).toBe('ar');
