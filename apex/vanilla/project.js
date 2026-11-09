@@ -25,7 +25,9 @@ const translations = {
     backToServices: '← Back to services',
     backTop: 'Back to top ↑',
     notFoundTitle: 'This project is not available.',
+    serviceNotFoundTitle: 'This service is not available.',
     notFoundBody: 'It may be unpublished or the link may be incorrect.',
+    serviceNotFoundBody: 'It may be unpublished or the link may be incorrect.',
     loadFailedTitle: 'Project details could not be loaded.',
     loadFailedBody: 'Please return to selected work and try again later.',
     noExtraDetails: 'More project details have not been published yet.',
@@ -51,7 +53,9 @@ const translations = {
     backToServices: '← العودة إلى الخدمات',
     backTop: 'العودة للأعلى ↑',
     notFoundTitle: 'المشروع غير متاح.',
+    serviceNotFoundTitle: 'الخدمة غير متاحة.',
     notFoundBody: 'قد يكون غير منشور أو أن الرابط غير صحيح.',
+    serviceNotFoundBody: 'قد تكون غير منشورة أو أن الرابط غير صحيح.',
     loadFailedTitle: 'تعذر تحميل تفاصيل المشروع.',
     loadFailedBody: 'ارجع إلى الأعمال المختارة وحاول مرة أخرى لاحقًا.',
     noExtraDetails: 'لم يتم نشر تفاصيل إضافية لهذا المشروع حتى الآن.',
@@ -243,7 +247,7 @@ function applyLocale(nextLocale) {
 
 async function loadProject() {
   if (!slug) {
-    renderState(t('notFoundTitle'), t('notFoundBody'));
+    renderState(t(contentType === 'service' ? 'serviceNotFoundTitle' : 'notFoundTitle'), t(contentType === 'service' ? 'serviceNotFoundBody' : 'notFoundBody'));
     return;
   }
   if (!supabase) {
