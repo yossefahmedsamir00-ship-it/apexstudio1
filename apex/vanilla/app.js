@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem, buildAnalyticsPayload } from './site-core.js';
+import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem, buildAnalyticsPayload, formatChatTranscript, getChatHistoryCursor } from './site-core.js';
 
 const browserStorage = (() => {
   try { return window.localStorage; }
@@ -56,6 +56,9 @@ let activeCategory = 'all';
 let conversationId = '';
 let chatBootPromise;
 let chatBusy = false;
+let olderChatBusy = false;
+let hasOlderChatMessages = false;
+let activeAssistantAgent = 'support';
 let selectedProject = null;
 let chatPollTimer = null;
 let ownerConversationId = '';
@@ -123,14 +126,59 @@ function renderSuggestions() {
   $('#chat-suggestions').innerHTML = suggestions.map((prompt) => `<button type="button" data-prompt="${escapeHTML(prompt)}">${escapeHTML(prompt)}</button>`).join('');
 }
 
-function addChatMessage(text, sender = 'ai', messageId = null) {
+function addChatMessage(text, senderType = 'ai', messageId = null, createdAt = null, prepend = false) {
   if (messageId && seenChatMessageIds.has(messageId)) return;
   if (messageId) seenChatMessageIds.add(messageId);
+
   const bubble = document.createElement('div');
-  bubble.className = `chat-bubble ${sender === 'user' ? 'user' : ''}`;
+  const isClient = senderType === 'client' || senderType === 'user';
+  bubble.className = `chat-bubble ${isClient ? 'user' : ''}`;
+  bubble.dataset.senderType = isClient ? 'client' : senderType;
+  if (messageId) bubble.dataset.messageId = messageId;
+  if (messageId === 'welcome') bubble.dataset.welcome = 'true';
+
+  const timestamp = typeof createdAt === 'string' && !Number.isNaN(Date.parse(createdAt))
+    ? createdAt
+    : new Date().toISOString();
+  bubble.dataset.createdAt = timestamp;
   bubble.textContent = text;
-  $('#chat-messages').append(bubble);
-  $('#chat-messages').scrollTop = $('#chat-messages').scrollHeight;
+
+  const container = $('#chat-messages');
+  if (prepend) container.insertBefore(bubble, container.firstElementChild);
+  else container.append(bubble);
+  if (!prepend) container.scrollTop = container.scrollHeight;
+}
+
+function addOlderChatMessages(messages) {
+  const container = $('#chat-messages');
+  const previousHeight = container.scrollHeight;
+  (Array.isArray(messages) ? messages : []).forEach((message) => {
+    addChatMessage(
+      message.body,
+      message.sender_type,
+      message.id,
+      message.created_at,
+      true,
+    );
+  });
+  container.scrollTop += container.scrollHeight - previousHeight;
+}
+
+function setOlderChatAvailability(available) {
+  hasOlderChatMessages = available === true;
+  const button = $('#load-older-chat');
+  button.hidden = !hasOlderChatMessages;
+  button.disabled = olderChatBusy;
+}
+
+function getVisibleChatTranscript() {
+  const messages = $('#chat-messages .chat-bubble')
+    .filter((bubble) => bubble.dataset.welcome !== 'true')
+    .map((bubble) => ({
+      sender_type: bubble.dataset.senderType,
+      body: bubble.textContent ?? '',
+    }));
+  return formatChatTranscript(messages, locale);
 }
 
 async function ensureSession() {
