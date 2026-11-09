@@ -48,3 +48,19 @@ export function removeStorageItem(storage, key) {
     return false;
   }
 }
+
+export function buildAnalyticsPayload({ eventName, sessionId, locale, path, metadata = {} }) {
+  const sourceMetadata = metadata && typeof metadata === 'object' && !Array.isArray(metadata)
+    ? metadata
+    : {};
+  const { projectId, ...eventMetadata } = sourceMetadata;
+
+  return {
+    p_event_name: eventName,
+    p_project_id: typeof projectId === 'string' && projectId.trim() ? projectId : null,
+    p_session_id: sessionId ?? null,
+    p_locale: locale ?? null,
+    p_path: path ?? null,
+    p_metadata: eventMetadata,
+  };
+}
