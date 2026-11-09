@@ -287,15 +287,26 @@ async function bootChat() {
     if (!conversationId) throw new Error('Could not start the conversation.');
     writeStoredValue(storageKey, conversationId);
     const messages = result.data?.messages || [];
-    if (messages.length) messages.forEach((message) => addChatMessage(message.body, message.sender_type === 'client' ? 'user' : 'ai', message.id));
-    else addChatMessage(t('chatWelcome'));
+    if (messages.length) {
+      messages.forEach((message) => addChatMessage(
+        message.body,
+        message.sender_type,
+        message.id,
+        message.created_at,
+      ));
+    } else {
+      addChatMessage(t('chatWelcome'), 'system', 'welcome');
+    }
+    setOlderChatAvailability(messages.length >= 50);
     if (!chatPollTimer) {
       chatPollTimer = setInterval(async () => {
         if (!conversationId || !$('#ai-modal').open || !supabase) return;
         try {
           const { data, error } = await supabase.functions.invoke('apex-client-chat', { body: { action: 'client_read', conversationId } });
           if (error || data?.error) return;
-          (data?.messages || []).filter((message) => message.sender_type !== 'client').forEach((message) => addChatMessage(message.body, 'ai', message.id));
+          (data?.messages || []).filter((message) => message.sender_type !== 'client').forEach((message) => {
+            addChatMessage(message.body, message.sender_type, message.id, message.created_at);
+          });
         } catch (error) {
           console.warn('APEX chat refresh unavailable:', error);
         }
@@ -306,23 +317,111 @@ async function bootChat() {
   catch (error) { chatBootPromise = null; throw error; }
 }
 
+async function loadOlderChatMessages() {
+  if (!conversationId || olderChatBusy || !hasOlderChatMessages) return;
+  const container = $('#chat-messages');
+  const cursor = getChatHistoryCursor(
+    container.firstElementChild
+      ? [{ created_at: container.firstElementChild.dataset.createdAt }]
+      : [],
+  );
+  if (!cursor) {
+    setOlderChatAvailability(false);
+    return;
+  }
+
+  olderChatBusy = true;
+  const button = $('#load-older-chat');
+  button.disabled = true;
+  button.textContent = t('loadingOlderMessages');
+  $('#chat-status').textContent = '';
+
+  try {
+    const { data, error } = await supabase.functions.invoke('apex-client-chat', {
+      body: { action: 'client_read', conversationId, before: cursor },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+
+    const olderMessages = Array.isArray(data?.messages) ? data.messages : [];
+    addOlderChatMessages(olderMessages);
+    setOlderChatAvailability(olderMessages.length >= 50);
+  } catch (error) {
+    console.warn('APEX older chat history unavailable:', error);
+    $('#chat-status').textContent = locale === 'ar'
+      ? 'تعذر تحميل الرسائل الأقدم. حاول مرة أخرى.'
+      : 'Could not load older messages. Please try again.';
+  } finally {
+    olderChatBusy = false;
+    button.textContent = t('loadOlderMessages');
+    button.disabled = !hasOlderChatMessages;
+  }
+}
+
+async function copyChatTranscript() {
+  const transcript = getVisibleChatTranscript();
+  if (!transcript) {
+    $('#chat-status').textContent = t('emptyTranscript');
+    return;
+  }
+
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+    await navigator.clipboard.writeText(transcript);
+    $('#chat-status').textContent = t('transcriptCopied');
+  } catch (error) {
+    console.warn('APEX transcript copy unavailable:', error);
+    $('#chat-status').textContent = t('copyTranscriptUnavailable');
+  }
+}
+
+function turnChatIntoProjectBrief() {
+  const transcript = getVisibleChatTranscript();
+  if (transcript.trim().length < 20) {
+    $('#chat-status').textContent = t('transcriptTooShort');
+    return;
+  }
+
+  const form = $('#inquiry-form');
+  form.elements.description.value = transcript;
+  form.elements.description.dispatchEvent(new Event('input', { bubbles: true }));
+  $('#form-status').textContent = '';
+  closeDialog($('#ai-modal'));
+  openDialog($('#inquiry-modal'));
+}
+
+async function openOwnerChatFromAssistant() {
+  closeDialog($('#ai-modal'));
+  openDialog($('#owner-modal'));
+  if (!ownerConversationId) {
+    try {
+      await bootOwnerChat();
+    } catch (error) {
+      $('#owner-chat-status').textContent = locale === 'ar'
+        ? 'تعذر فتح المحادثة حاليًا.'
+        : 'Could not open the conversation right now.';
+      console.warn(error);
+    }
+  }
+}
+
 async function sendChatMessage(rawText) {
   const message = rawText.trim();
   if (!message || chatBusy) return;
   if (message.length > 8000) return;
   chatBusy = true;
   $('#chat-status').textContent = '';
-  addChatMessage(message, 'user');
+  addChatMessage(message, 'client');
   $('#chat-input').value = '';
   try {
     await bootChat();
     const idempotencyKey = `msg_${crypto.randomUUID().replace(/-/g, '')}`;
     const { data, error } = await supabase.functions.invoke('apex-client-chat', {
-      body: { action: 'send', conversationId, body: message, idempotencyKey, agent: 'support' }
+      body: { action: 'send', conversationId, body: message, idempotencyKey, agent: activeAssistantAgent }
     });
     if (error) throw error;
     if (data?.error) throw new Error(data.error);
-    (data?.messages || []).filter((item) => item.sender_type !== 'client').forEach((item) => addChatMessage(item.body, 'ai', item.id));
+    (data?.messages || []).filter((item) => item.sender_type !== 'client').forEach((item) => addChatMessage(item.body, item.sender_type, item.id, item.created_at));
     if (data?.aiUnavailable) $('#chat-status').textContent = t('chatUnavailable');
     void captureEvent('ai_message', { length: message.length });
   } catch (error) {
@@ -429,13 +528,28 @@ function initEvents() {
     openDialog($('#inquiry-modal'));
     void captureEvent('cta_click', { cta: 'start_project' });
   }));
-  $$('[data-open-ai]').forEach((button) => button.addEventListener('click', async () => {
+  $('[data-open-ai]').forEach((button) => button.addEventListener('click', async () => {
     openDialog($('#ai-modal'));
     if (!$('#chat-messages').children.length) {
       try { await bootChat(); }
       catch (error) { $('#chat-status').textContent = t('chatError'); console.warn(error); }
     }
   }));
+  $('#assistant-modes [data-assistant-mode]').forEach((button) => button.addEventListener('click', () => {
+    activeAssistantAgent = button.dataset.assistantMode === 'technical' ? 'technical' : 'support';
+    $('#assistant-modes [data-assistant-mode]').forEach((modeButton) => {
+      const active = modeButton === button;
+      modeButton.classList.toggle('is-active', active);
+      modeButton.setAttribute('aria-pressed', String(active));
+    });
+    $('#assistant-mode-hint').textContent = activeAssistantAgent === 'technical'
+      ? t('technicalModeHint')
+      : t('guideModeHint');
+  }));
+  $('#copy-chat-transcript').addEventListener('click', () => void copyChatTranscript());
+  $('#load-older-chat').addEventListener('click', () => void loadOlderChatMessages());
+  $('#chat-to-brief').addEventListener('click', turnChatIntoProjectBrief);
+  $('#open-owner-from-ai').addEventListener('click', () => void openOwnerChatFromAssistant());
   $$('[data-close-modal]').forEach((button) => button.addEventListener('click', () => closeDialog(button.closest('dialog'))));
   $$('.modal').forEach((dialog) => dialog.addEventListener('click', (event) => {
     if (event.target === dialog) closeDialog(dialog);
