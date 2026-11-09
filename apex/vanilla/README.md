@@ -48,11 +48,11 @@ Implemented in this isolated phase:
 - Project category filters, accessible project detail dialog, and inquiry prefill
 - Service, process, about, and CTA sections
 - Inquiry validation and existing Supabase RPC submission
-- Visitor AI chat using the existing `apex-client-chat` open/send/read contract
+- Visitor AI chat and direct client-to-owner chat using the existing `apex-client-chat` open/send/read contract
 - Analytics event capture and reduced-motion support
 
 Not yet accepted as production parity:
-- Separate client-to-owner chat experience and complete parity with every existing React interaction
+- Complete parity with every existing React interaction and owner/admin workflow edge cases
 - Admin-managed live project content and separate project-detail routes
 - Browser/device QA, accessibility audit, real Supabase submission/chat smoke tests, and measured Core Web Vitals
 - Switching the root `apex/index.html` entry point
