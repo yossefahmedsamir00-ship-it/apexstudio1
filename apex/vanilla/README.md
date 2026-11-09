@@ -19,7 +19,7 @@ npm ci
 npm run dev
 ```
 
-Open the vanilla home page at `/vanilla/` (Vite serves `vanilla/index.html`). Published CMS projects open `/vanilla/project.html?slug=<project-slug>`.
+Open the vanilla home page at `/vanilla/` (Vite serves `vanilla/index.html`). Dedicated pages are `/vanilla/about.html`, `/vanilla/services.html`, and `/vanilla/work.html`. Published CMS services and projects open `/vanilla/service.html?slug=<slug>` and `/vanilla/project.html?slug=<slug>`.
 
 Set the same public Vite environment variables already used by the existing site in a local, untracked `.env.local` file:
 
@@ -35,6 +35,7 @@ The visitor AI chat uses the existing `apex-client-chat` Edge Function. Inquiry 
 ```bash
 node --check vanilla/app.js
 node --check vanilla/project.js
+node --check vanilla/page.js
 npm test
 npm run build
 ```
@@ -49,7 +50,8 @@ Implemented in this isolated phase:
 - Project category filters, keyboard-accessible project cards, and inquiry prefill
 - Service, process, about, payment-information, and CTA sections
 - Published CMS project/service loading from `apex_site_content`, falling back to curated showcase content when no published records exist
-- Dedicated CMS-backed project detail route at `project.html?slug=<slug>`; only published project records are addressable
+- Dedicated standalone About, Services and Work pages
+- Dedicated CMS-backed project and service detail routes at `project.html?slug=<slug>` and `service.html?slug=<slug>`; only published records are addressable
 - Inquiry validation and existing `capture_project_inquiry` RPC submission
 - Visitor AI chat with support/technical modes, suggested prompts, saved history, older-message pagination, transcript copy, and conversation-to-project-brief conversion
 - Separate direct client-to-owner chat using the existing `apex-client-chat` open/send/read contract and `mode: "owner"`
