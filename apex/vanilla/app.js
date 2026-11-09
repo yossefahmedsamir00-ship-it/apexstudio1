@@ -208,7 +208,7 @@ async function bootChat() {
         try {
           const { data, error } = await supabase.functions.invoke('apex-client-chat', { body: { action: 'client_read', conversationId } });
           if (error || data?.error) return;
-          (data?.messages || []).forEach((message) => addChatMessage(message.body, message.sender_type === 'client' ? 'user' : 'ai', message.id));
+          (data?.messages || []).filter((message) => message.sender_type !== 'client').forEach((message) => addChatMessage(message.body, 'ai', message.id));
         } catch (error) {
           console.warn('APEX chat refresh unavailable:', error);
         }
@@ -235,7 +235,7 @@ async function sendChatMessage(rawText) {
     });
     if (error) throw error;
     if (data?.error) throw new Error(data.error);
-    (data?.messages || []).forEach((item) => addChatMessage(item.body, item.sender_type === 'client' ? 'user' : 'ai', item.id));
+    (data?.messages || []).filter((item) => item.sender_type !== 'client').forEach((item) => addChatMessage(item.body, 'ai', item.id));
     if (data?.aiUnavailable) $('#chat-status').textContent = t('chatUnavailable');
     void captureEvent('ai_message', { length: message.length });
   } catch (error) {
