@@ -209,3 +209,27 @@ Commit the verified migration on `feature/vanilla-website-migration`. Do not mer
 - Confirm the current GitHub Pages deployment target and whether the checked-in Flutter Web workflow is obsolete; no deployment workflow will be changed during the website migration without evidence.
 - Confirm a safe Supabase test project/environment for end-to-end testing; production data and live settings will not be used for destructive tests.
 - AI provider/model, Paymob, 10-minute auto-reply, and final deployment remain owner-approval items.
+
+
+## Execution update — 2026-11-09
+
+### Implemented in the isolated preview entry
+
+- Added `apex/vanilla/index.html`, `styles.css`, and `app.js`.
+- Added Arabic/English locale switching with RTL/LTR document direction.
+- Added responsive navigation, project category filters, accessible project detail dialog, and inquiry prefill.
+- Added services, process, studio/about, CTA, and footer sections.
+- Reused existing Supabase anonymous auth, `capture_site_event`, `capture_project_inquiry`, and `apex-client-chat` contracts.
+- Added focused domain helpers and tests in `site-core.js` and `site-core.test.js`.
+- Added the vanilla page as a separate Vite build input; the existing root entry and other application entry points remain untouched.
+- Added a dedicated Node/Vite GitHub Actions validation workflow.
+- Added local setup and scope documentation in `apex/vanilla/README.md`.
+- Opened draft PR #24 for review and CI; it is not merged.
+
+### Verification state
+
+- Repository file writes were confirmed by fetching the committed files from the feature branch.
+- Local `node --check`, Vitest, production build, browser interaction testing, and live Supabase smoke tests have **not** been executed in this environment.
+- GitHub combined status currently returned no status records; no CI pass is claimed.
+- Full parity is not yet reached: separate owner-chat UI, admin-managed project detail routes, complete browser/device QA, and root-entry switch remain outstanding.
+- Do not merge or deploy this draft until all checks are observed passing and the remaining parity work is completed.
