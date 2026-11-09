@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem } from './site-core.js';
+import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem, buildAnalyticsPayload } from './site-core.js';
 
 const browserStorage = (() => {
   try { return window.localStorage; }
@@ -149,10 +149,14 @@ async function captureEvent(eventName, metadata = {}) {
     await ensureSession();
     const sessionId = readStoredValue('apex_session_id') || crypto.randomUUID();
     writeStoredValue('apex_session_id', sessionId);
-    const { error } = await supabase.rpc('capture_site_event', {
-      p_event_name: eventName, p_project_id: null, p_session_id: sessionId,
-      p_locale: locale, p_path: window.location.pathname, p_metadata: metadata
+    const payload = buildAnalyticsPayload({
+      eventName,
+      sessionId,
+      locale,
+      path: window.location.pathname,
+      metadata,
     });
+    const { error } = await supabase.rpc('capture_site_event', payload);
     if (error) console.warn('APEX analytics event failed:', error.code || 'unknown');
   } catch (error) {
     console.warn('APEX analytics unavailable:', error instanceof Error ? error.message : 'unknown');
