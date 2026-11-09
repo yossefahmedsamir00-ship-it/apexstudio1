@@ -63,6 +63,7 @@ function applyLocale(nextLocale) {
     else element.textContent = value;
   });
   $('#chat-input').placeholder = t('chatPlaceholder');
+  $('#owner-chat-input').placeholder = t('chatPlaceholder');
   renderProjects();
   renderSuggestions();
 }
