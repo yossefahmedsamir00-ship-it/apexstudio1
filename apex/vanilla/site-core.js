@@ -136,6 +136,7 @@ export function mapPublishedProjects(rows, fallback = []) {
         title: localizedContent(body, 'title', row.title.trim()),
         summary: localizedContent(body, 'summary', typeof row.summary === 'string' ? row.summary.trim() : ''),
         tags,
+        isCms: true,
       };
     });
 
