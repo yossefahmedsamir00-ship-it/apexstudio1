@@ -86,3 +86,74 @@ export function getChatHistoryCursor(messages) {
   );
   return oldest?.created_at ?? null;
 }
+
+function readContentBody(row) {
+  return row?.body && typeof row.body === 'object' && !Array.isArray(row.body)
+    ? row.body
+    : {};
+}
+
+function localizedContent(body, key, fallback) {
+  const english = body[`${key}_en`];
+  const arabic = body[`${key}_ar`];
+  return {
+    en: typeof english === 'string' && english.trim() ? english.trim() : fallback,
+    ar: typeof arabic === 'string' && arabic.trim() ? arabic.trim() : fallback,
+  };
+}
+
+function normalizeProjectCategory(value) {
+  const category = String(value ?? 'web').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const aliases = {
+    commerce: 'ecommerce',
+    e_commerce: 'ecommerce',
+    shop: 'ecommerce',
+    mobile: 'apps',
+    mobile_app: 'apps',
+    application: 'apps',
+    automation: 'ai',
+  };
+  const normalized = aliases[category] ?? category;
+  return ['web', 'ecommerce', 'ai', 'apps'].includes(normalized) ? normalized : 'web';
+}
+
+export function mapPublishedProjects(rows, fallback = []) {
+  const mapped = (Array.isArray(rows) ? rows : [])
+    .filter((row) => row?.content_type === 'project' && typeof row.slug === 'string'
+      && row.slug.trim() && typeof row.title === 'string' && row.title.trim())
+    .map((row) => {
+      const body = readContentBody(row);
+      const category = normalizeProjectCategory(body.category);
+      const marks = { web: '⌂', ecommerce: '◇', ai: '✳', apps: '↗' };
+      const tags = Array.isArray(body.tags)
+        ? body.tags.filter((tag) => typeof tag === 'string' && tag.trim()).map((tag) => tag.trim())
+        : [];
+
+      return {
+        id: row.slug.trim(),
+        category,
+        mark: typeof body.mark === 'string' && body.mark.trim() ? body.mark.trim().slice(0, 4) : marks[category],
+        title: localizedContent(body, 'title', row.title.trim()),
+        summary: localizedContent(body, 'summary', typeof row.summary === 'string' ? row.summary.trim() : ''),
+        tags,
+      };
+    });
+
+  return mapped.length ? mapped : fallback;
+}
+
+export function mapPublishedServices(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .filter((row) => row?.content_type === 'service' && typeof row.slug === 'string'
+      && row.slug.trim() && typeof row.title === 'string' && row.title.trim())
+    .map((row, index) => {
+      const body = readContentBody(row);
+      const summary = typeof row.summary === 'string' ? row.summary.trim() : '';
+      return {
+        id: row.slug.trim(),
+        no: String(index + 1).padStart(2, '0'),
+        title: localizedContent(body, 'title', row.title.trim()),
+        body: localizedContent(body, 'summary', summary),
+      };
+    });
+}
