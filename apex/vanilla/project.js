@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { readStorageItem, writeStorageItem } from './site-core.js';
-import { translations } from './detail-translations.js';
+import { translations, getDetailNotFoundCopy } from './detail-translations.js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -190,7 +190,8 @@ function applyLocale(nextLocale) {
 
 async function loadProject() {
   if (!slug) {
-    renderState(t(contentType === 'service' ? 'serviceNotFoundTitle' : 'notFoundTitle'), t(contentType === 'service' ? 'serviceNotFoundBody' : 'notFoundBody'));
+    const copy = getDetailNotFoundCopy(contentType, locale);
+    renderState(copy.title, copy.description);
     return;
   }
   if (!supabase) {
@@ -209,7 +210,8 @@ async function loadProject() {
 
     if (error) throw error;
     if (!data) {
-      renderState(t('notFoundTitle'), t('notFoundBody'));
+      const copy = getDetailNotFoundCopy(contentType, locale);
+      renderState(copy.title, copy.description);
       return;
     }
     projectRecord = data;
