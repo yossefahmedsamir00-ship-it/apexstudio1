@@ -53,14 +53,22 @@ The vanilla implementation must preserve or deliberately account for:
 - Do not add the proposed timed automatic AI fallback reply unless the owner separately approves it.
 - Do not change AI provider/model, payment provider, database schema, RLS, Edge Functions, or production secrets as part of this website-only phase.
 
+## Evidence completed in the isolated migration branch
+
+- Inspected the existing public React source, backend RPC helpers, Supabase client, contact configuration, CMS schema migration, CMS editor, current public Flutter CMS reader, and `apex-client-chat` Edge Function request/response contract.
+- Confirmed the public `apex_site_content` read policy is limited to published rows. The table contained zero rows at the time of the read-only 2026-11-09 query.
+- Added vanilla helper tests for project filtering, inquiry validation, safe storage, analytics argument mapping, CMS project/service mapping, transcript formatting, and chat pagination cursor selection.
+- Added a dedicated GitHub Actions validation workflow. The latest verified run is **#147**, which passed dependency install, JavaScript syntax checks, the full Vitest suite, and the multipage Vite build.
+- Added isolated About, Services, Work, project-detail, and service-detail page entry points without changing the root public entry.
+- Added a documented release boundary in `apex/vanilla/README.md` and `docs/audits/2026-11-09-vanilla-quality-pass.md`.
+
 ## Evidence still required before switching the public entry
 
-- Fetch and inspect complete source for public AI chat, owner chat, Supabase bootstrap, backend helpers, contact configuration, styles, and all linked assets.
-- Inspect Supabase migrations and Edge Function source to confirm request/response shapes, table/RPC contracts, and current RLS behavior.
-- Inspect current workflow run history and published artifact to resolve the Flutter-versus-Vite deployment discrepancy.
-- Run existing Vitest tests and Vite production build in a reproducible environment.
-- Add vanilla implementation tests for locale/direction, filtering, inquiry validation, and key interaction states.
-- Compare old and new behavior across desktop and mobile, Arabic RTL and English LTR, keyboard navigation, reduced motion, AI chat, and inquiry submission.
+- Browser/device QA at desktop, tablet, and mobile sizes.
+- Visual and behavioral parity review against the existing React implementation, including Arabic RTL, English LTR, keyboard navigation, reduced motion, forms, chat, and payment-information section.
+- Controlled end-to-end Supabase smoke tests for inquiry submission, visitor chat, direct owner chat, analytics, and published CMS content.
+- Accessibility review and measured Core Web Vitals.
+- Verify the latest deployment artifact and resolve the Flutter-versus-Vite deployment discrepancy before proposing any production workflow change.
 - Switch `apex/index.html` only after parity and release checks pass. Keep rollback to the existing React entry straightforward.
 
 ## Implementation decision
