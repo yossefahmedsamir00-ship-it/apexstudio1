@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem, buildAnalyticsPayload, formatChatTranscript, getChatHistoryCursor } from './site-core.js';
+import { filterProjects, validateInquiry, readStorageItem, writeStorageItem, removeStorageItem, buildAnalyticsPayload, formatChatTranscript, getChatHistoryCursor, mapPublishedProjects, mapPublishedServices } from './site-core.js';
 
 const browserStorage = (() => {
   try { return window.localStorage; }
@@ -35,12 +35,15 @@ const supabase = SUPABASE_URL && SUPABASE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: safeStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } })
   : null;
 
-const projects = [
+const fallbackProjects = [
   { id:'apex-ai', category:'ai', mark:'✳', title:{en:'APEX AI Studio',ar:'APEX AI Studio'}, summary:{en:'An AI-assisted coding workspace and multi-agent product concept.',ar:'تصور لمساحة عمل برمجية مدعومة بالذكاء الاصطناعي وتنسيق الوكلاء.'}, tags:'AI · Agents · Product' },
   { id:'loza-sokkar', category:'ecommerce', mark:'◇', title:{en:'Loza & Sokkar',ar:'لوزا و سكر'}, summary:{en:'An Arabic-first commerce experience for a growing product brand.',ar:'تجربة تجارة إلكترونية عربية لعلامة تجارية متنامية.'}, tags:'Commerce · Arabic · Store' },
   { id:'family-studio', category:'web', mark:'⌂', title:{en:'FAMILY STUDIO',ar:'FAMILY STUDIO'}, summary:{en:'Personalized, story-led digital tribute experiences.',ar:'تجارب رقمية شخصية تحكي القصص والذكريات.'}, tags:'Story · Motion · Web' },
   { id:'mobility-os', category:'apps', mark:'↗', title:{en:'AI Mobility Platform',ar:'منصة التنقل الذكي'}, summary:{en:'A future-facing mobility operating system concept.',ar:'تصور لمنصة تنقل ذكية برؤية مستقبلية.'}, tags:'Mobility · Maps · AI' },
 ];
+
+let projects = [...fallbackProjects];
+let publishedServices = [];
 
 const translations = {
   en: {
@@ -100,6 +103,7 @@ function applyLocale(nextLocale) {
     : t('guideModeHint');
   renderProjects();
   renderSuggestions();
+  renderCmsServices();
 }
 
 function renderProjects() {
@@ -109,6 +113,24 @@ function renderProjects() {
       <div class="project-art"><span class="project-number">0${index + 1}</span><div class="project-shape"><span>${escapeHTML(project.mark)}</span></div><span class="project-kind">${escapeHTML(t('projectLabel'))}</span></div>
       <div class="project-meta"><div><h3>${escapeHTML(project.title[locale])}</h3><p>${escapeHTML(project.summary[locale])}</p></div><span aria-hidden="true">↗</span></div>
     </article>`).join('');
+}
+
+function renderCmsServices() {
+  if (!publishedServices.length) return;
+  const serviceList = $('#service-list');
+  if (!serviceList) return;
+
+  serviceList.innerHTML = publishedServices.map((service) => `
+    <article class="service-item reveal is-visible">
+      <span class="service-number">${escapeHTML(service.no)}</span>
+      <div class="service-icon">↗</div>
+      <div>
+        <h3>${escapeHTML(service.title[locale])}</h3>
+        <p>${escapeHTML(service.body[locale])}</p>
+      </div>
+      <span class="service-arrow" aria-hidden="true">↗</span>
+    </article>
+  `).join('');
 }
 
 function openProject(projectId) {
@@ -211,6 +233,28 @@ async function captureEvent(eventName, metadata = {}) {
     if (error) console.warn('APEX analytics event failed:', error.code || 'unknown');
   } catch (error) {
     console.warn('APEX analytics unavailable:', error instanceof Error ? error.message : 'unknown');
+  }
+}
+
+async function loadPublishedContent() {
+  if (!supabase) return;
+
+  try {
+    const { data, error } = await supabase
+      .from('apex_site_content')
+      .select('slug,title,summary,content_type,body')
+      .eq('status', 'published')
+      .in('content_type', ['project', 'service'])
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+    const rows = Array.isArray(data) ? data : [];
+    projects = mapPublishedProjects(rows, fallbackProjects);
+    publishedServices = mapPublishedServices(rows);
+    renderProjects();
+    renderCmsServices();
+  } catch (error) {
+    console.warn('APEX published content unavailable; using curated content:', error);
   }
 }
 
@@ -617,3 +661,4 @@ applyLocale(locale);
 initEvents();
 initReveal();
 void captureEvent('page_view');
+void loadPublishedContent();
