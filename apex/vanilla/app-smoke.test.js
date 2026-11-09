@@ -67,4 +67,17 @@ describe('APEX vanilla home page boot', () => {
     expect(enter.getAttribute('aria-expanded')).toBe('false');
     expect(exit.hidden).toBe(true);
   });
+
+  it('restores an unsent visitor message when chat initialization fails', async () => {
+    const input = document.querySelector('#chat-input');
+    const form = document.querySelector('#chat-form');
+    const message = 'I need help planning a new website project.';
+
+    input.value = message;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(input.value).toBe(message);
+    expect(document.querySelector('#chat-messages .chat-bubble.user')).toBeNull();
+  });
 });
