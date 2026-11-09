@@ -28,6 +28,8 @@ let activeCategory = 'all';
 let conversationId = '';
 let chatBootPromise;
 let chatBusy = false;
+let selectedProject = null;
+const seenChatMessageIds = new Set();
 let toastTimer;
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -62,10 +64,21 @@ function applyLocale(nextLocale) {
 function renderProjects() {
   const list = filterProjects(projects, activeCategory, '', locale);
   $('#project-grid').innerHTML = list.map((project, index) => `
-    <article class="project-card reveal is-visible" data-project-id="${escapeHTML(project.id)}">
+    <article class="project-card reveal is-visible" data-project-id="${escapeHTML(project.id)}" role="button" tabindex="0" aria-label="${escapeHTML(project.title[locale])}">
       <div class="project-art"><span class="project-number">0${index + 1}</span><div class="project-shape"><span>${escapeHTML(project.mark)}</span></div><span class="project-kind">${escapeHTML(t('projectLabel'))}</span></div>
       <div class="project-meta"><div><h3>${escapeHTML(project.title[locale])}</h3><p>${escapeHTML(project.summary[locale])}</p></div><span aria-hidden="true">↗</span></div>
     </article>`).join('');
+}
+
+function openProject(projectId) {
+  const project = projects.find((item) => item.id === projectId);
+  if (!project) return;
+  selectedProject = project;
+  $('#project-modal-title').textContent = project.title[locale];
+  $('#project-modal-summary').textContent = project.summary[locale];
+  $('#project-modal-tags').textContent = project.tags;
+  openDialog($('#project-modal'));
+  void captureEvent('project_view', { projectId: project.id });
 }
 
 function renderSuggestions() {
@@ -267,6 +280,31 @@ function initEvents() {
     activeCategory = button.dataset.category;
     $$('.filter-button').forEach((item) => item.classList.toggle('is-active', item === button));
     renderProjects();
+  });
+  $('#project-grid').addEventListener('click', (event) => {
+    const card = event.target.closest('[data-project-id]');
+    if (card) openProject(card.dataset.projectId);
+  });
+  $('#project-grid').addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const card = event.target.closest('[data-project-id]');
+    if (!card) return;
+    event.preventDefault();
+    openProject(card.dataset.projectId);
+  });
+  $('#project-modal-inquiry').addEventListener('click', () => {
+    closeDialog($('#project-modal'));
+    openDialog($('#inquiry-modal'));
+    if (selectedProject) {
+      const brief = locale === 'ar'
+        ? `أريد الاستفسار عن مشروع مشابه لـ ${selectedProject.title.ar}. ${selectedProject.summary.ar}`
+        : `I would like to discuss a project similar to ${selectedProject.title.en}. ${selectedProject.summary.en}`;
+      $('#inquiry-form').elements.description.value = brief;
+      const service = selectedProject.category === 'ecommerce' ? 'ecommerce'
+        : selectedProject.category === 'ai' ? 'ai_solution'
+        : selectedProject.category === 'apps' ? 'mobile_app' : 'website';
+      $('#inquiry-form').elements.serviceType.value = service;
+    }
   });
   $('#inquiry-form').addEventListener('submit', submitInquiry);
   $('#chat-form').addEventListener('submit', (event) => {
