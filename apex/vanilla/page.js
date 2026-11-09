@@ -45,6 +45,7 @@ const translations = {
     conceptLabel: 'CURATED CONCEPT', publishedLabel: 'PUBLISHED PROJECT',
     emptyProjects: 'No projects are available in this category yet.',
     projectDialogStart: 'Start a project ↗',
+    viewService: 'Explore service ↗',
   },
   ar: {
     navWork: 'الأعمال', navServices: 'الخدمات', navAbout: 'عن الاستوديو', navPayments: 'الدفع',
@@ -74,6 +75,7 @@ const translations = {
     conceptLabel: 'تصور مختار', publishedLabel: 'مشروع منشور',
     emptyProjects: 'لا توجد مشاريع في هذا التصنيف حتى الآن.',
     projectDialogStart: 'ابدأ مشروعك ↗',
+    viewService: 'استكشف الخدمة ↗',
   },
 };
 
@@ -176,15 +178,21 @@ function renderServices() {
   const container = $('#services-page-grid');
   if (!container) return;
 
-  container.innerHTML = services.map((service) => `
-    <article class="service-page-card reveal is-visible">
-      <span class="service-number">${escapeHTML(service.no)}</span>
-      <div class="service-icon" aria-hidden="true">↗</div>
-      <h2>${escapeHTML(service.title[locale])}</h2>
-      <p>${escapeHTML(service.body[locale])}</p>
-      <a class="text-link" href="./index.html#contact">${escapeHTML(copy().startProject)} <span aria-hidden="true">↗</span></a>
-    </article>
-  `).join('');
+  container.innerHTML = services.map((service) => {
+    const href = service.isCms
+      ? `./service.html?slug=${encodeURIComponent(service.id)}`
+      : './index.html#contact';
+    const action = service.isCms ? copy().viewService : copy().startProject;
+    return `
+      <article class="service-page-card reveal is-visible">
+        <span class="service-number">${escapeHTML(service.no)}</span>
+        <div class="service-icon" aria-hidden="true">↗</div>
+        <h2>${escapeHTML(service.title[locale])}</h2>
+        <p>${escapeHTML(service.body[locale])}</p>
+        <a class="text-link" href="${escapeHTML(href)}">${escapeHTML(action)} <span aria-hidden="true">↗</span></a>
+      </article>
+    `;
+  }).join('');
 }
 
 function renderProjects() {
