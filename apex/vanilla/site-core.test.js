@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { filterProjects, validateInquiry } from './site-core.js';
+import * as siteCore from './site-core.js';
 
 const sampleProjects = [
   { id: 'store', category: 'ecommerce', title: { en: 'Orbit Store', ar: 'متجر أوربت' }, summary: { en: 'Online commerce', ar: 'تجارة إلكترونية' }, tags: ['shop'] },
   { id: 'assistant', category: 'ai', title: { en: 'Signal AI', ar: 'سيجنال الذكي' }, summary: { en: 'Customer assistant', ar: 'مساعد العملاء' }, tags: ['agent'] },
 ];
+
+describe('safe browser storage access', () => {
+  it('reads, writes and removes values without throwing when storage is unavailable', () => {
+    expect(siteCore.readStorageItem?.({ getItem: () => 'ar' }, 'apex_locale', 'en')).toBe('ar');
+    expect(siteCore.readStorageItem?.({ getItem: () => { throw new Error('blocked'); } }, 'apex_locale', 'en')).toBe('en');
+    expect(siteCore.readStorageItem?.(null, 'apex_locale', 'en')).toBe('en');
+    expect(siteCore.writeStorageItem?.({ setItem: () => {} }, 'apex_locale', 'ar')).toBe(true);
+    expect(siteCore.writeStorageItem?.({ setItem: () => { throw new Error('blocked'); } }, 'apex_locale', 'ar')).toBe(false);
+    expect(siteCore.removeStorageItem?.({ removeItem: () => {} }, 'apex_locale')).toBe(true);
+    expect(siteCore.removeStorageItem?.({ removeItem: () => { throw new Error('blocked'); } }, 'apex_locale')).toBe(false);
+  });
+});
 
 describe('vanilla project filtering', () => {
   it('filters by category and localized search text', () => {
