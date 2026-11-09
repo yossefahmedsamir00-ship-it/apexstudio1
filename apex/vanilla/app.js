@@ -136,6 +136,12 @@ function renderCmsServices() {
 function openProject(projectId) {
   const project = projects.find((item) => item.id === projectId);
   if (!project) return;
+  if (project.isCms) {
+    void captureEvent('project_view', { projectId: project.id }).finally(() => {
+      window.location.href = `./project.html?slug=${encodeURIComponent(project.id)}`;
+    });
+    return;
+  }
   selectedProject = project;
   $('#project-modal-title').textContent = project.title[locale];
   $('#project-modal-summary').textContent = project.summary[locale];
