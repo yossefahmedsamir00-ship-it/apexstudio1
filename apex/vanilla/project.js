@@ -10,7 +10,6 @@ const supabase = SUPABASE_URL && SUPABASE_KEY
     })
   : null;
 
-;
 
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
