@@ -1,9 +1,10 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 describe('APEX vanilla home page boot', () => {
   beforeAll(async () => {
-    const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+    const html = readFileSync(resolve(process.cwd(), 'vanilla/index.html'), 'utf8');
     document.open();
     document.write(html);
     document.close();
