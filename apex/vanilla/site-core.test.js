@@ -153,6 +153,7 @@ describe('published CMS content mapping', () => {
       no: '01',
       title: { en: 'Web design', ar: 'تصميم الويب' },
       body: { en: 'Sites and portals', ar: 'مواقع وبوابات' },
+      isCms: true,
     }]);
   });
 });
