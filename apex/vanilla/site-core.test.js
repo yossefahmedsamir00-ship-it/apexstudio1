@@ -102,3 +102,48 @@ describe('saved chat transcript helpers', () => {
     expect(siteCore.getChatHistoryCursor?.([])).toBe(null);
   });
 });
+
+
+describe('published CMS content mapping', () => {
+  it('maps published project fields without losing Arabic and English copy', () => {
+    const projects = siteCore.mapPublishedProjects?.([
+      {
+        slug: 'cms-store',
+        title: 'CMS Store',
+        summary: 'A published store project.',
+        content_type: 'project',
+        body: {
+          category: 'commerce',
+          title_ar: 'متجر تجريبي',
+          summary_ar: 'مشروع متجر منشور.',
+          tags: ['Commerce', 'Arabic'],
+        },
+      },
+    ]);
+    expect(projects).toEqual([{
+      id: 'cms-store',
+      category: 'ecommerce',
+      mark: '◇',
+      title: { en: 'CMS Store', ar: 'متجر تجريبي' },
+      summary: { en: 'A published store project.', ar: 'مشروع متجر منشور.' },
+      tags: ['Commerce', 'Arabic'],
+    }]);
+  });
+
+  it('uses curated fallback projects if the CMS has no valid published projects', () => {
+    const fallback = [{ id: 'curated', title: { en: 'Curated' } }];
+    expect(siteCore.mapPublishedProjects?.([{ content_type: 'service', title: 'Not a project' }], fallback)).toBe(fallback);
+  });
+
+  it('maps published services and ignores records with missing titles', () => {
+    expect(siteCore.mapPublishedServices?.([
+      { slug: 'web-design', title: 'Web design', summary: 'Sites and portals', content_type: 'service', body: { title_ar: 'تصميم الويب', summary_ar: 'مواقع وبوابات' } },
+      { slug: 'empty', title: '   ', summary: '', content_type: 'service', body: {} },
+    ])).toEqual([{
+      id: 'web-design',
+      no: '01',
+      title: { en: 'Web design', ar: 'تصميم الويب' },
+      body: { en: 'Sites and portals', ar: 'مواقع وبوابات' },
+    }]);
+  });
+});
