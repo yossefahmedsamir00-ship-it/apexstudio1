@@ -20,6 +20,7 @@ export default defineConfig({
         vanillaAbout: resolve(root, 'vanilla/about.html'),
         vanillaServices: resolve(root, 'vanilla/services.html'),
         vanillaWork: resolve(root, 'vanilla/work.html'),
+        vanillaService: resolve(root, 'vanilla/service.html'),
       },
     },
   },
