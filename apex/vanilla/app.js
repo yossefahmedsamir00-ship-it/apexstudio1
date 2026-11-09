@@ -600,16 +600,16 @@ function initEvents() {
     openDialog($('#inquiry-modal'));
     void captureEvent('cta_click', { cta: 'start_project' });
   }));
-  $('[data-open-ai]').forEach((button) => button.addEventListener('click', async () => {
+  $$('[data-open-ai]').forEach((button) => button.addEventListener('click', async () => {
     openDialog($('#ai-modal'));
     if (!$('#chat-messages').children.length) {
       try { await bootChat(); }
       catch (error) { $('#chat-status').textContent = t('chatError'); console.warn(error); }
     }
   }));
-  $('#assistant-modes [data-assistant-mode]').forEach((button) => button.addEventListener('click', () => {
+  $$('#assistant-modes [data-assistant-mode]').forEach((button) => button.addEventListener('click', () => {
     activeAssistantAgent = button.dataset.assistantMode === 'technical' ? 'technical' : 'support';
-    $('#assistant-modes [data-assistant-mode]').forEach((modeButton) => {
+    $$('#assistant-modes [data-assistant-mode]').forEach((modeButton) => {
       const active = modeButton === button;
       modeButton.classList.toggle('is-active', active);
       modeButton.setAttribute('aria-pressed', String(active));
