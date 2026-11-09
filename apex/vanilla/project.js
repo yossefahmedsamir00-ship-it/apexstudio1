@@ -284,14 +284,14 @@ const mainNav = $('#main-nav');
 menuToggle.addEventListener('click', () => {
   const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
   menuToggle.setAttribute('aria-expanded', String(!isOpen));
-  menuToggle.setAttribute('aria-label', isOpen ? 'Open navigation' : 'Close navigation');
+  menuToggle.setAttribute('aria-label', locale === 'ar' ? (isOpen ? 'فتح القائمة' : 'إغلاق القائمة') : (isOpen ? 'Open navigation' : 'Close navigation'));
   mainNav.classList.toggle('is-open', !isOpen);
 });
 mainNav.addEventListener('click', (event) => {
   if (!event.target.closest('a')) return;
   mainNav.classList.remove('is-open');
   menuToggle.setAttribute('aria-expanded', 'false');
-  menuToggle.setAttribute('aria-label', 'Open navigation');
+  menuToggle.setAttribute('aria-label', locale === 'ar' ? 'فتح القائمة' : 'Open navigation');
 });
 $('#year').textContent = String(new Date().getFullYear());
 applyLocale(locale);
