@@ -15,6 +15,7 @@ export default defineConfig({
         admin: resolve(root, 'admin.html'),
         payment: resolve(root, 'payment.html'),
         socialAi: resolve(root, 'social-ai.html'),
+        vanilla: resolve(root, 'vanilla/index.html'),
       },
     },
   },
