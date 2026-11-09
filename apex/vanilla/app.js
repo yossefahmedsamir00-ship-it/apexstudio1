@@ -16,10 +16,10 @@ const projects = [
 
 const translations = {
   en: {
-    navWork:'Work',navServices:'Services',navProcess:'Process',navAbout:'About',startProject:'Start a project',eyebrow:'INDEPENDENT DIGITAL STUDIO · CAIRO / REMOTE',heroTitle:'Turn your vision into <em>digital reality.</em>',heroBody:'A creative technology studio for websites, mobile apps, AI systems and digital experiences built to move your business forward.',exploreWork:'Explore selected work',heroNote:'No templates. No noise. Just purposeful digital work.',scroll:'SCROLL TO EXPLORE',selectedWork:'SELECTED WORK',workTitle:'Ideas taking <em>shape.</em>',workBody:'A selection of concepts and digital experiences from the APEX universe.',filterAll:'All work',filterCommerce:'Commerce',filterApps:'Apps',whatWeBuild:'WHAT WE BUILD',servicesTitle:'Digital, made <em>useful.</em>',servicesBody:'From a focused first release to a connected digital ecosystem.',serviceWeb:'Websites & platforms',serviceWebBody:'Company websites, landing pages, portals and custom dashboards.',serviceCommerce:'E-commerce experiences',serviceCommerceBody:'Online stores designed around discovery, trust and conversion.',serviceAI:'AI & automation',serviceAIBody:'AI assistants, smart workflows and practical business automation.',serviceApps:'Mobile & digital products',serviceAppsBody:'Purpose-built applications shaped around real user needs.',ourApproach:'OUR APPROACH',processTitle:'Clear thinking.<br><em>Careful execution.</em>',processBody:'A straightforward process that keeps the goal visible from the first conversation to launch.',stepDiscover:'Discover',stepDiscoverBody:'Understand the goal, audience and constraints.',stepDefine:'Define',stepDefineBody:'Turn the idea into a focused scope and direction.',stepDesign:'Design',stepDesignBody:'Shape the interface, content and interaction.',stepBuild:'Build',stepBuildBody:'Develop, test and refine the real product.',stepLaunch:'Launch',stepLaunchBody:'Ship with a clear handoff and next steps.',theStudio:'THE STUDIO',aboutTitle:'Small by design.<br><em>Serious about outcomes.</em>',aboutBody:'We build precise digital experiences tied to a real outcome. Technology and AI are tools in our process — the result is what matters.',pointClarity:'Clarity first',pointCustom:'Made for your context',pointQuality:'Built to last',startSomething:'START SOMETHING',ctaTitle:'Have an idea that<br><em>should exist?</em>',ctaBody:'Tell us what you are trying to make. We will turn the rough thought into a clearer next step.',buildBrief:'Build my project brief',askApex:'Ask APEX',footerLine:'Turning thoughtful ideas into crafted digital experiences.',backTop:'BACK TO TOP ↑',projectInquiry:'PROJECT INQUIRY',formTitle:"Let's make it real.",formIntro:'Share a few details and the studio can follow up with you.',fieldName:'Your name',fieldEmail:'Email address',fieldService:'What do you need?',fieldBudget:'Budget range',fieldBrief:'Tell us about your idea',fieldWhatsapp:'WhatsApp (optional)',fieldTimeline:'Timeline',consent:'I agree that APEX STUDIO may contact me about this request.',sendBrief:'Send project brief ↗',chatTitle:"Let's explore your idea.",chatIntro:'Ask about our services or how to shape your project.',chatPlaceholder:'Write your message…',chatUnavailable:'The assistant is temporarily unavailable. Your message was not sent.',chatWelcome:'Welcome to APEX. Tell me about your idea. This conversation is saved so you can return to it later.',chatError:'Could not send your message. Please try again.',formSuccess:'Your project brief was securely submitted.',formError:'We could not save your request right now. Please try again.',formInvalid:'Please complete all required fields and the contact consent.',projectLabel:'APEX EXPERIMENT'
+    navWork:'Work',navServices:'Services',navProcess:'Process',navAbout:'About',startProject:'Start a project',eyebrow:'INDEPENDENT DIGITAL STUDIO · CAIRO / REMOTE',heroTitle:'Turn your vision into <em>digital reality.</em>',heroBody:'A creative technology studio for websites, mobile apps, AI systems and digital experiences built to move your business forward.',exploreWork:'Explore selected work',heroNote:'No templates. No noise. Just purposeful digital work.',scroll:'SCROLL TO EXPLORE',selectedWork:'SELECTED WORK',workTitle:'Ideas taking <em>shape.</em>',workBody:'A selection of concepts and digital experiences from the APEX universe.',filterAll:'All work',filterCommerce:'Commerce',filterApps:'Apps',whatWeBuild:'WHAT WE BUILD',servicesTitle:'Digital, made <em>useful.</em>',servicesBody:'From a focused first release to a connected digital ecosystem.',serviceWeb:'Websites & platforms',serviceWebBody:'Company websites, landing pages, portals and custom dashboards.',serviceCommerce:'E-commerce experiences',serviceCommerceBody:'Online stores designed around discovery, trust and conversion.',serviceAI:'AI & automation',serviceAIBody:'AI assistants, smart workflows and practical business automation.',serviceApps:'Mobile & digital products',serviceAppsBody:'Purpose-built applications shaped around real user needs.',ourApproach:'OUR APPROACH',processTitle:'Clear thinking.<br><em>Careful execution.</em>',processBody:'A straightforward process that keeps the goal visible from the first conversation to launch.',stepDiscover:'Discover',stepDiscoverBody:'Understand the goal, audience and constraints.',stepDefine:'Define',stepDefineBody:'Turn the idea into a focused scope and direction.',stepDesign:'Design',stepDesignBody:'Shape the interface, content and interaction.',stepBuild:'Build',stepBuildBody:'Develop, test and refine the real product.',stepLaunch:'Launch',stepLaunchBody:'Ship with a clear handoff and next steps.',theStudio:'THE STUDIO',aboutTitle:'Small by design.<br><em>Serious about outcomes.</em>',aboutBody:'We build precise digital experiences tied to a real outcome. Technology and AI are tools in our process — the result is what matters.',pointClarity:'Clarity first',pointCustom:'Made for your context',pointQuality:'Built to last',startSomething:'START SOMETHING',ctaTitle:'Have an idea that<br><em>should exist?</em>',ctaBody:'Tell us what you are trying to make. We will turn the rough thought into a clearer next step.',buildBrief:'Build my project brief',askApex:'Ask APEX',footerLine:'Turning thoughtful ideas into crafted digital experiences.',backTop:'BACK TO TOP ↑',projectInquiry:'PROJECT INQUIRY',formTitle:"Let's make it real.",formIntro:'Share a few details and the studio can follow up with you.',fieldName:'Your name',fieldEmail:'Email address',fieldService:'What do you need?',fieldBudget:'Budget range',fieldBrief:'Tell us about your idea',fieldWhatsapp:'WhatsApp (optional)',fieldTimeline:'Timeline',consent:'I agree that APEX STUDIO may contact me about this request.',sendBrief:'Send project brief ↗',chatTitle:"Let's explore your idea.",chatIntro:'Ask about our services or how to shape your project.',chatOwner:'CHAT WITH OWNER ↗',ownerChatTitle:'Chat with the owner.',ownerChatIntro:'Your message goes to the APEX STUDIO owner. Replies appear here.',chatPlaceholder:'Write your message…',chatUnavailable:'The assistant is temporarily unavailable. Your message was not sent.',chatWelcome:'Welcome to APEX. Tell me about your idea. This conversation is saved so you can return to it later.',chatError:'Could not send your message. Please try again.',formSuccess:'Your project brief was securely submitted.',formError:'We could not save your request right now. Please try again.',formInvalid:'Please complete all required fields and the contact consent.',projectLabel:'APEX EXPERIMENT'
   },
   ar: {
-    navWork:'الأعمال',navServices:'الخدمات',navProcess:'طريقة العمل',navAbout:'عن الاستوديو',startProject:'ابدأ مشروعك',eyebrow:'استوديو رقمي مستقل · القاهرة / عن بُعد',heroTitle:'حوّل فكرتك إلى <em>واقع رقمي.</em>',heroBody:'استوديو تقني إبداعي يبني المواقع وتطبيقات الموبايل وأنظمة الذكاء الاصطناعي والتجارب الرقمية التي تدفع أعمالك للأمام.',exploreWork:'استكشف الأعمال',heroNote:'لا قوالب جاهزة. لا ضوضاء. فقط عمل رقمي له هدف.',scroll:'اكتشف المزيد',selectedWork:'أعمال مختارة',workTitle:'أفكار تتحول إلى <em>واقع.</em>',workBody:'مجموعة من التصورات والتجارب الرقمية من عالم APEX.',filterAll:'كل الأعمال',filterCommerce:'التجارة',filterApps:'التطبيقات',whatWeBuild:'ماذا نبني؟',servicesTitle:'تقنية تصنع <em>فرقًا.</em>',servicesBody:'من أول إصدار مركز إلى منظومة رقمية متكاملة.',serviceWeb:'المواقع والمنصات',serviceWebBody:'مواقع الشركات وصفحات الهبوط والبوابات ولوحات التحكم.',serviceCommerce:'تجارب التجارة الإلكترونية',serviceCommerceBody:'متاجر إلكترونية مصممة لاكتشاف المنتجات وبناء الثقة وزيادة التحويل.',serviceAI:'الذكاء الاصطناعي والأتمتة',serviceAIBody:'مساعدات ذكية وسير عمل مؤتمت وحلول عملية للأعمال.',serviceApps:'تطبيقات ومنتجات رقمية',serviceAppsBody:'تطبيقات مصممة حول احتياجات المستخدم الحقيقية.',ourApproach:'منهجيتنا',processTitle:'تفكير واضح.<br><em>تنفيذ متقن.</em>',processBody:'خطوات عملية تحافظ على وضوح الهدف من أول محادثة وحتى الإطلاق.',stepDiscover:'الاكتشاف',stepDiscoverBody:'نفهم الهدف والجمهور والقيود.',stepDefine:'التحديد',stepDefineBody:'نحوّل الفكرة إلى نطاق واتجاه واضحين.',stepDesign:'التصميم',stepDesignBody:'نبني الواجهة والمحتوى والتفاعل.',stepBuild:'التنفيذ',stepBuildBody:'نطوّر ونختبر ونصقل المنتج الحقيقي.',stepLaunch:'الإطلاق',stepLaunchBody:'نسلّم المنتج بخطوات تالية واضحة.',theStudio:'الاستوديو',aboutTitle:'صغير عن قصد.<br><em>جاد في النتيجة.</em>',aboutBody:'نبني تجارب رقمية دقيقة مرتبطة بهدف حقيقي. التقنية والذكاء الاصطناعي أدوات في طريقتنا، لكن النتيجة هي الأهم.',pointClarity:'وضوح من البداية',pointCustom:'مصمم لاحتياجك',pointQuality:'جودة تدوم',startSomething:'ابدأ شيئًا جديدًا',ctaTitle:'عندك فكرة<br><em>تستحق أن توجد؟</em>',ctaBody:'احكِ لنا ما تريد بناءه، وسنحوّل الفكرة الأولية إلى خطوة تالية أوضح.',buildBrief:'جهّز طلب مشروعك',askApex:'اسأل APEX',footerLine:'نحوّل الأفكار إلى تجارب رقمية مصممة بعناية.',backTop:'العودة للأعلى ↑',projectInquiry:'طلب مشروع',formTitle:'خلينا نحوّلها لحقيقة.',formIntro:'شاركنا بعض التفاصيل وسنتواصل معك لمتابعة المشروع.',fieldName:'اسمك',fieldEmail:'البريد الإلكتروني',fieldService:'ما الخدمة المطلوبة؟',fieldBudget:'الميزانية المتوقعة',fieldBrief:'احكِ لنا عن فكرتك',fieldWhatsapp:'واتساب (اختياري)',fieldTimeline:'الجدول الزمني',consent:'أوافق على تواصل APEX STUDIO معي بخصوص هذا الطلب.',sendBrief:'إرسال طلب المشروع ↗',chatTitle:'خلينا نفهم فكرتك.',chatIntro:'اسأل عن خدماتنا أو كيفية تحويل فكرتك إلى مشروع.',chatPlaceholder:'اكتب رسالتك…',chatUnavailable:'المساعد غير متاح مؤقتًا. لم يتم إرسال رسالتك.',chatWelcome:'أهلًا بيك في APEX. احكي لنا عن فكرتك. المحادثة محفوظة لتقدر ترجع لها لاحقًا.',chatError:'تعذر إرسال الرسالة. حاول مرة أخرى.',formSuccess:'تم إرسال طلب مشروعك وحفظه بنجاح.',formError:'تعذر حفظ الطلب حاليًا. حاول مرة أخرى.',formInvalid:'من فضلك أكمل البيانات المطلوبة والموافقة على التواصل.',projectLabel:'تجربة APEX'
+    navWork:'الأعمال',navServices:'الخدمات',navProcess:'طريقة العمل',navAbout:'عن الاستوديو',startProject:'ابدأ مشروعك',eyebrow:'استوديو رقمي مستقل · القاهرة / عن بُعد',heroTitle:'حوّل فكرتك إلى <em>واقع رقمي.</em>',heroBody:'استوديو تقني إبداعي يبني المواقع وتطبيقات الموبايل وأنظمة الذكاء الاصطناعي والتجارب الرقمية التي تدفع أعمالك للأمام.',exploreWork:'استكشف الأعمال',heroNote:'لا قوالب جاهزة. لا ضوضاء. فقط عمل رقمي له هدف.',scroll:'اكتشف المزيد',selectedWork:'أعمال مختارة',workTitle:'أفكار تتحول إلى <em>واقع.</em>',workBody:'مجموعة من التصورات والتجارب الرقمية من عالم APEX.',filterAll:'كل الأعمال',filterCommerce:'التجارة',filterApps:'التطبيقات',whatWeBuild:'ماذا نبني؟',servicesTitle:'تقنية تصنع <em>فرقًا.</em>',servicesBody:'من أول إصدار مركز إلى منظومة رقمية متكاملة.',serviceWeb:'المواقع والمنصات',serviceWebBody:'مواقع الشركات وصفحات الهبوط والبوابات ولوحات التحكم.',serviceCommerce:'تجارب التجارة الإلكترونية',serviceCommerceBody:'متاجر إلكترونية مصممة لاكتشاف المنتجات وبناء الثقة وزيادة التحويل.',serviceAI:'الذكاء الاصطناعي والأتمتة',serviceAIBody:'مساعدات ذكية وسير عمل مؤتمت وحلول عملية للأعمال.',serviceApps:'تطبيقات ومنتجات رقمية',serviceAppsBody:'تطبيقات مصممة حول احتياجات المستخدم الحقيقية.',ourApproach:'منهجيتنا',processTitle:'تفكير واضح.<br><em>تنفيذ متقن.</em>',processBody:'خطوات عملية تحافظ على وضوح الهدف من أول محادثة وحتى الإطلاق.',stepDiscover:'الاكتشاف',stepDiscoverBody:'نفهم الهدف والجمهور والقيود.',stepDefine:'التحديد',stepDefineBody:'نحوّل الفكرة إلى نطاق واتجاه واضحين.',stepDesign:'التصميم',stepDesignBody:'نبني الواجهة والمحتوى والتفاعل.',stepBuild:'التنفيذ',stepBuildBody:'نطوّر ونختبر ونصقل المنتج الحقيقي.',stepLaunch:'الإطلاق',stepLaunchBody:'نسلّم المنتج بخطوات تالية واضحة.',theStudio:'الاستوديو',aboutTitle:'صغير عن قصد.<br><em>جاد في النتيجة.</em>',aboutBody:'نبني تجارب رقمية دقيقة مرتبطة بهدف حقيقي. التقنية والذكاء الاصطناعي أدوات في طريقتنا، لكن النتيجة هي الأهم.',pointClarity:'وضوح من البداية',pointCustom:'مصمم لاحتياجك',pointQuality:'جودة تدوم',startSomething:'ابدأ شيئًا جديدًا',ctaTitle:'عندك فكرة<br><em>تستحق أن توجد؟</em>',ctaBody:'احكِ لنا ما تريد بناءه، وسنحوّل الفكرة الأولية إلى خطوة تالية أوضح.',buildBrief:'جهّز طلب مشروعك',askApex:'اسأل APEX',footerLine:'نحوّل الأفكار إلى تجارب رقمية مصممة بعناية.',backTop:'العودة للأعلى ↑',projectInquiry:'طلب مشروع',formTitle:'خلينا نحوّلها لحقيقة.',formIntro:'شاركنا بعض التفاصيل وسنتواصل معك لمتابعة المشروع.',fieldName:'اسمك',fieldEmail:'البريد الإلكتروني',fieldService:'ما الخدمة المطلوبة؟',fieldBudget:'الميزانية المتوقعة',fieldBrief:'احكِ لنا عن فكرتك',fieldWhatsapp:'واتساب (اختياري)',fieldTimeline:'الجدول الزمني',consent:'أوافق على تواصل APEX STUDIO معي بخصوص هذا الطلب.',sendBrief:'إرسال طلب المشروع ↗',chatTitle:'خلينا نفهم فكرتك.',chatIntro:'اسأل عن خدماتنا أو كيفية تحويل فكرتك إلى مشروع.',chatOwner:'كلم صاحب الاستوديو ↗',ownerChatTitle:'تواصل مباشر مع صاحب الاستوديو.',ownerChatIntro:'رسالتك هتوصل لصاحب APEX STUDIO والرد هيظهر هنا.',chatPlaceholder:'اكتب رسالتك…',chatUnavailable:'المساعد غير متاح مؤقتًا. لم يتم إرسال رسالتك.',chatWelcome:'أهلًا بيك في APEX. احكي لنا عن فكرتك. المحادثة محفوظة لتقدر ترجع لها لاحقًا.',chatError:'تعذر إرسال الرسالة. حاول مرة أخرى.',formSuccess:'تم إرسال طلب مشروعك وحفظه بنجاح.',formError:'تعذر حفظ الطلب حاليًا. حاول مرة أخرى.',formInvalid:'من فضلك أكمل البيانات المطلوبة والموافقة على التواصل.',projectLabel:'تجربة APEX'
   }
 };
 
@@ -30,6 +30,11 @@ let chatBootPromise;
 let chatBusy = false;
 let selectedProject = null;
 let chatPollTimer = null;
+let ownerConversationId = '';
+let ownerBootPromise = null;
+let ownerChatBusy = false;
+let ownerPollTimer = null;
+const seenOwnerMessageIds = new Set();
 const seenChatMessageIds = new Set();
 let toastTimer;
 
@@ -246,6 +251,70 @@ async function sendChatMessage(rawText) {
   }
 }
 
+function addOwnerMessage(message) {
+  if (!message || !message.id || seenOwnerMessageIds.has(message.id)) return;
+  seenOwnerMessageIds.add(message.id);
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble ' + (message.sender_type === 'client' ? 'user' : '');
+  bubble.textContent = message.body || '';
+  $('#owner-messages').append(bubble);
+  $('#owner-messages').scrollTop = $('#owner-messages').scrollHeight;
+}
+
+async function bootOwnerChat() {
+  if (ownerBootPromise) return ownerBootPromise;
+  ownerBootPromise = (async () => {
+    await ensureSession();
+    const userResult = await supabase.auth.getUser();
+    if (userResult.error || !userResult.data.user) throw new Error('Could not confirm the visitor session.');
+    const storageKey = 'apex_owner_chat_conversation_' + userResult.data.user.id;
+    const cachedId = localStorage.getItem(storageKey) || '';
+    let result = await supabase.functions.invoke('apex-client-chat', { body: { action: 'open', ...(cachedId ? { conversationId: cachedId } : {}), subject: locale === 'ar' ? 'محادثة مباشرة مع صاحب الموقع' : 'Direct chat with website owner', locale } });
+    if ((result.error || result.data?.error) && cachedId) {
+      localStorage.removeItem(storageKey);
+      result = await supabase.functions.invoke('apex-client-chat', { body: { action: 'open', subject: 'Direct chat with website owner', locale } });
+    }
+    if (result.error) throw result.error;
+    if (result.data?.error) throw new Error(result.data.error);
+    ownerConversationId = result.data?.conversation?.id || '';
+    if (!ownerConversationId) throw new Error('Could not open the owner conversation.');
+    localStorage.setItem(storageKey, ownerConversationId);
+    (result.data?.messages || []).forEach(addOwnerMessage);
+    if (!result.data?.messages?.length) {
+      const welcome = document.createElement('div'); welcome.className = 'chat-bubble';
+      welcome.textContent = locale === 'ar' ? 'أهلًا بيك! اكتب رسالتك هنا، وصاحب الاستوديو هيتابعها من لوحة التحكم.' : 'Hello! Leave a message here and the studio owner can follow up from the admin dashboard.';
+      $('#owner-messages').append(welcome);
+    }
+    if (!ownerPollTimer) ownerPollTimer = setInterval(async () => {
+      if (!ownerConversationId || !$('#owner-modal').open) return;
+      try {
+        const response = await supabase.functions.invoke('apex-client-chat', { body: { action: 'client_read', conversationId: ownerConversationId } });
+        if (!response.error && !response.data?.error) (response.data?.messages || []).forEach(addOwnerMessage);
+      } catch (error) { console.warn('APEX owner chat refresh unavailable:', error); }
+    }, 5000);
+  })();
+  try { await ownerBootPromise; } catch (error) { ownerBootPromise = null; throw error; }
+}
+
+async function sendOwnerMessage(rawText) {
+  const message = rawText.trim();
+  if (!message || ownerChatBusy || message.length > 8000) return;
+  ownerChatBusy = true; $('#owner-chat-status').textContent = '';
+  const bubble = document.createElement('div'); bubble.className = 'chat-bubble user'; bubble.textContent = message;
+  $('#owner-messages').append(bubble); $('#owner-messages').scrollTop = $('#owner-messages').scrollHeight; $('#owner-chat-input').value = '';
+  try {
+    await bootOwnerChat();
+    const idempotencyKey = 'msg_' + crypto.randomUUID().replace(/-/g, '');
+    const response = await supabase.functions.invoke('apex-client-chat', { body: { action: 'send', conversationId: ownerConversationId, body: message, idempotencyKey, mode: 'owner' } });
+    if (response.error) throw response.error;
+    if (response.data?.error) throw new Error(response.data.error);
+    (response.data?.messages || []).filter((item) => item.sender_type !== 'client').forEach(addOwnerMessage);
+  } catch (error) {
+    console.error('APEX owner chat failed:', error);
+    $('#owner-chat-status').textContent = locale === 'ar' ? 'تعذر إرسال الرسالة. حاول مرة أخرى.' : 'Could not send the message. Please try again.';
+  } finally { ownerChatBusy = false; }
+}
+
 function initReveal() {
   const elements = $$('.reveal');
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
@@ -322,6 +391,18 @@ function initEvents() {
     }
   });
   $('#inquiry-form').addEventListener('submit', submitInquiry);
+  $('#open-owner-chat').addEventListener('click', async () => {
+    openDialog($('#owner-modal'));
+    if (!ownerConversationId) {
+      try { await bootOwnerChat(); }
+      catch (error) { $('#owner-chat-status').textContent = locale === 'ar' ? 'تعذر فتح المحادثة حاليًا.' : 'Could not open the conversation right now.'; console.warn(error); }
+    }
+  });
+  $('#owner-chat-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    void sendOwnerMessage($('#owner-chat-input').value);
+  });
+
   $('#chat-form').addEventListener('submit', (event) => {
     event.preventDefault();
     void sendChatMessage($('#chat-input').value);
