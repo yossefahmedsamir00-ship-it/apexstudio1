@@ -70,3 +70,35 @@ describe('vanilla inquiry validation', () => {
     expect(validateInquiry({ ...valid, email: 'mina @example.com' })).toEqual(['email']);
   });
 });
+
+
+describe('saved chat transcript helpers', () => {
+  it('formats client, AI and owner messages into a readable bilingual transcript', () => {
+    const messages = [
+      { sender_type: 'client', body: 'I need a store.' },
+      { sender_type: 'ai', body: 'We can plan the store.' },
+      { sender_type: 'owner', body: 'I will follow up.' },
+    ];
+    expect(siteCore.formatChatTranscript?.(messages, 'en')).toBe(
+      'Client: I need a store.\nAPEX AI: We can plan the store.\nOwner: I will follow up.'
+    );
+    expect(siteCore.formatChatTranscript?.(messages, 'ar')).toBe(
+      'العميل: I need a store.\nAPEX AI: We can plan the store.\nصاحب الاستوديو: I will follow up.'
+    );
+  });
+
+  it('ignores empty message rows when building a transcript', () => {
+    expect(siteCore.formatChatTranscript?.([
+      { sender_type: 'client', body: '   ' },
+      { sender_type: 'ai', body: 'A useful answer.' },
+    ], 'en')).toBe('APEX AI: A useful answer.');
+  });
+
+  it('uses the oldest available message timestamp as the pagination cursor', () => {
+    expect(siteCore.getChatHistoryCursor?.([
+      { created_at: '2026-11-09T12:00:00.000Z' },
+      { created_at: '2026-11-09T12:05:00.000Z' },
+    ])).toBe('2026-11-09T12:00:00.000Z');
+    expect(siteCore.getChatHistoryCursor?.([])).toBe(null);
+  });
+});
