@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { filterProjects, validateInquiry } from './site-core.js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -59,7 +60,7 @@ function applyLocale(nextLocale) {
 }
 
 function renderProjects() {
-  const list = projects.filter((project) => activeCategory === 'all' || project.category === activeCategory);
+  const list = filterProjects(projects, activeCategory, '', locale);
   $('#project-grid').innerHTML = list.map((project, index) => `
     <article class="project-card reveal is-visible" data-project-id="${escapeHTML(project.id)}">
       <div class="project-art"><span class="project-number">0${index + 1}</span><div class="project-shape"><span>${escapeHTML(project.mark)}</span></div><span class="project-kind">${escapeHTML(t('projectLabel'))}</span></div>
