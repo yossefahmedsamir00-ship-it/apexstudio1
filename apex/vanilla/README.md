@@ -59,8 +59,9 @@ Implemented in this isolated phase:
 - Reduced-motion support, focus states, and safe handling when browser storage is unavailable
 - Lightweight CSS-based immersive showroom with pointer parallax, responsive founder contact card, keyboard-accessible enter/exit controls, and Escape-key exit
 - Shared bilingual copy modules for the homepage, standalone pages, and project/service detail pages
-- Browser smoke tests for homepage boot, language direction, assistant mode and opening, and immersive showroom exit
+- Browser smoke tests for homepage boot, language direction, assistant mode and opening, immersive showroom exit, all standalone page entry points, and bilingual detail not-found copy
 - Chat history pagination preserves chronological order when inserting older server-ordered messages
+- Visitor and owner chat restore the unsent message and remove the optimistic bubble after a send failure
 
 CMS detail-page body fields currently supported:
 - Localized text: `title_en`, `title_ar`, `summary_en`, `summary_ar`
@@ -73,7 +74,7 @@ Current CMS data state verified on 2026-11-09:
 - `apex_site_content` returned zero rows across content types and statuses, so the public site currently uses its curated fallback projects and static service content until the owner publishes CMS records.
 
 Not yet accepted as production parity:
-- Browser/device QA, accessibility audit, real Supabase submission/chat smoke tests, and measured Core Web Vitals
+- Browser/device QA in real browsers, accessibility audit, real Supabase submission/chat smoke tests, and measured Core Web Vitals
 - Full rendering of every optional CMS field and full comparison against every existing React interaction
 - Switching the root `apex/index.html` entry point
 
