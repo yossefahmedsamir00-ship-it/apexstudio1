@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { readStorageItem, writeStorageItem } from './site-core.js';
+import { translations } from './detail-translations.js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -9,64 +10,7 @@ const supabase = SUPABASE_URL && SUPABASE_KEY
     })
   : null;
 
-const translations = {
-  en: {
-    navWork: 'Work',
-    navServices: 'Services',
-    navAbout: 'About',
-    startProject: 'Start a project ↗',
-    backToWork: '← Back to selected work',
-    loadingTitle: 'Loading project…',
-    startSomething: 'START SOMETHING',
-    ctaTitle: 'Have an idea that should exist?',
-    ctaBody: 'Tell us what you are trying to make. We will shape the rough thought into a clearer next step.',
-    viewLiveProject: 'View project ↗',
-    viewService: 'Explore service ↗',
-    backToServices: '← Back to services',
-    backTop: 'Back to top ↑',
-    notFoundTitle: 'This project is not available.',
-    serviceNotFoundTitle: 'This service is not available.',
-    notFoundBody: 'It may be unpublished or the link may be incorrect.',
-    serviceNotFoundBody: 'It may be unpublished or the link may be incorrect.',
-    loadFailedTitle: 'Project details could not be loaded.',
-    loadFailedBody: 'Please return to selected work and try again later.',
-    noExtraDetails: 'More project details have not been published yet.',
-    overview: 'Overview',
-    challenge: 'Challenge',
-    approach: 'Approach',
-    solution: 'Solution',
-    results: 'Results',
-    features: 'Highlights',
-  },
-  ar: {
-    navWork: 'الأعمال',
-    navServices: 'الخدمات',
-    navAbout: 'عن الاستوديو',
-    startProject: 'ابدأ مشروعك ↗',
-    backToWork: '← العودة إلى الأعمال المختارة',
-    loadingTitle: 'جارٍ تحميل المشروع…',
-    startSomething: 'ابدأ شيئًا جديدًا',
-    ctaTitle: 'عندك فكرة تستحق أن توجد؟',
-    ctaBody: 'احكِ لنا ما تريد بناءه، وسنحوّل الفكرة الأولية إلى خطوة تالية أوضح.',
-    viewLiveProject: 'عرض المشروع ↗',
-    viewService: 'استكشف الخدمة ↗',
-    backToServices: '← العودة إلى الخدمات',
-    backTop: 'العودة للأعلى ↑',
-    notFoundTitle: 'المشروع غير متاح.',
-    serviceNotFoundTitle: 'الخدمة غير متاحة.',
-    notFoundBody: 'قد يكون غير منشور أو أن الرابط غير صحيح.',
-    serviceNotFoundBody: 'قد تكون غير منشورة أو أن الرابط غير صحيح.',
-    loadFailedTitle: 'تعذر تحميل تفاصيل المشروع.',
-    loadFailedBody: 'ارجع إلى الأعمال المختارة وحاول مرة أخرى لاحقًا.',
-    noExtraDetails: 'لم يتم نشر تفاصيل إضافية لهذا المشروع حتى الآن.',
-    overview: 'نظرة عامة',
-    challenge: 'التحدي',
-    approach: 'طريقة العمل',
-    solution: 'الحل',
-    results: 'النتائج',
-    features: 'أبرز المميزات',
-  },
-};
+;
 
 const $ = (selector) => document.querySelector(selector);
 const params = new URLSearchParams(window.location.search);
