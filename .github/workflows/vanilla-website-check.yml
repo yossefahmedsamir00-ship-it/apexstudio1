@@ -40,6 +40,8 @@ jobs:
           node --check vanilla/site-core.js
           node --check vanilla/site-data.js
           node --check vanilla/translations.js
+          node --check vanilla/page-translations.js
+          node --check vanilla/detail-translations.js
       - name: Run unit tests
         run: npm test
       - name: Build all website entry points
