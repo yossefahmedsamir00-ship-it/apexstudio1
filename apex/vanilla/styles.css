@@ -28,7 +28,7 @@ body {
   overflow-x:hidden
 }
 
-body[dir=rtl] {
+html[dir=rtl] body {
   font-family:"Cairo",var(--font),sans-serif
 }
 
@@ -994,37 +994,37 @@ button {
 
 }
 
-body[dir=rtl] .hero h1,body[dir=rtl] .section-heading h2,body[dir=rtl] .about-copy h2,body[dir=rtl] .cta-content h2 {
+html[dir=rtl] body .hero h1,html[dir=rtl] body .section-heading h2,html[dir=rtl] body .about-copy h2,html[dir=rtl] body .cta-content h2 {
   letter-spacing:0
 }
 
-body[dir=rtl] .process-grid article {
+html[dir=rtl] body .process-grid article {
   border-right:0;
   border-left:1px solid var(--line);
   padding-right:20px;
   padding-left:0
 }
 
-body[dir=rtl] .process-grid article+article {
+html[dir=rtl] body .process-grid article+article {
   padding-right:20px;
   padding-left:0
 }
 
-body[dir=rtl] .process-grid article:last-child {
+html[dir=rtl] body .process-grid article:last-child {
   border:0
 }
 
-body[dir=rtl] .modal-close {
+html[dir=rtl] body .modal-close {
   right:auto;
   left:18px
 }
 
-body[dir=rtl] .project-number {
+html[dir=rtl] body .project-number {
   left:auto;
   right:20px
 }
 
-body[dir=rtl] .project-kind {
+html[dir=rtl] body .project-kind {
   right:auto;
   left:18px
 }
