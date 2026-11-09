@@ -2260,3 +2260,116 @@ body.showroom-mode .showroom-exit {
     transition: none !important;
   }
 }
+
+
+.showroom-contact {
+  position: absolute;
+  z-index: 7;
+  right: 18px;
+  bottom: 66px;
+  width: min(278px, 58%);
+  padding: 13px;
+  border: 1px solid #c6a66a66;
+  border-radius: 13px;
+  background: #0b0907d9;
+  box-shadow: 0 14px 34px #0008, inset 0 0 25px #c6a66a0d;
+  backdrop-filter: blur(16px);
+}
+
+.showroom-contact-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.showroom-avatar {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 1px solid #c6a66a99;
+  border-radius: 50%;
+  background: #c6a66a18;
+  color: #f1dfb5;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.showroom-contact-heading strong,.showroom-contact-heading small {
+  display: block;
+}
+
+.showroom-contact-heading strong {
+  color: var(--text);
+  font-size: 11px;
+}
+
+.showroom-contact-heading small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.showroom-contact > a {
+  display: block;
+  overflow-wrap: anywhere;
+  margin-top: 6px;
+  padding: 7px 8px;
+  border: 1px solid #c6a66a2c;
+  border-radius: 7px;
+  color: #e8d5ae;
+  font-size: 9px;
+  transition: border-color .2s,color .2s;
+}
+
+.showroom-contact > a:hover {
+  border-color: #d9bd7b;
+  color: #fff2d3;
+}
+
+body.showroom-mode .showroom-contact {
+  right: 28px;
+  bottom: 28px;
+  width: min(320px, 38vw);
+}
+
+html[dir=rtl] body .showroom-contact {
+  right: auto;
+  left: 18px;
+}
+
+html[dir=rtl] body.showroom-mode .showroom-contact {
+  right: auto;
+  left: 28px;
+}
+
+@media(max-width:600px) {
+  .showroom-contact {
+    right: 10px;
+    bottom: 60px;
+    width: min(240px, 66%);
+    padding: 10px;
+  }
+
+  .showroom-contact > a {
+    font-size: 8px;
+  }
+
+  body.showroom-mode .showroom-contact {
+    right: 10px;
+    bottom: 10px;
+    width: min(300px, 72vw);
+  }
+
+  html[dir=rtl] body .showroom-contact {
+    right: auto;
+    left: 10px;
+  }
+
+  html[dir=rtl] body.showroom-mode .showroom-contact {
+    right: auto;
+    left: 10px;
+  }
+}
