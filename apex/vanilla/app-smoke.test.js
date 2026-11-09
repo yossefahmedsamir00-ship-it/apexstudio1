@@ -52,4 +52,19 @@ describe('APEX vanilla home page boot', () => {
     document.querySelector('[data-open-ai]').click();
     expect(document.querySelector('#ai-modal').hasAttribute('open')).toBe(true);
   });
+
+  it('opens the immersive showroom and exits safely with Escape', () => {
+    const enter = document.querySelector('#enter-showroom');
+    const exit = document.querySelector('#exit-showroom');
+
+    enter.click();
+    expect(document.body.classList.contains('showroom-mode')).toBe(true);
+    expect(enter.getAttribute('aria-expanded')).toBe('true');
+    expect(exit.hidden).toBe(false);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(document.body.classList.contains('showroom-mode')).toBe(false);
+    expect(enter.getAttribute('aria-expanded')).toBe('false');
+    expect(exit.hidden).toBe(true);
+  });
 });
