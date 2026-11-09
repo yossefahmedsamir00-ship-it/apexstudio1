@@ -157,3 +157,17 @@ describe('published CMS content mapping', () => {
     }]);
   });
 });
+
+
+describe('chat history prepend ordering', () => {
+  it('reverses chronological API rows before inserting each at the top of the message list', () => {
+    const rows = [
+      { id: 'older-1', created_at: '2026-11-09T09:00:00.000Z' },
+      { id: 'older-2', created_at: '2026-11-09T09:05:00.000Z' },
+      { id: 'older-3', created_at: '2026-11-09T09:10:00.000Z' },
+    ];
+    expect(siteCore.getMessagesForPrepend?.(rows).map((message) => message.id))
+      .toEqual(['older-3', 'older-2', 'older-1']);
+    expect(siteCore.getMessagesForPrepend?.(null)).toEqual([]);
+  });
+});
