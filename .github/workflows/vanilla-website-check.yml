@@ -36,6 +36,7 @@ jobs:
         run: |
           node --check vanilla/app.js
           node --check vanilla/project.js
+          node --check vanilla/page.js
       - name: Run unit tests
         run: npm test
       - name: Build all website entry points
