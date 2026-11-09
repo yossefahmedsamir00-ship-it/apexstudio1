@@ -240,6 +240,21 @@ function closeProject() {
 }
 
 $('#language-toggle').addEventListener('click', () => applyLocale(locale === 'en' ? 'ar' : 'en'));
+
+const menuToggle = $('#menu-toggle');
+const mainNav = $('#main-nav');
+menuToggle.addEventListener('click', () => {
+  const isOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+  menuToggle.setAttribute('aria-expanded', String(!isOpen));
+  menuToggle.setAttribute('aria-label', isOpen ? 'Open navigation' : 'Close navigation');
+  mainNav.classList.toggle('is-open', !isOpen);
+});
+mainNav.addEventListener('click', (event) => {
+  if (!event.target.closest('a')) return;
+  mainNav.classList.remove('is-open');
+  menuToggle.setAttribute('aria-expanded', 'false');
+  menuToggle.setAttribute('aria-label', 'Open navigation');
+});
 document.querySelectorAll('.current-year').forEach((element) => {
   element.textContent = String(new Date().getFullYear());
 });
