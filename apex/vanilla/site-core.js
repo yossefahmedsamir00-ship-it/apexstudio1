@@ -64,3 +64,25 @@ export function buildAnalyticsPayload({ eventName, sessionId, locale, path, meta
     p_metadata: eventMetadata,
   };
 }
+
+export function formatChatTranscript(messages, locale = 'en') {
+  const labels = locale === 'ar'
+    ? { client: 'العميل', owner: 'صاحب الاستوديو', ai: 'APEX AI', system: 'APEX' }
+    : { client: 'Client', owner: 'Owner', ai: 'APEX AI', system: 'APEX' };
+
+  return (Array.isArray(messages) ? messages : [])
+    .filter((message) => typeof message?.body === 'string' && message.body.trim())
+    .map((message) => {
+      const sender = labels[message.sender_type] ?? labels.ai;
+      return `${sender}: ${message.body.trim()}`;
+    })
+    .join('\n');
+}
+
+export function getChatHistoryCursor(messages) {
+  if (!Array.isArray(messages)) return null;
+  const oldest = messages.find((message) =>
+    typeof message?.created_at === 'string' && !Number.isNaN(Date.parse(message.created_at))
+  );
+  return oldest?.created_at ?? null;
+}
