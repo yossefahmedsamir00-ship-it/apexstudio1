@@ -56,3 +56,13 @@ export const translations = {
     features: 'أبرز المميزات',
   },
 };
+
+export function getDetailNotFoundCopy(contentType, locale = 'en') {
+  const dictionary = translations[locale === 'ar' ? 'ar' : 'en'];
+  const isService = contentType === 'service';
+
+  return {
+    title: dictionary[isService ? 'serviceNotFoundTitle' : 'notFoundTitle'],
+    description: dictionary[isService ? 'serviceNotFoundBody' : 'notFoundBody'],
+  };
+}
