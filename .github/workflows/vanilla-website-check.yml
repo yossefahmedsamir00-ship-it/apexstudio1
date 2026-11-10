@@ -45,6 +45,7 @@ jobs:
           node --check vanilla/project-preview.js
           node --check vanilla/welcome-intro.js
           node --check vanilla/welcome-intro-core.js
+          node --check vanilla/scroll-mascot.js
       - name: Run unit tests
         run: npm test
       - name: Build all website entry points
