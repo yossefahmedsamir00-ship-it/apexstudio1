@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { readStorageItem, writeStorageItem } from './site-core.js';
 import { translations, getDetailNotFoundCopy } from './detail-translations.js';
+import { getSafeProjectPreview } from './project-preview.js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -149,6 +150,22 @@ function renderProject(row) {
     cover.hidden = true;
   }
 
+  const preview = getSafeProjectPreview(body);
+  const previewSection = $('#project-preview');
+  const previewFrame = $('#project-preview-frame');
+  const previewLink = $('#open-project-preview');
+  if (contentType === 'project' && preview.url) {
+    previewFrame.src = preview.url;
+    previewFrame.title = `${title} — ${t('previewTitle')}`;
+    previewLink.href = preview.url;
+    $('#project-preview-description').textContent = t(preview.demoMode ? 'previewDemoMode' : 'previewDescription');
+    previewSection.hidden = false;
+  } else {
+    previewFrame.removeAttribute('src');
+    previewLink.removeAttribute('href');
+    previewSection.hidden = true;
+  }
+
   const liveUrl = contentType === 'service'
     ? safeHttpsUrl(body.service_url ?? body.project_url ?? body.live_url)
     : safeHttpsUrl(body.project_url ?? body.live_url);
@@ -221,6 +238,11 @@ async function loadProject() {
     renderState(t('loadFailedTitle'), t('loadFailedBody'));
   }
 }
+
+$('#refresh-project-preview').addEventListener('click', () => {
+  const frame = $('#project-preview-frame');
+  if (frame.src) frame.src = frame.src;
+});
 
 $('#language-toggle').addEventListener('click', () => applyLocale(locale === 'en' ? 'ar' : 'en'));
 
