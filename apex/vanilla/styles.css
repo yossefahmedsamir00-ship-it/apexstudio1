@@ -2469,3 +2469,274 @@ html[dir=rtl] body.showroom-mode .showroom-contact {
     left: 10px;
   }
 }
+
+/* APEX cinematic welcome — lightweight CSS character study, no video or WebGL dependency. */
+.welcome-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  color: #f8f2e6;
+  background:
+    radial-gradient(ellipse at 50% 42%, #17223a 0, #090b12 32%, transparent 62%),
+    radial-gradient(ellipse at 50% 110%, #8a5a1c55 0, transparent 45%),
+    #030405;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .8s ease, visibility .8s ease;
+}
+.welcome-intro[hidden] { display: none !important; }
+.welcome-intro.is-leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+body.welcome-intro-active { overflow: hidden; }
+.welcome-stars {
+  position: absolute;
+  inset: -20%;
+  z-index: -2;
+  opacity: .45;
+  background-image: radial-gradient(circle, #f3d99c 1px, transparent 1.7px), radial-gradient(circle, #69b9ff 1px, transparent 1.8px);
+  background-size: 73px 69px, 113px 97px;
+  background-position: 0 0, 34px 21px;
+  animation: welcome-star-drift 38s linear infinite;
+}
+.welcome-gold-orbit {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: min(78vw, 780px);
+  aspect-ratio: 1;
+  border: 1px solid #d5b36a48;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotateX(68deg);
+  box-shadow: 0 0 45px #d5b36a18, inset 0 0 35px #d5b36a10;
+  pointer-events: none;
+}
+.welcome-orbit-one { animation: welcome-orbit 22s linear infinite; }
+.welcome-orbit-two {
+  width: min(58vw, 570px);
+  border-color: #3e9bff55;
+  transform: translate(-50%, -50%) rotateX(68deg) rotate(58deg);
+  animation: welcome-orbit 18s linear infinite reverse;
+}
+.welcome-stage {
+  position: relative;
+  z-index: 1;
+  width: min(920px, calc(100% - 34px));
+  min-height: min(760px, 100dvh);
+  padding: clamp(26px, 5vh, 58px) 18px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.welcome-brand-lockup {
+  position: absolute;
+  top: clamp(20px, 5vh, 48px);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateX(-50%);
+  color: #f4d28b;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  white-space: nowrap;
+}
+.welcome-brand-lockup b { color: #fff; }
+.welcome-brand-lockup small {
+  display: block;
+  margin-top: 4px;
+  color: #a99b7d;
+  font-size: 8px;
+  letter-spacing: .3em;
+}
+.welcome-brand-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid #e6bc66;
+  color: #f5c86c;
+  font: 800 29px Georgia, serif;
+  transform: rotate(45deg) skew(-7deg);
+  box-shadow: 0 0 22px #e6bc6644;
+}
+.welcome-mascot {
+  position: relative;
+  width: clamp(190px, 28vw, 290px);
+  height: clamp(230px, 35vh, 330px);
+  margin: 25px auto 5px;
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 18px 38px #000b);
+  animation: welcome-mascot-float 5.2s ease-in-out infinite;
+}
+.mascot-aura {
+  position: absolute;
+  inset: 13% -15% 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #1d82e855 0, #d6a64c26 34%, transparent 68%);
+  filter: blur(20px);
+  animation: welcome-aura-pulse 3.8s ease-in-out infinite;
+}
+.mascot-hood {
+  position: absolute;
+  z-index: 3;
+  top: 4%;
+  left: 50%;
+  width: 58%;
+  height: 52%;
+  transform: translateX(-50%);
+  border: 2px solid #b78a43;
+  border-radius: 48% 48% 39% 39%;
+  background: linear-gradient(135deg, #30333a, #090b10 42%, #17191e 72%, #050609);
+  clip-path: polygon(50% 0, 94% 24%, 100% 72%, 78% 100%, 22% 100%, 0 72%, 6% 24%);
+  box-shadow: inset 0 0 24px #fff2, 0 0 30px #d5b36a25;
+  animation: welcome-head-turn 6s ease-in-out infinite;
+}
+.mascot-face {
+  position: absolute;
+  left: 17%;
+  right: 17%;
+  top: 42%;
+  height: 30%;
+  border-radius: 45%;
+  background: #02050b;
+  box-shadow: inset 0 0 16px #000, 0 0 18px #176edb55;
+}
+.mascot-face i {
+  position: absolute;
+  top: 43%;
+  width: 24%;
+  height: 3px;
+  border-radius: 100%;
+  background: #4cb8ff;
+  box-shadow: 0 0 7px #39aaff, 0 0 17px #168cff;
+  transform: rotate(-10deg);
+}
+.mascot-face i:first-child { left: 13%; }
+.mascot-face i:last-child { right: 13%; transform: rotate(10deg); }
+.mascot-neck {
+  position: absolute;
+  z-index: 2;
+  top: 48%;
+  left: 42%;
+  width: 16%;
+  height: 17%;
+  background: linear-gradient(90deg, #080a0e, #35363a, #090b10);
+}
+.mascot-body {
+  position: absolute;
+  z-index: 2;
+  bottom: 0;
+  left: 14%;
+  width: 72%;
+  height: 48%;
+  border: 1px solid #a77c3b;
+  border-radius: 48% 48% 12% 12%;
+  background: linear-gradient(110deg, #080a0e 4%, #272a30 33%, #090b10 62%, #24262a);
+  clip-path: polygon(34% 0, 66% 0, 100% 30%, 91% 100%, 9% 100%, 0 30%);
+  box-shadow: inset 0 10px 24px #ffffff0b, 0 0 22px #c69a4a24;
+}
+.mascot-body::after {
+  content: "A";
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  color: #f1c66d;
+  font: 700 clamp(30px, 5vw, 48px) Georgia, serif;
+  text-shadow: 0 0 18px #d5a94d;
+  transform: translateX(-50%);
+}
+.mascot-arm {
+  position: absolute;
+  z-index: 4;
+  top: 57%;
+  width: 24%;
+  height: 38%;
+  border: 1px solid #9b743c;
+  border-radius: 48px;
+  background: linear-gradient(90deg, #080a0e, #34363b, #0a0c11);
+  transform-origin: 50% 8%;
+}
+.mascot-arm-left { left: 7%; transform: rotate(25deg); animation: welcome-arm-left 4.8s ease-in-out infinite; }
+.mascot-arm-right { right: 7%; transform: rotate(-25deg); animation: welcome-arm-right 4.8s ease-in-out infinite; }
+.welcome-kicker {
+  margin: 14px 0 5px;
+  color: #d5b36a;
+  font-size: 9px;
+  letter-spacing: .28em;
+}
+.welcome-stage h1 {
+  margin: 7px 0;
+  color: #fff7e7;
+  font-size: clamp(24px, 4.2vw, 43px);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-shadow: 0 0 28px #d5b36a3d;
+}
+.welcome-subtitle {
+  margin: 4px 0 17px;
+  color: #a9a9b2;
+  font-size: 12px;
+  letter-spacing: .06em;
+}
+.welcome-loader {
+  width: min(250px, 65vw);
+  height: 2px;
+  margin: 8px auto 20px;
+  overflow: hidden;
+  background: #ffffff1a;
+}
+.welcome-loader span {
+  display: block;
+  width: 38%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #e7bf6c, #58b7ff, transparent);
+  box-shadow: 0 0 12px #e7bf6c;
+  animation: welcome-loading 2.2s ease-in-out infinite;
+}
+.welcome-actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.welcome-enter,.welcome-replay,.welcome-skip {
+  min-height: 42px;
+  padding: 10px 18px;
+  border: 1px solid #d5b36a99;
+  border-radius: 999px;
+  background: #d5b36a;
+  color: #15110a;
+  font-size: 11px;
+  font-weight: 800;
+  box-shadow: 0 0 25px #d5b36a36;
+  transition: transform .2s, box-shadow .2s, opacity .2s;
+}
+.welcome-enter { opacity: .78; }
+.welcome-enter.is-ready { opacity: 1; }
+.welcome-replay,.welcome-skip { background: #080b12b8; color: #ead8b1; }
+.welcome-actions button:hover { transform: translateY(-2px); box-shadow: 0 0 30px #d5b36a66; }
+.welcome-footnote { margin: 22px 0 0; color: #716b60; font-size: 8px; letter-spacing: .24em; }
+.welcome-intro button:focus-visible { outline: 2px solid #65baff; outline-offset: 4px; }
+@keyframes welcome-star-drift { to { background-position: 130px 100px, -80px 120px; } }
+@keyframes welcome-orbit { to { rotate: 360deg; } }
+@keyframes welcome-mascot-float { 0%,100% { transform: translateY(0) rotateY(-3deg); } 50% { transform: translateY(-11px) rotateY(3deg); } }
+@keyframes welcome-aura-pulse { 0%,100% { opacity: .58; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.08); } }
+@keyframes welcome-head-turn { 0%,100% { rotate: 0deg; } 50% { rotate: 3deg; } }
+@keyframes welcome-arm-left { 0%,100% { rotate: 0deg; } 50% { rotate: -5deg; } }
+@keyframes welcome-arm-right { 0%,100% { rotate: 0deg; } 50% { rotate: 5deg; } }
+@keyframes welcome-loading { 0% { transform: translateX(-120%); } 100% { transform: translateX(360%); } }
+@media(max-width:600px) {
+  .welcome-stage { min-height: 100dvh; padding-inline: 10px; }
+  .welcome-mascot { width: 190px; height: 235px; margin-top: 36px; }
+  .welcome-gold-orbit { width: 110vw; }
+  .welcome-orbit-two { width: 82vw; }
+  .welcome-stage h1 { font-size: clamp(21px, 7vw, 30px); letter-spacing: .035em; }
+  .welcome-kicker { font-size: 8px; letter-spacing: .15em; }
+  .welcome-actions { gap: 8px; }
+  .welcome-enter,.welcome-replay,.welcome-skip { padding: 9px 13px; font-size: 10px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .welcome-stars,.welcome-orbit-one,.welcome-orbit-two,.welcome-mascot,.mascot-aura,.mascot-hood,.mascot-arm,.welcome-loader span { animation: none !important; }
+  .welcome-intro,.welcome-actions button { transition: none !important; }
+}
