@@ -9,7 +9,10 @@ if (root) {
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
   if (shouldShowWelcomeIntro(storage, reducedMotion)) {
-    const copy = getWelcomeCopy(document.documentElement.lang === 'ar' ? 'ar' : 'en');
+    let savedLocale = '';
+  try { savedLocale = window.localStorage.getItem('apex_locale') || ''; } catch { /* storage may be blocked */ }
+  const locale = savedLocale === 'ar' || document.documentElement.lang === 'ar' ? 'ar' : 'en';
+  const copy = getWelcomeCopy(locale);
     const caption = root.querySelector('[data-welcome-caption]');
     const enter = root.querySelector('[data-welcome-enter]');
     const replay = root.querySelector('[data-welcome-replay]');
@@ -46,6 +49,7 @@ if (root) {
     document.body.classList.add('welcome-intro-active');
     root.hidden = false;
     root.setAttribute('aria-hidden', 'false');
+    enter.focus({ preventScroll: true });
 
     enter.addEventListener('click', finish);
     skip.addEventListener('click', finish);
