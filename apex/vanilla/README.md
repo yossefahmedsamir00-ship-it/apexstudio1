@@ -35,6 +35,8 @@ The visitor AI chat uses the existing `apex-client-chat` Edge Function. Inquiry 
 ```bash
 node --check vanilla/app.js
 node --check vanilla/project.js
+node --check vanilla/welcome-intro.js
+node --check vanilla/welcome-intro-core.js
 node --check vanilla/page.js
 npm test
 npm run build
@@ -58,6 +60,9 @@ Implemented in this isolated phase:
 - Analytics event capture with the project id mapped to the dedicated RPC argument
 - Reduced-motion support, focus states, and safe handling when browser storage is unavailable
 - Lightweight CSS-based immersive showroom with pointer parallax, responsive founder contact card, keyboard-accessible enter/exit controls, and Escape-key exit
+- Cinematic first-visit welcome layer with animated CSS mascot study, gold/blue orbital lighting, localized welcome captions, optional browser speech synthesis, replay/skip/enter controls, and reduced-motion bypass
+- Welcome intro is session-scoped and does not run again after dismissal in the same tab; speech availability depends on browser voice support and autoplay policy
+- The current mascot is a CSS character study/prototype, not the final rigged 3D character. A production-quality animated 3D character with facial/lip-sync animation requires a separately created and optimized rigged GLB/GLTF asset
 - Shared bilingual copy modules for the homepage, standalone pages, and project/service detail pages
 - Browser smoke tests for homepage boot, language direction, assistant mode and opening, immersive showroom exit, all standalone page entry points, and bilingual detail not-found copy
 - Chat history pagination preserves chronological order when inserting older server-ordered messages
