@@ -26,6 +26,13 @@ export const translations = {
     solution: 'Solution',
     results: 'Results',
     features: 'Highlights',
+    previewEyebrow: 'INTERACTIVE PREVIEW',
+    previewTitle: 'Explore the experience',
+    previewDescription: 'A protected preview of this project.',
+    previewDemoMode: 'Curated demo preview. Use the controls inside the preview to explore safely.',
+    previewSafety: 'This preview is sandboxed and cannot access the APEX website. Some external sites may block embedded viewing.',
+    refreshPreview: 'Reload preview',
+    openPreview: 'Open in new tab ↗',
   },
   ar: {
     navWork: 'الأعمال',
@@ -54,6 +61,13 @@ export const translations = {
     solution: 'الحل',
     results: 'النتائج',
     features: 'أبرز المميزات',
+    previewEyebrow: 'معاينة تفاعلية',
+    previewTitle: 'استكشف تجربة المشروع',
+    previewDescription: 'معاينة محمية لهذا المشروع.',
+    previewDemoMode: 'معاينة تجريبية منظمة. استخدم عناصر التحكم داخل المعاينة لاستكشاف المشروع.',
+    previewSafety: 'المعاينة معزولة ولا يمكنها الوصول إلى موقع APEX. قد تمنع بعض المواقع الخارجية العرض داخل الصفحة.',
+    refreshPreview: 'إعادة تحميل المعاينة',
+    openPreview: 'فتح في نافذة جديدة ↗',
   },
 };
 
