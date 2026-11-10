@@ -32,12 +32,17 @@ if (root) {
       window.speechSynthesis.speak(utterance);
     };
 
+    const handleKeydown = (event) => {
+      if (event.key === 'Escape') event.preventDefault();
+    };
+
     const finish = () => {
       if (finished) return;
       finished = true;
       window.clearTimeout(stageTimer);
       window.clearTimeout(finishTimer);
       window.speechSynthesis?.cancel();
+      document.removeEventListener('keydown', handleKeydown);
       try { storage.setItem('apex_welcome_intro_seen', 'seen'); } catch { /* Session storage may be blocked. */ }
       root.classList.add('is-leaving');
       document.body.classList.remove('welcome-intro-active');
@@ -69,9 +74,7 @@ if (root) {
       root.hidden = false;
       root.setAttribute('aria-hidden', 'false');
       root.focus({ preventScroll: true });
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') event.preventDefault();
-      }, { once: false });
+      document.addEventListener('keydown', handleKeydown);
       showStage(0);
     }
   } else {
