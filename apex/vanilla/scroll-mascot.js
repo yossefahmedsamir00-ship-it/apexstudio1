@@ -15,6 +15,8 @@ if (mascot) {
     const direction = scrollY > Number(mascot.dataset.lastY || 0) ? 1 : -1;
     mascot.dataset.lastY = String(scrollY);
     mascot.style.setProperty('--scroll-progress', progress.toFixed(4));
+    document.documentElement.style.setProperty('--apex-scroll-progress', progress.toFixed(4));
+    document.body.dataset.scrollDirection = direction > 0 ? 'down' : 'up';
     mascot.style.setProperty('--scroll-tilt', reduceMotion.matches ? '0deg' : `${direction * 2.5}deg`);
     mascot.style.setProperty('--scroll-shift', reduceMotion.matches ? '0px' : `${Math.sin(progress * Math.PI * 8) * 8}px`);
     mascot.dataset.section = activeSection;
