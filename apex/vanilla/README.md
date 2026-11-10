@@ -68,6 +68,7 @@ CMS detail-page body fields currently supported:
 - Project/service metadata: `category`, `mark`, `tags`, `client`, `year`
 - Optional sections: `overview`, `challenge`, `approach`, `solution`, `results`, `features`, or `details` array with localized `title` and `description`
 - Optional HTTPS media/links: `cover_image_url` / `cover_url`, `gallery` array, `project_url` / `live_url`, and `service_url` for service detail pages
+- Optional project preview: `preview_url` (HTTPS only) and `demo_mode` (boolean). The preview is embedded in a restricted sandbox without same-origin access or form submission permission; some third-party sites may refuse iframe embedding. The separate live-project link remains available through `project_url` / `live_url`.
 - Only HTTPS external links and images are rendered by detail pages
 
 Current CMS data state verified on 2026-11-09:
