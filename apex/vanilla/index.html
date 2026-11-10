@@ -15,32 +15,47 @@
   <script type="module" src="./app.js"></script>
 </head>
 <body>
-  <section class="welcome-intro" id="apex-welcome" role="dialog" aria-modal="true" aria-label="Welcome to APEX STUDIO" aria-hidden="true">
+  <section class="welcome-intro" id="apex-welcome" role="dialog" aria-modal="true" aria-label="APEX STUDIO introduction" aria-hidden="true" tabindex="-1" hidden>
     <div class="welcome-stars" aria-hidden="true"></div>
     <div class="welcome-gold-orbit welcome-orbit-one" aria-hidden="true"></div>
     <div class="welcome-gold-orbit welcome-orbit-two" aria-hidden="true"></div>
     <div class="welcome-stage">
-      <div class="welcome-brand-lockup">
-        <span class="welcome-brand-mark" aria-hidden="true">A</span>
-        <span>APEX <b>STUDIO</b><small>CREATED BY ANSTA</small></span>
+      <div class="welcome-sequence" data-welcome-stage="hello" aria-hidden="false">
+        <p class="welcome-micro">A NEW DIGITAL STORY</p>
+        <h1 class="hello-world">Hello World<span>.</span></h1>
+        <span class="welcome-stage-line"></span>
       </div>
-      <div class="welcome-mascot" aria-hidden="true">
-        <div class="mascot-aura"></div>
-        <div class="mascot-hood"><div class="mascot-face"><i></i><i></i></div></div>
-        <div class="mascot-neck"></div>
-        <div class="mascot-body"></div>
-        <div class="mascot-arm mascot-arm-left"></div>
-        <div class="mascot-arm mascot-arm-right"></div>
-        <div class="mascot-core">A</div>
+      <div class="welcome-sequence" data-welcome-stage="evolve" aria-hidden="true">
+        <p class="welcome-micro">EVERYTHING STARTS WITH AN IDEA</p>
+        <h2 class="evolve-word">Hello <em>World</em><span>.</span></h2>
+        <div class="evolve-orbit" aria-hidden="true"></div>
+        <p class="evolve-caption">A SIMPLE LINE. AN INFINITE POSSIBILITY.</p>
       </div>
-      <p class="welcome-kicker">DREAM BIGGER · BUILD BETTER · GROW FASTER</p>
-      <h1 data-welcome-caption>WELCOME TO APEX STUDIO</h1>
-      <p class="welcome-subtitle" data-welcome-subtitle>A new dimension of digital experiences.</p>
-      <div class="welcome-loader" aria-label="Loading"><span></span></div>
-      <div class="welcome-actions">
-        <button type="button" data-welcome-replay class="welcome-replay">Replay welcome voice</button>
+      <div class="welcome-sequence" data-welcome-stage="identity" aria-hidden="true">
+        <div class="welcome-brand-lockup"><span class="welcome-brand-mark" aria-hidden="true">A</span><span>APEX <b>STUDIO</b><small>CREATED BY ANSTA</small></span></div>
+        <div class="welcome-mascot" aria-hidden="true">
+          <div class="mascot-aura"></div><div class="mascot-hood"><div class="mascot-face"><i></i><i></i></div></div>
+          <div class="mascot-neck"></div><div class="mascot-body"></div><div class="mascot-arm mascot-arm-left"></div><div class="mascot-arm mascot-arm-right"></div>
+        </div>
+        <p class="welcome-micro">IDENTITY TAKES SHAPE</p>
       </div>
-      <p class="welcome-footnote">INTERACTIVE EXPERIENCE · APEX STUDIO</p>
+      <div class="welcome-sequence" data-welcome-stage="greeting" aria-hidden="true">
+        <div class="welcome-brand-lockup"><span class="welcome-brand-mark" aria-hidden="true">A</span><span>APEX <b>STUDIO</b><small>CREATED BY ANSTA</small></span></div>
+        <div class="welcome-mascot greeting-mascot" aria-hidden="true">
+          <div class="mascot-aura"></div><div class="mascot-hood"><div class="mascot-face"><i></i><i></i></div></div>
+          <div class="mascot-neck"></div><div class="mascot-body"></div><div class="mascot-arm mascot-arm-left"></div><div class="mascot-arm mascot-arm-right"></div>
+        </div>
+        <p class="welcome-kicker">DREAM BIGGER · BUILD BETTER · GROW FASTER</p>
+        <h2 data-welcome-caption>WELCOME TO APEX STUDIO</h2>
+        <p class="welcome-subtitle" data-welcome-subtitle>A new dimension of digital experiences.</p>
+        <div class="welcome-loader" aria-hidden="true"><span></span></div>
+        <p class="welcome-footnote">INTERACTIVE EXPERIENCE · APEX STUDIO</p>
+      </div>
+      <div class="welcome-sequence website-reveal" data-welcome-stage="website" aria-hidden="true">
+        <div class="website-reveal-mark">A</div>
+        <p class="welcome-kicker">THE EXPERIENCE BEGINS</p>
+        <h2>APEX <em>STUDIO</em></h2>
+      </div>
     </div>
   </section>
   <script type="module" src="./welcome-intro.js"></script>
