@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { getFocusTrapTarget, getWelcomeCopy, getWelcomeDuration, shouldShowWelcomeIntro } from './welcome-intro-core.js';
+import { getFocusTrapTarget, getWelcomeCopy, getWelcomeDuration, getWelcomeStages, shouldShowWelcomeIntro } from './welcome-intro-core.js';
 
 describe('cinematic welcome intro', () => {
+  it('plays five ordered visual stages before opening the website', () => {
+    expect(getWelcomeStages().map((stage) => stage.id)).toEqual(['hello', 'evolve', 'identity', 'greeting', 'website']);
+    expect(getWelcomeStages().reduce((total, stage) => total + stage.duration, 0)).toBe(10500);
+  });
+
   it('shows the intro once per tab unless the visitor already completed it', () => {
     expect(shouldShowWelcomeIntro({ getItem: () => null })).toBe(true);
     expect(shouldShowWelcomeIntro({ getItem: () => 'seen' })).toBe(false);
