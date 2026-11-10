@@ -36,3 +36,13 @@ export function getWelcomeCopy(locale = 'en') {
 export function getWelcomeDuration(prefersReducedMotion) {
   return prefersReducedMotion ? 1800 : 7200;
 }
+
+export function getWelcomeStages() {
+  return [
+    { id: 'hello', duration: 2000 },
+    { id: 'evolve', duration: 1800 },
+    { id: 'identity', duration: 2000 },
+    { id: 'greeting', duration: 2500 },
+    { id: 'website', duration: 2200 },
+  ];
+}
