@@ -1,4 +1,4 @@
-import { getWelcomeCopy, shouldShowWelcomeIntro } from './welcome-intro-core.js';
+import { getFocusTrapTarget, getWelcomeCopy, shouldShowWelcomeIntro } from './welcome-intro-core.js';
 
 const root = document.getElementById('apex-welcome');
 
@@ -54,15 +54,10 @@ if (root) {
         }
 
         if (event.key !== 'Tab') return;
-
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
+        const target = getFocusTrapTarget(document.activeElement, focusable, event.shiftKey);
+        if (target) {
           event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
+          target.focus();
         }
       };
 
