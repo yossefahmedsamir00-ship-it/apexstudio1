@@ -1,4 +1,4 @@
-import { getFocusTrapTarget, getWelcomeCopy, shouldShowWelcomeIntro } from './welcome-intro-core.js';
+import { getFocusTrapTarget, getWelcomeCopy, getWelcomeDuration, shouldShowWelcomeIntro } from './welcome-intro-core.js';
 
 const root = document.getElementById('apex-welcome');
 
@@ -13,7 +13,7 @@ if (root) {
   };
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
-  if (shouldShowWelcomeIntro(storage, reducedMotion)) {
+  if (shouldShowWelcomeIntro(storage)) {
     let savedLocale = '';
     try {
       savedLocale = window.localStorage.getItem('apex_locale') || '';
@@ -24,15 +24,14 @@ if (root) {
     const locale = savedLocale === 'ar' || document.documentElement.lang === 'ar' ? 'ar' : 'en';
     const copy = getWelcomeCopy(locale);
     const caption = root.querySelector('[data-welcome-caption]');
-    const enter = root.querySelector('[data-welcome-enter]');
+    const subtitle = root.querySelector('[data-welcome-subtitle]');
     const replay = root.querySelector('[data-welcome-replay]');
-    const skip = root.querySelector('[data-welcome-skip]');
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const focusable = [enter, replay, skip].filter((element) => element instanceof HTMLButtonElement);
+    const focusable = [replay].filter((element) => element instanceof HTMLButtonElement);
     let finished = false;
     let voiceTimer;
 
-    if (!caption || focusable.length !== 3) {
+    if (!caption || !subtitle || focusable.length !== 1) {
       root.remove();
     } else {
       const speak = () => {
@@ -49,7 +48,6 @@ if (root) {
       const handleKeydown = (event) => {
         if (event.key === 'Escape') {
           event.preventDefault();
-          finish();
           return;
         }
 
@@ -81,23 +79,17 @@ if (root) {
       };
 
       caption.textContent = copy.caption;
-      enter.textContent = copy.enter;
+      subtitle.textContent = copy.subtitle;
       replay.textContent = copy.replay;
-      skip.textContent = copy.skip;
       document.body.classList.add('welcome-intro-active');
       root.hidden = false;
       root.setAttribute('aria-hidden', 'false');
       document.addEventListener('keydown', handleKeydown);
-      enter.focus({ preventScroll: true });
+      replay.focus({ preventScroll: true });
 
-      enter.addEventListener('click', finish);
-      skip.addEventListener('click', finish);
       replay.addEventListener('click', speak);
-      voiceTimer = window.setTimeout(speak, 2100);
-      window.setTimeout(() => {
-        if (!finished) enter.classList.add('is-ready');
-      }, 2600);
-      window.setTimeout(finish, 7200);
+      voiceTimer = window.setTimeout(speak, reducedMotion ? 450 : 2100);
+      window.setTimeout(finish, getWelcomeDuration(reducedMotion));
     }
   } else {
     root.remove();
