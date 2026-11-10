@@ -239,10 +239,13 @@ async function loadProject() {
   }
 }
 
-$('#refresh-project-preview').addEventListener('click', () => {
-  const frame = $('#project-preview-frame');
-  if (frame.src) frame.src = frame.src;
-});
+const refreshPreviewButton = $('#refresh-project-preview');
+if (refreshPreviewButton) {
+  refreshPreviewButton.addEventListener('click', () => {
+    const frame = $('#project-preview-frame');
+    if (frame?.src) frame.src = frame.src;
+  });
+}
 
 $('#language-toggle').addEventListener('click', () => applyLocale(locale === 'en' ? 'ar' : 'en'));
 
