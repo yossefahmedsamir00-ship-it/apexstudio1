@@ -1,95 +1,78 @@
-import { getFocusTrapTarget, getWelcomeCopy, getWelcomeDuration, shouldShowWelcomeIntro } from './welcome-intro-core.js';
+import { getWelcomeCopy, getWelcomeStages, shouldShowWelcomeIntro } from './welcome-intro-core.js';
 
 const root = document.getElementById('apex-welcome');
 
 if (root) {
   const storage = {
-    getItem(key) {
-      return window.sessionStorage.getItem(key);
-    },
-    setItem(key, value) {
-      window.sessionStorage.setItem(key, value);
-    },
+    getItem(key) { return window.sessionStorage.getItem(key); },
+    setItem(key, value) { window.sessionStorage.setItem(key, value); },
   };
-  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
   if (shouldShowWelcomeIntro(storage)) {
     let savedLocale = '';
-    try {
-      savedLocale = window.localStorage.getItem('apex_locale') || '';
-    } catch {
-      // Local storage may be blocked by the browser.
-    }
-
+    try { savedLocale = window.localStorage.getItem('apex_locale') || ''; } catch { /* Storage may be blocked. */ }
     const locale = savedLocale === 'ar' || document.documentElement.lang === 'ar' ? 'ar' : 'en';
     const copy = getWelcomeCopy(locale);
     const caption = root.querySelector('[data-welcome-caption]');
     const subtitle = root.querySelector('[data-welcome-subtitle]');
-    const replay = root.querySelector('[data-welcome-replay]');
-    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const focusable = [replay].filter((element) => element instanceof HTMLButtonElement);
+    const stageNodes = [...root.querySelectorAll('[data-welcome-stage]')];
+    const stages = getWelcomeStages();
     let finished = false;
-    let voiceTimer;
+    let stageTimer = 0;
+    let finishTimer = 0;
 
-    if (!caption || !subtitle || focusable.length !== 1) {
+    const speak = () => {
+      if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(copy.spoken);
+      utterance.lang = locale === 'ar' ? 'ar-EG' : 'en-US';
+      utterance.rate = 0.92;
+      utterance.pitch = 0.94;
+      utterance.volume = 0.9;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      window.clearTimeout(stageTimer);
+      window.clearTimeout(finishTimer);
+      window.speechSynthesis?.cancel();
+      try { storage.setItem('apex_welcome_intro_seen', 'seen'); } catch { /* Session storage may be blocked. */ }
+      root.classList.add('is-leaving');
+      document.body.classList.remove('welcome-intro-active');
+      window.setTimeout(() => root.remove(), 850);
+    };
+
+    const showStage = (index) => {
+      if (finished) return;
+      const stage = stages[index];
+      if (!stage) { finish(); return; }
+      root.dataset.stage = stage.id;
+      stageNodes.forEach((node) => {
+        const active = node.dataset.welcomeStage === stage.id;
+        node.classList.toggle('is-active', active);
+        node.setAttribute('aria-hidden', String(!active));
+      });
+      if (stage.id === 'greeting') {
+        caption.textContent = copy.caption;
+        subtitle.textContent = copy.subtitle;
+        speak();
+      }
+      stageTimer = window.setTimeout(() => showStage(index + 1), stage.duration);
+    };
+
+    if (!caption || !subtitle || stageNodes.length !== stages.length) {
       root.remove();
     } else {
-      const speak = () => {
-        if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(copy.spoken);
-        utterance.lang = locale === 'ar' ? 'ar-EG' : 'en-US';
-        utterance.rate = 0.92;
-        utterance.pitch = 0.94;
-        utterance.volume = 0.9;
-        window.speechSynthesis.speak(utterance);
-      };
-
-      const handleKeydown = (event) => {
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          return;
-        }
-
-        if (event.key !== 'Tab') return;
-        const target = getFocusTrapTarget(document.activeElement, focusable, event.shiftKey);
-        if (target) {
-          event.preventDefault();
-          target.focus();
-        }
-      };
-
-      const finish = () => {
-        if (finished) return;
-        finished = true;
-        window.clearTimeout(voiceTimer);
-        window.speechSynthesis?.cancel();
-        document.removeEventListener('keydown', handleKeydown);
-        try {
-          storage.setItem('apex_welcome_intro_seen', 'seen');
-        } catch {
-          // Session storage may be blocked.
-        }
-        root.classList.add('is-leaving');
-        document.body.classList.remove('welcome-intro-active');
-        window.setTimeout(() => {
-          root.remove();
-          previousFocus?.focus?.({ preventScroll: true });
-        }, reducedMotion ? 0 : 850);
-      };
-
-      caption.textContent = copy.caption;
-      subtitle.textContent = copy.subtitle;
-      replay.textContent = copy.replay;
       document.body.classList.add('welcome-intro-active');
       root.hidden = false;
       root.setAttribute('aria-hidden', 'false');
-      document.addEventListener('keydown', handleKeydown);
-      replay.focus({ preventScroll: true });
-
-      replay.addEventListener('click', speak);
-      voiceTimer = window.setTimeout(speak, reducedMotion ? 450 : 2100);
-      window.setTimeout(finish, getWelcomeDuration(reducedMotion));
+      root.focus({ preventScroll: true });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') event.preventDefault();
+      }, { once: false });
+      showStage(0);
     }
   } else {
     root.remove();
