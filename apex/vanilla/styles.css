@@ -2740,3 +2740,127 @@ body.welcome-intro-active { overflow: hidden; }
   .welcome-stars,.welcome-orbit-one,.welcome-orbit-two,.welcome-mascot,.mascot-aura,.mascot-hood,.mascot-arm,.welcome-loader span { animation: none !important; }
   .welcome-intro,.welcome-actions button { transition: none !important; }
 }
+
+/* Persistent scroll-responsive APEX guide — lightweight CSS character prototype. */
+.apex-scroll-mascot {
+  --scroll-progress: 0;
+  --scroll-tilt: 0deg;
+  --scroll-shift: 0px;
+  position: fixed;
+  z-index: 4;
+  right: clamp(8px, 2.2vw, 34px);
+  bottom: clamp(18px, 5vh, 48px);
+  width: clamp(76px, 9vw, 112px);
+  height: clamp(112px, 14vw, 158px);
+  pointer-events: none;
+  opacity: .82;
+  transform: translate3d(0, var(--scroll-shift), 0) rotate(var(--scroll-tilt));
+  transform-origin: 50% 80%;
+  transition: opacity .35s ease, filter .35s ease;
+  filter: drop-shadow(0 8px 22px #000b);
+  animation: scroll-mascot-idle 5.5s ease-in-out infinite;
+}
+.apex-scroll-mascot[data-section="home"] { opacity: .12; }
+.apex-scroll-mascot[data-section="work"],
+.apex-scroll-mascot[data-section="services"],
+.apex-scroll-mascot[data-section="process"],
+.apex-scroll-mascot[data-section="about"],
+.apex-scroll-mascot[data-section="payments"] { opacity: .88; }
+.scroll-mascot-aura {
+  position: absolute;
+  inset: 8% -25% -8%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #258fe044 0, #d5b36a26 44%, transparent 72%);
+  filter: blur(13px);
+  animation: scroll-aura-breathe 4s ease-in-out infinite;
+}
+.scroll-mascot-hood {
+  position: absolute;
+  z-index: 3;
+  top: 2%;
+  left: 50%;
+  width: 58%;
+  height: 43%;
+  transform: translateX(-50%) rotate(calc(var(--scroll-progress) * 5deg - 2.5deg));
+  border: 1px solid #b78a43;
+  border-radius: 48% 48% 38% 38%;
+  background: linear-gradient(135deg, #353840, #090b10 48%, #20232a);
+  clip-path: polygon(50% 0, 94% 24%, 100% 72%, 78% 100%, 22% 100%, 0 72%, 6% 24%);
+  box-shadow: inset 0 0 15px #fff2, 0 0 17px #d5b36a2b;
+}
+.scroll-mascot-eyes {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 58%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0 8%, #4cb8ff 12% 38%, transparent 43% 57%, #4cb8ff 62% 88%, transparent 92%);
+  filter: drop-shadow(0 0 5px #168cff);
+}
+.scroll-mascot-neck {
+  position: absolute;
+  z-index: 2;
+  top: 39%;
+  left: 42%;
+  width: 16%;
+  height: 16%;
+  background: linear-gradient(90deg, #080a0e, #383a40, #090b10);
+}
+.scroll-mascot-torso {
+  position: absolute;
+  z-index: 2;
+  bottom: 0;
+  left: 13%;
+  width: 74%;
+  height: 55%;
+  border: 1px solid #a77c3b;
+  border-radius: 45% 45% 12% 12%;
+  background: linear-gradient(110deg, #080a0e 4%, #292c32 34%, #090b10 65%, #25272c);
+  clip-path: polygon(34% 0, 66% 0, 100% 30%, 91% 100%, 9% 100%, 0 30%);
+  box-shadow: inset 0 8px 16px #ffffff0b, 0 0 16px #c69a4a22;
+}
+.scroll-mascot-torso span {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  color: #f1c66d;
+  font: 700 28px Georgia, serif;
+  text-shadow: 0 0 12px #d5a94d;
+  transform: translateX(-50%);
+}
+.scroll-mascot-arm {
+  position: absolute;
+  z-index: 4;
+  top: 48%;
+  width: 22%;
+  height: 42%;
+  border: 1px solid #9b743c;
+  border-radius: 30px;
+  background: linear-gradient(90deg, #080a0e, #34363b, #0a0c11);
+  transform-origin: 50% 8%;
+}
+.scroll-mascot-arm.left { left: 6%; animation: scroll-arm-left 4.8s ease-in-out infinite; }
+.scroll-mascot-arm.right { right: 6%; animation: scroll-arm-right 4.8s ease-in-out infinite; }
+.scroll-mascot-caption {
+  position: absolute;
+  bottom: -17px;
+  left: 50%;
+  width: max-content;
+  color: #d5b36a;
+  font-size: 6px;
+  letter-spacing: .13em;
+  transform: translateX(-50%);
+  opacity: .8;
+}
+@keyframes scroll-mascot-idle { 0%,100% { margin-bottom: 0; } 50% { margin-bottom: 5px; } }
+@keyframes scroll-aura-breathe { 0%,100% { opacity: .5; } 50% { opacity: .95; } }
+@keyframes scroll-arm-left { 0%,100% { rotate: 0deg; } 50% { rotate: -6deg; } }
+@keyframes scroll-arm-right { 0%,100% { rotate: 0deg; } 50% { rotate: 6deg; } }
+@media(max-width:620px) {
+  .apex-scroll-mascot { right: 5px; bottom: 12px; width: 62px; height: 94px; opacity: .55; }
+  .apex-scroll-mascot[data-section="home"] { opacity: .08; }
+  .scroll-mascot-caption { display: none; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .apex-scroll-mascot,.scroll-mascot-aura,.scroll-mascot-arm { animation: none !important; transition: none !important; }
+}
