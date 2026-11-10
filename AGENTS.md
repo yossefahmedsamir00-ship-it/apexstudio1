@@ -33,3 +33,17 @@ This repository follows the Superpowers methodology: https://github.com/obra/sup
 ## Scope and honesty
 
 This is a repository-level workflow guide inspired by Superpowers. It does not vendor or install the upstream plugin or its complete skill set. Install the official plugin separately in each supported coding-agent harness.
+
+## Mandatory APEX Agent Skills
+
+Use the repository skills when their trigger applies; load the complete `SKILL.md` before acting:
+
+- Use `$apex-task-planner` for multi-file, ambiguous, or architecture-affecting APEX work.
+- Use `$apex-flutter-ui` for public Flutter website or Flutter owner-app UI changes.
+- Use `$apex-supabase-security` for any Supabase Auth, database, RLS, Storage, Realtime, migration, or Edge Function work.
+- Use `$apex-ai-chat` for AI chat, model routing, prompt, or `apex-client-chat` changes.
+- Use `$apex-code-review` for branch, PR, commit, or diff reviews.
+- Use `$apex-verify-delivery` after implementation and before claiming completion.
+
+Skills are task-specific workflows, not permission to bypass the rules above. Existing repository approval gates, security constraints, and explicit deployment restrictions always take precedence.
+
