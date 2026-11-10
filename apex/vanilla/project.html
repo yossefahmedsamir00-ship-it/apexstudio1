@@ -42,6 +42,23 @@
         <p class="project-detail-summary" id="project-summary"></p>
         <div class="project-detail-meta" id="project-meta"></div>
         <div class="project-detail-cover" id="project-cover" hidden></div>
+        <section class="project-preview" id="project-preview" aria-labelledby="project-preview-title" hidden>
+          <div class="project-preview-heading">
+            <div>
+              <p class="eyebrow" data-i18n="previewEyebrow">INTERACTIVE PREVIEW</p>
+              <h2 id="project-preview-title" data-i18n="previewTitle">Explore the experience</h2>
+              <p class="project-preview-description" id="project-preview-description" data-i18n="previewDescription">A protected preview of this project.</p>
+            </div>
+            <div class="project-preview-actions">
+              <button class="button button-outline" id="refresh-project-preview" type="button" data-i18n="refreshPreview">Reload preview</button>
+              <a class="button button-gold" id="open-project-preview" href="#" target="_blank" rel="noopener noreferrer" data-i18n="openPreview">Open in new tab ↗</a>
+            </div>
+          </div>
+          <div class="project-preview-frame-wrap">
+            <iframe id="project-preview-frame" title="Project interactive preview" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts"></iframe>
+          </div>
+          <p class="project-preview-safety" id="project-preview-safety" role="note" data-i18n="previewSafety">This preview is isolated from the APEX website. Some external sites may block embedded viewing.</p>
+        </section>
         <div class="project-detail-sections" id="project-sections"></div>
         <div class="project-detail-gallery" id="project-gallery"></div>
         <a class="button button-gold project-live-link" id="project-live-link" href="#" target="_blank" rel="noopener noreferrer" hidden data-i18n="viewLiveProject">View project ↗</a>
