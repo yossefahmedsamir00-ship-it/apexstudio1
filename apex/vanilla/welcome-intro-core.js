@@ -1,5 +1,4 @@
-export function shouldShowWelcomeIntro(storage, prefersReducedMotion) {
-  if (prefersReducedMotion) return false;
+export function shouldShowWelcomeIntro(storage) {
   try {
     return storage?.getItem('apex_welcome_intro_seen') !== 'seen';
   } catch {
@@ -20,6 +19,20 @@ export function getFocusTrapTarget(activeElement, focusableElements, shiftKey) {
 
 export function getWelcomeCopy(locale = 'en') {
   return locale === 'ar'
-    ? { spoken: 'أهلاً بيك في أبيكس ستوديو', caption: 'أهلاً بيك في APEX STUDIO', enter: 'ادخل الاستوديو', replay: 'اسمع الترحيب مرة تانية', skip: 'تخطي المقدمة' }
-    : { spoken: 'Welcome to APEX STUDIO', caption: 'WELCOME TO APEX STUDIO', enter: 'Enter the studio', replay: 'Replay welcome', skip: 'Skip intro' };
+    ? {
+        spoken: 'أهلاً بيك في أبيكس ستوديو',
+        caption: 'أهلاً بيك في APEX STUDIO',
+        subtitle: 'مساحة جديدة لصناعة تجارب رقمية مختلفة.',
+        replay: 'إعادة الترحيب الصوتي',
+      }
+    : {
+        spoken: 'Welcome to APEX STUDIO',
+        caption: 'WELCOME TO APEX STUDIO',
+        subtitle: 'A new dimension of digital experiences.',
+        replay: 'Replay welcome voice',
+      };
+}
+
+export function getWelcomeDuration(prefersReducedMotion) {
+  return prefersReducedMotion ? 1800 : 7200;
 }
