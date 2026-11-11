@@ -161,7 +161,7 @@ export const translations = {
     serviceSecurity:'مراجعة الأمان وتعزيز الحماية',
     serviceSecurityBody:'تقييم أمني عملي وضبط الصلاحيات وتحسين ممارسات النشر الآمن.',
     serviceCustom:'برمجيات مخصصة وتكامل الأنظمة',
-    serviceCustomBody:'أدوات مصممة لربط سير العمل والفرق والمنصات الموجودة.
+    serviceCustomBody:'أدوات مصممة لربط سير العمل والفرق والمنصات الموجودة.',
     ourApproach:'منهجيتنا',
     processTitle:'تفكير واضح.<br><em>تنفيذ متقن.</em>',
     processBody:'خطوات عملية تحافظ على وضوح الهدف من أول محادثة وحتى الإطلاق.',
