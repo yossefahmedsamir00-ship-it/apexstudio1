@@ -1,0 +1,22 @@
+name: APEX STUDIO Flutter
+
+on:
+  push:
+    branches: [main, feat/apex-flow-flutter-foundation]
+  pull_request:
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apex_flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
