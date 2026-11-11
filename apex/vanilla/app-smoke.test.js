@@ -53,6 +53,10 @@ describe('APEX vanilla home page boot', () => {
     expect(document.querySelector('#ai-modal').hasAttribute('open')).toBe(true);
   });
 
+  it('shows all eight core service families on the home page', () => {
+    expect(document.querySelectorAll('#service-list .service-item').length).toBe(8);
+  });
+
   it('renders the editorial hero image without obsolete showroom controls', () => {
     const heroImage = document.querySelector('.hero-visual img');
     expect(heroImage).not.toBeNull();
