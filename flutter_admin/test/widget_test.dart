@@ -16,6 +16,14 @@ void main() {
     );
   });
 
+  testWidgets('uses the APEX electric-blue and cyan owner-app theme', (tester) async {
+    await tester.pumpWidget(const ApexAdminApp(forceConfigurationMissing: true));
+    final context = tester.element(find.text('APEX STUDIO Admin'));
+    final scheme = Theme.of(context).colorScheme;
+    expect(scheme.primary, const Color(0xFF1677FF));
+    expect(scheme.secondary, const Color(0xFF12D9FF));
+  });
+
   test('only a successful server owner claim opens the owner console', () {
     expect(ownerResponseIsVerified({'configured': true}), isTrue);
     expect(ownerResponseIsVerified({'configured': false}), isFalse);
