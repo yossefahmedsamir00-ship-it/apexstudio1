@@ -6,23 +6,28 @@ class GlassPanel extends StatelessWidget {
   const GlassPanel({super.key, required this.child, this.padding = const EdgeInsets.all(18)});
   final Widget child; final EdgeInsetsGeometry padding;
   @override
-  Widget build(BuildContext context) => ClipRRect(borderRadius: BorderRadius.circular(22), child: BackdropFilter(
-    filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-    child: Container(padding: padding, decoration: BoxDecoration(
-      gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-        colors: [Color(0xCC1B2A3D), Color(0xB30C1421), Color(0xC9101927)]),
-      borderRadius: BorderRadius.circular(22),
-      border: Border.all(color: const Color(0xFF78BFFF).withValues(alpha: .16)),
-      boxShadow: [BoxShadow(color: const Color(0xFF3B9CEB).withValues(alpha: .055), blurRadius: 24)],
-    ), child: child),
-  ));
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ClipRRect(borderRadius: BorderRadius.circular(22), child: BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+      child: Container(padding: padding, decoration: BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: [scheme.surface.withValues(alpha: .92), scheme.surface.withValues(alpha: .78), scheme.surface]),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: scheme.secondary.withValues(alpha: .16)),
+        boxShadow: [BoxShadow(color: scheme.primary.withValues(alpha: .055), blurRadius: 24)],
+      ), child: child),
+    ));
+  }
 }
 
 class GlassStatsCard extends StatelessWidget {
   const GlassStatsCard({super.key, required this.title, required this.value, required this.note, required this.icon, required this.color});
   final String title, value, note; final IconData icon; final Color color;
   @override
-  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return TweenAnimationBuilder<double>(
     tween: Tween(begin: .96, end: 1), duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic,
     builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
     child: GlassPanel(padding: const EdgeInsets.all(13), child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -31,11 +36,12 @@ class GlassStatsCard extends StatelessWidget {
         const Spacer(), Icon(Icons.north_east_rounded, color: color.withValues(alpha: .7), size: 15),
       ]),
       const SizedBox(height: 10),
-      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFFF4F7FC))),
+      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: onSurface)),
       Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFFF4F7FC))),
-      Text(note, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, color: Color(0xFFA6B4C7))),
+      Text(note, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, color: onSurface.withValues(alpha: .68))),
     ])),
-  );
+    );
+  }
 }
 
 class ApexMiniBars extends StatelessWidget {
@@ -43,6 +49,8 @@ class ApexMiniBars extends StatelessWidget {
   final List<String> labels; final List<double> values;
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final onSurface = scheme.onSurface;
     final maxValue = values.fold<double>(0, (max, v) => max > v ? max : v);
     return Row(crossAxisAlignment: CrossAxisAlignment.end, children: List.generate(values.length, (i) => Expanded(child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -53,8 +61,8 @@ class ApexMiniBars extends StatelessWidget {
           heightFactor: maxValue == 0 ? .025 : (values[i] / maxValue).clamp(.08, 1),
           child: Container(decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF9BDEFF), Color(0xFF347BCE), Color(0xFF244A82)]),
-            boxShadow: [BoxShadow(color: const Color(0xFF69BFFF).withValues(alpha: .22), blurRadius: 12)],
+            gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [scheme.secondary, scheme.primary, scheme.primary.withValues(alpha: .62)]),
+            boxShadow: [BoxShadow(color: scheme.secondary.withValues(alpha: .22), blurRadius: 12)],
           )),
         ))),
         const SizedBox(height: 7), Text(labels[i], style: const TextStyle(color: Color(0xFFA6B4C7), fontSize: 9)),
