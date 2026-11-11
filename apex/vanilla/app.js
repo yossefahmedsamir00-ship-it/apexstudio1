@@ -560,38 +560,6 @@ function initReveal() {
 function initEvents() {
   $('#language-toggle').addEventListener('click', () => applyLocale(locale === 'en' ? 'ar' : 'en'));
 
-  const showroom = $('#hero-showroom');
-  const enterShowroom = $('#enter-showroom');
-  const exitShowroom = $('#exit-showroom');
-  const setShowroomMode = (enabled) => {
-    document.body.classList.toggle('showroom-mode', enabled);
-    enterShowroom.hidden = enabled;
-    exitShowroom.hidden = !enabled;
-    enterShowroom.setAttribute('aria-expanded', String(enabled));
-    if (enabled) exitShowroom.focus();
-    else enterShowroom.focus();
-  };
-  enterShowroom.addEventListener('click', () => setShowroomMode(true));
-  exitShowroom.addEventListener('click', () => setShowroomMode(false));
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && document.body.classList.contains('showroom-mode')) {
-      setShowroomMode(false);
-    }
-  });
-
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    showroom.addEventListener('pointermove', (event) => {
-      const bounds = showroom.getBoundingClientRect();
-      const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5;
-      const vertical = (event.clientY - bounds.top) / bounds.height - 0.5;
-      showroom.style.setProperty('--showroom-rotate-x', `${vertical * -3}deg`);
-      showroom.style.setProperty('--showroom-rotate-y', `${horizontal * 3}deg`);
-    });
-    showroom.addEventListener('pointerleave', () => {
-      showroom.style.setProperty('--showroom-rotate-x', '0deg');
-      showroom.style.setProperty('--showroom-rotate-y', '0deg');
-    });
-  }
   $('#menu-toggle').addEventListener('click', () => {
     const open = $('#main-nav').classList.toggle('is-open');
     $('#menu-toggle').setAttribute('aria-expanded', String(open));
