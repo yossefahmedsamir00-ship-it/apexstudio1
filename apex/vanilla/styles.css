@@ -3045,3 +3045,271 @@ body.welcome-intro-active { overflow: hidden; }
   }
   .hello-world,.welcome-stage-line,.evolve-orbit,.website-reveal-mark { animation: none !important; }
 }
+
+
+/* APEX cinematic welcome + astronaut companion. The CSS astronaut is a clearly
+   marked temporary silhouette; replace its shapes with the approved astronaut asset. */
+body.welcome-intro-active > .ambient,
+body.welcome-intro-active > .site-header,
+body.welcome-intro-active > main,
+body.welcome-intro-active > dialog,
+body.welcome-intro-active > .toast {
+  opacity:  0;
+  visibility: hidden;
+}
+body > .ambient,
+body > .site-header,
+body > main,
+body > dialog,
+body > .toast {
+  transition: opacity .9s ease, visibility .9s ease;
+}
+.apex-welcome[hidden] { display: none !important; }
+.apex-welcome {
+  --welcome-energy: #d9a441;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  color: #f2f7ff;
+  background: radial-gradient(ellipse at 50% 48%, #111b2b 0, #070a10 48%, #020307 100%);
+  opacity: 1;
+  transition: opacity .7s ease, visibility .7s ease;
+}
+.apex-welcome::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: .22;
+  background-image: linear-gradient(rgba(18,217,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(18,217,255,.08) 1px,transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(ellipse at center,#000 0,transparent 72%);
+}
+.apex-welcome.is-leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+.welcome-terminal {
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #9aa9bc;
+  font: 500 clamp(15px,2vw,21px)/1.4 ui-monospace,monospace;
+  letter-spacing: .04em;
+  opacity: 0;
+  animation: welcome-terminal-in .8s .2s forwards;
+}
+.welcome-terminal-cursor { color: var(--cyan); animation: welcome-cursor-blink .9s steps(2,end) infinite; }
+.welcome-build {
+  position: relative;
+  width: min(64vw,430px);
+  height: min(64vw,430px);
+  display: grid;
+  place-items: center;
+  color: var(--welcome-energy);
+  filter: drop-shadow(0 0 24px color-mix(in srgb,var(--welcome-energy),transparent 65%));
+  transition: color 2.2s ease, filter 2.2s ease;
+}
+.welcome-build-cursor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  left: 18%;
+  top: 67%;
+  border: 2px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0;
+  box-shadow: 0 0 18px currentColor;
+}
+.welcome-build-orbit {
+  position: absolute;
+  width: 65%;
+  height: 65%;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0;
+  transform: rotate(-28deg) scale(.5);
+}
+.welcome-orbit-two { width: 78%; height: 42%; transform: rotate(48deg) scale(.5); }
+.welcome-astronaut {
+  position: relative;
+  width: 42%;
+  height: 68%;
+  opacity: 0;
+  transform: translateY(28px) scale(.86);
+  filter: drop-shadow(0 0 22px currentColor);
+}
+.astronaut-helmet {
+  position: absolute;
+  z-index: 3;
+  top: 4%;
+  left: 19%;
+  width: 62%;
+  aspect-ratio: 1;
+  border: 7px solid #b9c8d8;
+  border-radius: 44% 44% 40% 40%;
+  background: linear-gradient(145deg,#27384c,#080e18 68%);
+  box-shadow: inset 0 0 0 5px #0b1422, 0 0 0 1px currentColor, 0 0 24px currentColor;
+}
+.astronaut-visor {
+  position: absolute;
+  inset: 19% 13% 22%;
+  border: 1px solid #8ba8c5;
+  border-radius: 50%;
+  background: linear-gradient(145deg,rgba(18,217,255,.42),rgba(4,9,18,.94) 70%);
+}
+.astronaut-body {
+  position: absolute;
+  left: 23%;
+  top: 49%;
+  width: 54%;
+  height: 42%;
+  border: 2px solid #aab9c8;
+  border-radius: 24% 24% 18% 18%;
+  background: linear-gradient(110deg,#526276,#152236 45%,#090f19);
+}
+.astronaut-backpack {
+  position: absolute;
+  top: 51%;
+  left: 8%;
+  width: 18%;
+  height: 33%;
+  border: 2px solid #8ea2b8;
+  border-radius: 5px;
+  background: #1a2a3d;
+}
+.astronaut-arm {
+  position: absolute;
+  top: 53%;
+  width: 19%;
+  height: 36%;
+  border: 2px solid #aab9c8;
+  border-radius: 14px;
+  background: linear-gradient(#35465a,#111c2a);
+  transform-origin: 50% 12%;
+}
+.astronaut-arm-left { left: 9%; transform: rotate(18deg); }
+.astronaut-arm-right { right: 9%; transform: rotate(-18deg); }
+.welcome-energy-ring {
+  position: absolute;
+  width: 12%;
+  aspect-ratio: 1;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  opacity: 0;
+}
+.welcome-copy {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 13%;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(14px);
+}
+.welcome-caption {
+  margin: 0;
+  color: var(--cyan);
+  font-size: clamp(15px,2.6vw,24px);
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+.welcome-subtitle { margin: 10px 0 0; color: #aab8ca; font-size: 13px; }
+.welcome-skip {
+  position: absolute;
+  right: max(22px,env(safe-area-inset-right));
+  bottom: max(22px,env(safe-area-inset-bottom));
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 1px solid rgba(18,217,255,.55);
+  border-radius: 3px;
+  background: rgba(7,10,16,.75);
+  color: #d9eaff;
+  font-size: 11px;
+  letter-spacing: .08em;
+}
+.welcome-skip:hover,.welcome-skip:focus-visible { border-color: var(--cyan); color: var(--cyan); outline: 2px solid var(--cyan); outline-offset: 3px; }
+.apex-welcome[data-stage="hello"] .welcome-terminal { opacity: 1; }
+.apex-welcome[data-stage="cursor"] .welcome-build-cursor { opacity: 1; animation: welcome-cursor-travel 2s ease-in-out forwards; }
+.apex-welcome[data-stage="outline"] .welcome-build-orbit { opacity: .65; transform: rotate(-28deg) scale(1); transition: opacity 1.4s ease,transform 1.4s ease; }
+.apex-welcome[data-stage="outline"] .welcome-orbit-two { transform: rotate(48deg) scale(1); }
+.apex-welcome[data-stage="armor"] .welcome-astronaut { opacity: 1; transform: translateY(0) scale(1); transition: opacity 1.4s ease,transform 1.4s cubic-bezier(.2,.8,.2,1); animation: astronaut-idle 4s 1.4s ease-in-out infinite; }
+.apex-welcome[data-stage="armor"] .welcome-build { --welcome-energy: #ed493f; }
+.apex-welcome[data-stage="greeting"] .welcome-build { --welcome-energy: #ff8a36; }
+.apex-welcome[data-stage="greeting"] .welcome-energy-ring { animation: welcome-energy-burst 1.1s ease-out both; }
+.apex-welcome[data-stage="greeting"] .welcome-copy { opacity: 1; transform: translateY(0); transition: opacity .9s ease,transform .9s ease; }
+.apex-welcome[data-stage="website"] .welcome-build { --welcome-energy: var(--cyan); }
+.apex-welcome[data-stage="website"] .welcome-build-orbit { opacity: .35; }
+.apex-welcome[data-stage="website"] .welcome-copy { opacity: 1; }
+.apex-scroll-mascot {
+  --scroll-progress: 0;
+  position: fixed;
+  z-index: 20;
+  right: max(22px,env(safe-area-inset-right));
+  bottom: max(22px,env(safe-area-inset-bottom));
+  width: 94px;
+  height: 126px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0,18px,0);
+  transition: opacity .8s ease,transform .8s ease;
+}
+body:not(.welcome-intro-active) .apex-scroll-mascot { opacity: 1; transform: translate3d(0,0,0); }
+.mascot-orbit {
+  position: absolute;
+  inset: 7px 2px 23px;
+  border: 1px solid rgba(18,217,255,.35);
+  border-radius: 50%;
+  transform: rotate(-24deg);
+  box-shadow: 0 0 20px rgba(18,217,255,.12);
+}
+.mascot-astronaut {
+  position: absolute;
+  inset: 8px 20px 26px;
+  animation: mascot-float 5s ease-in-out infinite;
+}
+.mascot-helmet {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 7px;
+  width: 42px;
+  height: 43px;
+  border: 4px solid #a9bfd4;
+  border-radius: 44% 44% 40% 40%;
+  background: linear-gradient(145deg,#30445d,#080f1b);
+  box-shadow: 0 0 12px rgba(18,217,255,.45);
+}
+.mascot-helmet span { position: absolute; inset: 8px 5px; border-radius: 50%; background: linear-gradient(140deg,#1a7896,#07101b 75%); }
+.mascot-pack { position: absolute; top: 46px; left: 2px; width: 13px; height: 29px; border: 1px solid #8197ad; background: #17263a; }
+.mascot-torso { position: absolute; top: 39px; left: 10px; width: 37px; height: 39px; border: 1px solid #a9bfd4; border-radius: 9px 9px 7px 7px; background: linear-gradient(110deg,#4c6077,#101b2c); }
+.mascot-arm { position: absolute; top: 43px; width: 12px; height: 31px; border: 1px solid #a9bfd4; border-radius: 8px; background: #26394f; }
+.mascot-arm-a { left: 3px; transform: rotate(15deg); }
+.mascot-arm-b { right: 0; transform: rotate(-15deg); }
+.mascot-label { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); color: var(--cyan); white-space: nowrap; font-size: 7px; letter-spacing: .14em; }
+.apex-scroll-mascot[data-section="home"] .mascot-orbit { border-color: rgba(18,217,255,.4); }
+.apex-scroll-mascot[data-section="work"] .mascot-orbit,
+.apex-scroll-mascot[data-section="services"] .mascot-orbit { border-color: rgba(22,119,255,.65); }
+.apex-scroll-mascot[data-section="process"] .mascot-astronaut { animation-duration: 3.6s; }
+@keyframes welcome-terminal-in { to { opacity: 1; } }
+@keyframes welcome-cursor-blink { 50% { opacity: 0; } }
+@keyframes welcome-cursor-travel { to { left: 50%; top: 50%; transform: rotate(405deg) scale(.65); } }
+@keyframes welcome-energy-burst { 0% { opacity: .9; transform: scale(.2); } 100% { opacity: 0; transform: scale(10); } }
+@keyframes astronaut-idle { 50% { transform: translateY(-7px) rotate(.8deg); } }
+@keyframes mascot-float { 50% { transform: translateY(-5px) rotate(var(--scroll-tilt,0deg)); } }
+@media(max-width:620px) {
+  .welcome-build { width: min(82vw,340px); height: min(82vw,340px); }
+  .welcome-terminal { top: 18%; }
+  .welcome-copy { bottom: 17%; }
+  .welcome-subtitle { max-width: 290px; margin-inline: auto; }
+  .apex-scroll-mascot { right: 10px; bottom: 12px; transform: scale(.76); transform-origin: bottom right; }
+  body:not(.welcome-intro-active) .apex-scroll-mascot { transform: scale(.76); }
+}
+@media(prefers-reduced-motion:reduce) {
+  .apex-welcome *, .apex-scroll-mascot * { animation: none !important; transition-duration: .01ms !important; }
+  .welcome-terminal { opacity: 1; }
+  .welcome-build-orbit,.welcome-astronaut,.welcome-copy { opacity: 1; transform: none; }
+  .welcome-build { color: var(--cyan); }
+}
