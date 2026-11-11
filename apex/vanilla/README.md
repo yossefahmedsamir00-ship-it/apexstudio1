@@ -62,9 +62,9 @@ Implemented in this isolated phase:
 - Reduced-motion support, focus states, and safe handling when browser storage is unavailable
 - Lightweight CSS-based immersive showroom with pointer parallax, responsive founder contact card, keyboard-accessible enter/exit controls, and Escape-key exit
 - Cinematic first-visit welcome layer with animated CSS mascot study, electric-blue/cyan orbital lighting, localized welcome captions, optional browser speech synthesis, replay/skip/enter controls, and reduced-motion bypass
-- Welcome intro is session-scoped and does not run again after dismissal in the same tab; speech availability depends on browser voice support and autoplay policy
+- The welcome-intro controller is session-scoped when mounted; speech availability depends on browser voice support and autoplay policy. The reviewed homepage entry does not currently mount it.
 - The current mascot is a CSS character study/prototype, not the final rigged 3D character.
-- A lightweight persistent mascot prototype is also mounted on the home page; it responds to scroll progress and the currently visible section, with passive scroll listeners, requestAnimationFrame updates, and reduced-motion support. A production-quality animated 3D character with facial/lip-sync animation requires a separately created and optimized rigged GLB/GLTF asset
+- Mascot/welcome prototype files exist (`scroll-mascot.js`, `welcome-intro.js`, and related CSS), but static review of the homepage entry found no markup roots or imports wiring them into the page. Treat them as dormant prototypes until integration is implemented and browser-tested. The approved astronaut is a separate asset requirement.
 - Shared bilingual copy modules for the homepage, standalone pages, and project/service detail pages
 - Browser smoke tests for homepage boot, language direction, assistant mode and opening, immersive showroom exit, all standalone page entry points, and bilingual detail not-found copy
 - Chat history pagination preserves chronological order when inserting older server-ordered messages
