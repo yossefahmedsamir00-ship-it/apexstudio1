@@ -211,3 +211,11 @@
 - [ ] Run website syntax checks, unit tests, build, and browser QA before marking complete.
 
 No production deployment or PR merge is authorized by this task.
+
+
+**Approved greeting color-transformation sequence (2026-11-11):**
+- When the astronaut begins the welcome greeting, its illuminated accents and aura transition from **gold** to **red**, then blend gradually into a **fiery orange/ember** phase, and finally settle into **electric blue + cyan** as the permanent APEX state.
+- The transformation must be continuous and smooth (no abrupt flashing): synchronize visor/eye LEDs, chest emblem, armor light strips, and surrounding aura/particles.
+- Keep the metallic armor materials readable; animate emissive lighting and controlled reflections rather than tinting the entire character flat.
+- End state remains electric blue/cyan to match the established APEX brand palette. The gold/red/fire phases are a one-time cinematic welcome sequence, not the site's persistent brand colors.
+- Respect reduced-motion preferences with a short crossfade or static final blue state. Do not use strobing or rapid flashing.
