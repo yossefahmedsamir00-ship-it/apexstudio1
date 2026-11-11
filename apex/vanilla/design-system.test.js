@@ -30,7 +30,7 @@ describe('APEX public design tokens', () => {
 
   it('does not leave escaped newline sequences visible in public page markup', () => {
     for (const [page, markup] of pageMarkup) {
-      expect(markup, page).not.toContain(String.raw`\\n`);
+      expect(markup, page).not.toContain(String.raw`\n`);
     }
   });
 
