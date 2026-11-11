@@ -81,6 +81,23 @@
 
 ### Task 3: Complete the public vanilla website as the public-site source of truth
 
+#### Task 3A: Mount the cinematic intro and astronaut companion
+
+**Status:** First functional CSS/DOM implementation committed on the integration branch; final astronaut artwork and browser/device QA remain open.
+
+- [x] Mount semantic homepage roots for the welcome layer and persistent scroll companion.
+- [x] Add a 13.2-second staged sequence: terminal Hello World, cursor movement, orbit/outline, armor silhouette, localized greeting, and website reveal.
+- [x] Add Skip and Escape controls; keep keyboard focus available and avoid autoplay audio.
+- [x] Add reduced-motion short path and mobile sizing.
+- [x] Transition the welcome lighting from gold through red/ember to electric blue/cyan.
+- [x] Add scroll-section/direction signals to the persistent companion.
+- [x] Mark the CSS astronaut as a temporary silhouette placeholder; the approved top-left armored-astronaut asset and true character animation are not implemented.
+- [ ] Run focused Vitest tests and full website CI on the final commit; inspect real browser rendering, RTL/LTR, keyboard behavior, mobile layout, and reduced-motion behavior.
+- [ ] Replace the placeholder with the approved astronaut source artwork/rig when that asset is supplied and approved.
+
+**Implementation note:** The intro/controller and companion are now mounted by apex/vanilla/index.html. CSS provides the staged silhouette and emissive transitions; this is not a rigged 3D character. The intro uses no speech synthesis or other autoplay audio. The GitHub-hosted edits were not run in a local checkout during this pass, so no local red-green TDD cycle is claimed.
+
+
 **Status:** Not started in this integration checkpoint. The existing site remains in place; only the shared palette and its regression checks have been updated.
 
 **Files:**
