@@ -28,6 +28,12 @@ describe('APEX public design tokens', () => {
     }
   });
 
+  it('does not leave escaped newline sequences visible in public page markup', () => {
+    for (const [page, markup] of pageMarkup) {
+      expect(markup, page).not.toContain(String.raw`\\n`);
+    }
+  });
+
   it('keeps a reduced-motion mode for non-essential animation', () => {
     expect(styles.includes('prefers-reduced-motion')).toBe(true);
   });
