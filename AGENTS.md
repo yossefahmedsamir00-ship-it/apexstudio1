@@ -39,7 +39,9 @@ This is a repository-level workflow guide inspired by Superpowers. It does not v
 Load the complete repository skill when its trigger applies:
 
 - `$apex-task-planner`: multi-file, ambiguous, or architecture-affecting APEX work.
-- `$apex-flutter-ui`: Flutter public-site or owner-app UI, navigation, responsiveness, animation, and RTL/LTR.
+- `$apex-vanilla-web`: public HTML/CSS/JavaScript website pages and browser behavior.
+- `$apex-flutter-ui`: Flutter owner-app UI, navigation, responsiveness, animation, and RTL/LTR.
+- `$apex-motion-system`: animation, transitions, scroll effects, reduced motion, and motion performance.
 - `$apex-supabase-security`: any Supabase Auth, PostgreSQL, RLS, Storage, Realtime, migration, or Edge Function work.
 - `$apex-ai-chat`: AI chat, model routing, prompt construction, streaming, or conversation persistence.
 - `$apex-code-review`: review branches, PRs, commits, and diffs.
