@@ -13,10 +13,10 @@ describe('APEX public design tokens', () => {
   });
 
   it('keeps the editorial layer on the same palette without legacy gold variables', () => {
-    expect(editorial).toMatch(/--bg:\\s*#070a10/i);
-    expect(editorial).toMatch(/--electric-blue:\\s*#1677ff/i);
-    expect(editorial).toMatch(/--cyan:\\s*#12d9ff/i);
-    expect(editorial).not.toMatch(/--gold:|var\\(\\s*--gold/i);
+    expect(editorial).toMatch(/--bg:\s*#070a10/i);
+    expect(editorial).toMatch(/--electric-blue:\s*#1677ff/i);
+    expect(editorial).toMatch(/--cyan:\s*#12d9ff/i);
+    expect(editorial).not.toMatch(/--gold:|var\(\s*--gold/i);
   });
 
   it('keeps a reduced-motion mode for non-essential animation', () => {
