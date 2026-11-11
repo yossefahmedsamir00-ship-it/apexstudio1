@@ -219,3 +219,16 @@ No production deployment or PR merge is authorized by this task.
 - Keep the metallic armor materials readable; animate emissive lighting and controlled reflections rather than tinting the entire character flat.
 - End state remains electric blue/cyan to match the established APEX brand palette. The gold/red/fire phases are a one-time cinematic welcome sequence, not the site's persistent brand colors.
 - Respect reduced-motion preferences with a short crossfade or static final blue state. Do not use strobing or rapid flashing.
+
+
+**Approved cinematic intro choreography (2026-11-11):**
+1. **Primitive opening:** start on a quiet dark screen with only a small, simple `Hello World` in a minimal/terminal-like treatment. No fully formed astronaut at this point.
+2. **Gradual construction:** the lettering and a small cursor-like builder marker appear. The marker travels deliberately across the scene; each pass reveals/builds another layer of the APEX identity. Motion must be slow, staged, and eased—not a fast montage.
+3. **Evolution:** simple geometric/outline forms progressively gain detail, depth, armor panels, visor, and lighting until the approved upper-left armored astronaut is fully formed. Use authored animation states/frames or a rigged Rive asset; do not pretend a single static image is a fully animated character.
+4. **Welcome transformation:** on the greeting, illuminate the astronaut gold, then transition smoothly to red, blend through fiery orange/ember, and finally settle into electric blue/cyan. Keep metallic materials readable; animate emissive accents and aura, not a flat full-body tint.
+5. **Build marker climax:** the cursor-like marker reaches the final build point, triggers one controlled energy burst (soft expanding ring/particles/light bloom; no harsh strobe), then the intro scene opens/reveals the actual website.
+6. **Website reveal:** use a smooth cinematic mask/zoom/fade reveal; the astronaut completes the greeting and transitions into the compact persistent scroll companion. It should respond subtly to section changes.
+7. **Timing and accessibility:** default pacing should feel deliberate and cinematic (roughly 10–16 seconds, adjustable after visual QA); provide a visible Skip control; honor `prefers-reduced-motion` with a short crossfade/static final state; never autoplay audio. If speech is available, begin only under browser/user-activation rules or offer a clearly visible replay/sound control.
+8. **Responsive/performance:** mobile gets a shorter, lighter sequence and smaller marker/particles; avoid blocking page interaction for the full intro. Lazy-load heavy animation assets and retain a graceful static fallback.
+
+**Implementation gate:** the approved astronaut source asset and its animation states are still required. The user's composite reference image is a design reference only; do not crop the whole collage as a production character asset. Build and test the intro in isolated stages before wiring it to the public entry point.
