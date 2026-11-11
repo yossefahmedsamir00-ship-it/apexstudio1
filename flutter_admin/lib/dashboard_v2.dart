@@ -36,9 +36,9 @@ class GlassStatsCard extends StatelessWidget {
         const Spacer(), Icon(Icons.north_east_rounded, color: color.withValues(alpha: .7), size: 15),
       ]),
       const SizedBox(height: 10),
-      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: onSurface)),
-      Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFFF4F7FC))),
-      Text(note, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, color: onSurface.withValues(alpha: .68))),
+      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: onSurface)),
+      Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: onSurface)),
+      Text(note, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 9, color: onSurface.withValues(alpha: .68))),
     ])),
     );
   }
@@ -55,7 +55,7 @@ class ApexMiniBars extends StatelessWidget {
     return Row(crossAxisAlignment: CrossAxisAlignment.end, children: List.generate(values.length, (i) => Expanded(child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-        Text(values[i] == 0 ? '—' : _shortNumber(values[i]), style: const TextStyle(color: Color(0xFFA6B4C7), fontSize: 8)),
+        Text(values[i] == 0 ? '—' : _shortNumber(values[i]), style: TextStyle(color: onSurface.withValues(alpha: .68), fontSize: 8)),
         const SizedBox(height: 6),
         Expanded(child: Align(alignment: Alignment.bottomCenter, child: FractionallySizedBox(
           heightFactor: maxValue == 0 ? .025 : (values[i] / maxValue).clamp(.08, 1),
@@ -65,7 +65,7 @@ class ApexMiniBars extends StatelessWidget {
             boxShadow: [BoxShadow(color: scheme.secondary.withValues(alpha: .22), blurRadius: 12)],
           )),
         ))),
-        const SizedBox(height: 7), Text(labels[i], style: const TextStyle(color: Color(0xFFA6B4C7), fontSize: 9)),
+        const SizedBox(height: 7), Text(labels[i], style: TextStyle(color: onSurface.withValues(alpha: .68), fontSize: 9)),
       ]),
     ))));
   }
