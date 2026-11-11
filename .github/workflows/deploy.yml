@@ -43,7 +43,7 @@ jobs:
         run: npx vite build --config vite.vanilla.config.ts
 
       - name: Include ANSTA storefront page
-        run: cp task.html apex/build/web/task.html
+        run: cp task.html apex/dist/task.html
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
