@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="Explore selected APEX STUDIO projects and digital product concepts.">
+  <title>Selected Work | APEX STUDIO</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css"><script type="module" src="./page.js"></script>
+</head>
+<body data-page="work">
+  <header class="site-header">
+    <a class="brand" href="./index.html#home" aria-label="APEX STUDIO home"><span class="brand-symbol">A</span><span class="brand-name">APEX<small>STUDIO</small></span></a>
+    <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="main-nav"><span></span><span></span></button>
+    <nav class="main-nav" id="main-nav" aria-label="Primary navigation"><a href="./work.html" aria-current="page" data-i18n="navWork">Work</a><a href="./services.html" data-i18n="navServices">Services</a><a href="./about.html" data-i18n="navAbout">About</a><a href="./index.html#payments" data-i18n="navPayments">Payments</a></nav>
+    <div class="header-actions"><button class="language-toggle" id="language-toggle" type="button" aria-label="Switch language">AR</button><a class="button button-gold button-small" href="./index.html#contact" data-i18n="startProject">Start a project ↗</a></div>
+  </header>
+  <main class="section-wrap subpage-main">
+    <section class="subpage-hero">
+      <p class="eyebrow" data-i18n="workEyebrow">SELECTED WORK</p>
+      <h1 data-i18n="workTitle">Ideas taking <em>shape.</em></h1>
+      <p class="subpage-intro" data-i18n="workIntro">A selection of published projects and curated concepts from the APEX universe.</p>
+    </section>
+    <div class="filter-row" id="work-page-filters" role="group" aria-label="Filter projects">
+      <button class="filter-button is-active" type="button" data-category="all" data-i18n="filterAll">All work</button>
+      <button class="filter-button" type="button" data-category="web">Web</button>
+      <button class="filter-button" type="button" data-category="ecommerce" data-i18n="filterCommerce">Commerce</button>
+      <button class="filter-button" type="button" data-category="ai">AI</button>
+      <button class="filter-button" type="button" data-category="apps" data-i18n="filterApps">Apps</button>
+    </div>
+    <section class="project-grid work-page-grid" id="work-page-grid" aria-live="polite"></section>\n    <p class="empty-state" id="work-page-empty" hidden data-i18n="emptyProjects">No projects are available in this category yet.</p>
+    <section class="subpage-cta"><p class="eyebrow" data-i18n="startSomething">START SOMETHING</p><h2 data-i18n="workCtaTitle">Have a project in mind?</h2><p data-i18n="workCtaBody">Let's shape the next idea into something people can use.</p><a class="button button-gold" href="./index.html#contact" data-i18n="startProject">Start a project ↗</a></section>
+  </main>
+  <dialog class="modal" id="work-project-modal"><section class="modal-card"><button type="button" class="modal-close" id="close-work-project" aria-label="Close">×</button><p class="eyebrow">APEX / PROJECT CONCEPT</p><h2 id="work-project-title"></h2><p class="modal-intro" id="work-project-summary"></p><p class="project-modal-tags" id="work-project-tags"></p><a class="button button-gold" href="./index.html#contact" data-i18n="startProject">Start a project ↗</a></section></dialog>
+  <footer class="site-footer section-wrap"><div class="footer-top"><a class="brand" href="./index.html#home"><span class="brand-symbol">A</span><span class="brand-name">APEX<small>STUDIO</small></span></a><p>© <span class="current-year"></span> APEX STUDIO</p><a class="back-top" href="./index.html#home" data-i18n="backTop">Back to top ↑</a></div><div class="footer-bottom"><span>CREATED BY ANSTA</span><a href="mailto:yossefahmedsamir00@gmail.com">EMAIL ↗</a><a href="https://wa.me/201110568882" target="_blank" rel="noopener noreferrer">WHATSAPP ↗</a></div></footer>
+</body></html>

@@ -1,0 +1,52 @@
+name: Validate APEX website migration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apex/**"
+      - ".github/workflows/vanilla-website-check.yml"
+  push:
+    branches: [feature/vanilla-website-migration]
+    paths:
+      - "apex/**"
+      - ".github/workflows/vanilla-website-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apex
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apex/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Check vanilla website JavaScript syntax
+        run: |
+          node --check vanilla/app.js
+          node --check vanilla/project.js
+          node --check vanilla/page.js
+          node --check vanilla/site-core.js
+          node --check vanilla/site-data.js
+          node --check vanilla/translations.js
+          node --check vanilla/page-translations.js
+          node --check vanilla/detail-translations.js
+          node --check vanilla/project-preview.js
+          node --check vanilla/welcome-intro.js
+          node --check vanilla/welcome-intro-core.js
+          node --check vanilla/scroll-mascot.js
+      - name: Run unit tests
+        run: npm test
+      - name: Build all website entry points
+        run: npm run build
