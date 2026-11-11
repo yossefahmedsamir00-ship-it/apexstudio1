@@ -153,7 +153,7 @@ class _ApexBrandPainter extends CustomPainter {
     canvas.save();
     canvas.scale(scale, scale);
 
-    final gold = Paint()
+    final electricBluePaint = Paint()
       ..color = _electricBlue
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.2
@@ -173,13 +173,13 @@ class _ApexBrandPainter extends CustomPainter {
       ..lineTo(9, 72)
       ..lineTo(9, 28)
       ..close();
-    canvas.drawPath(frame, gold);
+    canvas.drawPath(frame, electricBluePaint);
 
     final apex = Path()
       ..moveTo(25, 72)
       ..lineTo(50, 25)
       ..lineTo(75, 72);
-    canvas.drawPath(apex, gold);
+    canvas.drawPath(apex, electricBluePaint);
 
     final crossbar = Path()
       ..moveTo(37, 57)
