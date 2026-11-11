@@ -1,4 +1,4 @@
-name: Deploy APEX STUDIO Flutter app to GitHub Pages
+name: Deploy APEX STUDIO HTML website to GitHub Pages
 
 on:
   push:
@@ -23,34 +23,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          flutter-version: '3.35.7'
-          channel: stable
-          cache: true
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apex/package-lock.json
 
-      - name: Get Flutter dependencies
+      - name: Install website dependencies
         working-directory: apex
-        run: flutter pub get
+        run: npm ci
 
-      - name: Analyze Flutter app
+      - name: Run website tests
         working-directory: apex
-        run: flutter analyze
+        run: npm test
 
-      - name: Run Flutter tests
+      - name: Build HTML, CSS and JavaScript website
         working-directory: apex
-        run: flutter test
-
-      - name: Build Flutter web
-        working-directory: apex
-        run: flutter build web --release --base-href /apexstudio1/
+        run: npx vite build --config vite.vanilla.config.ts
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: apex/build/web
+          path: apex/dist
 
   deploy:
     if: github.event_name != 'pull_request'
