@@ -28,7 +28,7 @@ describe('standalone APEX pages', () => {
     await import('./page.js?smoke-services');
 
     expect(document.body.dataset.page).toBe('services');
-    expect(document.querySelectorAll('#services-page-grid .service-page-card').length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('#services-page-grid .service-page-card').length).toBe(8);
   });
 
   it('renders the Work page and its initial project collection', async () => {
