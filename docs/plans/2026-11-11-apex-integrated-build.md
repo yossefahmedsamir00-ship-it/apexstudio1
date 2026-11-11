@@ -72,7 +72,7 @@
 - [x] Replace legacy gold-led emphasis in the selected target surfaces; retain red only for semantic danger/status use.
 - [x] Verify reduced-motion rules already exist in the selected website styles and retain them while applying the palette.
 - [x] Update dashboard glass panels and chart accents to consume the shared Flutter `ColorScheme` rather than hardcoded legacy blue shades.
-- [x] GitHub Actions passed website tests/build, vanilla migration checks, Flutter analyze/tests, and Android debug APK build on the current PR head. Browser visual review remains outstanding.
+- [ ] Latest GitHub Actions evidence on commit `c39b4fba24152b1fd3b187a3430c97475c5bbcba`: website syntax/tests/Vite build passed; vanilla migration checks passed; GitHub Pages build passed with deploy skipped for the PR. Flutter analyze/tests passed, but Android debug APK build is still in progress; do not mark Flutter CI complete until the job concludes. Browser visual review remains outstanding.
 
 **Acceptance:**
 - Public site and owner app visibly share the same black/electric-blue/cyan identity.
