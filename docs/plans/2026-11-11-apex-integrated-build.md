@@ -57,6 +57,7 @@
 - Modify: `flutter_admin/lib/main.dart`
 - Modify: `flutter_admin/lib/dashboard_v2.dart`
 - Modify: `flutter_admin/lib/cms_page.dart`
+- Modify: `flutter_admin/lib/dashboard_v2.dart`
 - Test: `apex/vanilla/design-system.test.js`
 - Test: `flutter_admin/test/widget_test.dart`
 
@@ -70,6 +71,7 @@
 - [x] Implement the shared near-black/graphite, electric-blue, cyan, muted-slate, and visible-focus token set in the selected website and Flutter owner-app surfaces.
 - [x] Replace legacy gold-led emphasis in the selected target surfaces; retain red only for semantic danger/status use.
 - [x] Verify reduced-motion rules already exist in the selected website styles and retain them while applying the palette.
+- [x] Update dashboard glass panels and chart accents to consume the shared Flutter `ColorScheme` rather than hardcoded legacy blue shades.
 - [x] GitHub Actions passed website tests/build, vanilla migration checks, Flutter analyze/tests, and Android debug APK build on the current PR head. Browser visual review remains outstanding.
 
 **Acceptance:**
