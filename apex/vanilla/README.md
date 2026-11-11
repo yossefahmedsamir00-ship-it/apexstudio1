@@ -62,9 +62,9 @@ Implemented in this isolated phase:
 - Reduced-motion support, focus states, and safe handling when browser storage is unavailable
 - Lightweight CSS-based immersive showroom with pointer parallax, responsive founder contact card, keyboard-accessible enter/exit controls, and Escape-key exit
 - Mounted staged intro with skip, localized copy, reduced-motion fallback, and no autoplay audio
-- The welcome-intro controller is session-scoped when mounted; speech availability depends on browser voice support and autoplay policy. The reviewed homepage entry does not currently mount it.
-- The current mascot is a CSS character study/prototype, not the final rigged 3D character.
-- Mascot/welcome prototype files exist (`scroll-mascot.js`, `welcome-intro.js`, and related CSS), but static review of the homepage entry found no markup roots or imports wiring them into the page. Treat them as dormant prototypes until integration is implemented and browser-tested. The approved astronaut is a separate asset requirement.
+- The welcome controller is mounted and session-scoped; Skip and Escape end the sequence, while reduced-motion users receive a short static path. No speech synthesis or autoplay audio is used.
+- The persistent companion is a CSS astronaut silhouette placeholder, not the approved final astronaut artwork or a rigged 3D character.
+- Both `welcome-intro.js` and `scroll-mascot.js` are mounted from `index.html`. Browser visual, accessibility, RTL/LTR, and device QA are still required.
 - Shared bilingual copy modules for the homepage, standalone pages, and project/service detail pages
 - Browser smoke tests for homepage boot, language direction, assistant mode and opening, immersive showroom exit, all standalone page entry points, and bilingual detail not-found copy
 - Chat history pagination preserves chronological order when inserting older server-ordered messages
