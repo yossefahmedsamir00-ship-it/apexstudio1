@@ -1,0 +1,17 @@
+import { describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
+
+const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+
+describe('APEX public design tokens', () => {
+  it('defines the black, electric-blue and cyan brand palette', () => {
+    expect(styles).toMatch(/--bg:\s*#070a10/i);
+    expect(styles).toMatch(/--electric-blue:\s*#1677ff/i);
+    expect(styles).toMatch(/--cyan:\s*#12d9ff/i);
+    expect(styles).toMatch(/--surface:\s*#0c1422/i);
+  });
+
+  it('keeps a reduced-motion mode for non-essential animation', () => {
+    expect(styles).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/i);
+  });
+});
