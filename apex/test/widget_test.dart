@@ -5,9 +5,48 @@ void main() {
   testWidgets('APEX STUDIO main application renders', (tester) async {
     await tester.pumpWidget(const ApexStudioApp());
 
-    expect(find.text('APEX'), findsOneWidget);
-    expect(find.text('STUDIO'), findsOneWidget);
+    // The responsive layout intentionally renders the APEX wordmark in
+    // more than one place (for example, hero and navigation).
+    expect(find.text('APEX').first, findsOneWidget);
+    expect(find.text('STUDIO').first, findsOneWidget);
     expect(find.textContaining('INDEPENDENT DIGITAL STUDIO'), findsOneWidget);
     expect(find.byTooltip('AI Chat'), findsOneWidget);
+  });
+
+  testWidgets('work navigation opens a dedicated projects page', (tester) async {
+    await tester.pumpWidget(const ApexStudioApp());
+    await tester.tap(find.text('EXPLORE WORK'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ideas, shaped into digital experiences.'), findsOneWidget);
+    expect(find.text('FAMILY STUDIO'), findsOneWidget);
+    expect(find.byTooltip('Home'), findsOneWidget);
+  });
+
+  test('project preview links accept only HTTP and HTTPS URLs', () {
+    expect(
+      const Project('Safe preview', 'Web', 'Demo', previewUrl: 'https://example.com').validPreviewUri,
+      Uri.parse('https://example.com'),
+    );
+    expect(
+      const Project('Unsafe preview', 'Web', 'Demo', previewUrl: 'javascript:alert(1)').validPreviewUri,
+      isNull,
+    );
+    expect(
+      const Project('Relative preview', 'Web', 'Demo', previewUrl: '/preview').validPreviewUri,
+      isNull,
+    );
+  });
+
+  testWidgets('project card clearly marks missing live previews', (tester) async {
+    await tester.pumpWidget(const ApexStudioApp());
+    final projectCard = find.text('APEX AI Studio');
+    await tester.ensureVisible(projectCard);
+    await tester.pumpAndSettle();
+    await tester.tap(projectCard);
+    await tester.pumpAndSettle();
+
+    expect(find.text('APEX AI Studio'), findsOneWidget);
+    expect(find.text('PREVIEW COMING SOON'), findsOneWidget);
   });
 }
