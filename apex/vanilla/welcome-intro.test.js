@@ -3,8 +3,8 @@ import { getFocusTrapTarget, getWelcomeCopy, getWelcomeDuration, getWelcomeStage
 
 describe('cinematic welcome intro', () => {
   it('plays five ordered visual stages before opening the website', () => {
-    expect(getWelcomeStages().map((stage) => stage.id)).toEqual(['hello', 'evolve', 'identity', 'greeting', 'website']);
-    expect(getWelcomeStages().reduce((total, stage) => total + stage.duration, 0)).toBe(10500);
+    expect(getWelcomeStages().map((stage) => stage.id)).toEqual(['hello', 'cursor', 'outline', 'armor', 'greeting', 'website']);
+    expect(getWelcomeStages().reduce((total, stage) => total + stage.duration, 0)).toBe(13200);
   });
 
   it('includes a skip action and a deliberate color progression for the astronaut build', () => {
@@ -28,13 +28,11 @@ describe('cinematic welcome intro', () => {
     expect(getWelcomeDuration(true)).toBeLessThan(getWelcomeDuration(false));
   });
 
-  it('provides localized welcome copy without a skip or early-enter action', () => {
+  it('provides localized welcome copy and an accessible skip label', () => {
     expect(getWelcomeCopy('en').spoken).toBe('Welcome to APEX STUDIO');
     expect(getWelcomeCopy('ar').spoken).toContain('أهلاً بيك');
-    expect(getWelcomeCopy('en')).not.toHaveProperty('skip');
-    expect(getWelcomeCopy('ar')).not.toHaveProperty('skip');
-    expect(getWelcomeCopy('en')).not.toHaveProperty('enter');
-    expect(getWelcomeCopy('ar')).not.toHaveProperty('enter');
+    expect(getWelcomeCopy('en').skip).toBe('Skip intro');
+    expect(getWelcomeCopy('ar').skip).toBe('تخطي المقدمة');
   });
 
   it('wraps focus on the only available voice replay control', () => {
