@@ -25,6 +25,13 @@ describe('APEX vanilla home page boot', () => {
     await import('./app.js');
   });
 
+  it('mounts the skippable welcome layer and persistent astronaut companion', () => {
+    expect(document.querySelector('#apex-welcome [data-welcome-skip]')).not.toBeNull();
+    expect(document.querySelector('#apex-scroll-mascot')).not.toBeNull();
+    expect(document.querySelector('script[src="./welcome-intro.js"]')).not.toBeNull();
+    expect(document.querySelector('script[src="./scroll-mascot.js"]')).not.toBeNull();
+  });
+
   it('initializes all primary page controls without throwing', () => {
     expect(document.querySelector('#language-toggle')).not.toBeNull();
     expect(document.querySelector('#menu-toggle')).not.toBeNull();
