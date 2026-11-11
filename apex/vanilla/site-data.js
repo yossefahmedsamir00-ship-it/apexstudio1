@@ -82,4 +82,40 @@ export const fallbackServices = [
       ar: 'تطبيقات مصممة حول احتياجات المستخدم الحقيقية.',
     },
   },
+  {
+    id: 'design',
+    no: '05',
+    title: { en: 'UI/UX & product design', ar: 'تصميم واجهات وتجربة المستخدم' },
+    body: {
+      en: 'Research-led interfaces, design systems and accessible product experiences.',
+      ar: 'واجهات مبنية على فهم المستخدم وأنظمة تصميم وتجارب رقمية سهلة الوصول.',
+    },
+  },
+  {
+    id: 'backend',
+    no: '06',
+    title: { en: 'Backend & database systems', ar: 'أنظمة الخوادم وقواعد البيانات' },
+    body: {
+      en: 'Secure APIs, data models, integrations and reliable application infrastructure.',
+      ar: 'واجهات API آمنة ونماذج بيانات وتكاملات وبنية تقنية موثوقة.',
+    },
+  },
+  {
+    id: 'security',
+    no: '07',
+    title: { en: 'Security reviews & hardening', ar: 'مراجعة الأمان وتعزيز الحماية' },
+    body: {
+      en: 'Practical security assessment, access controls and safer deployment practices.',
+      ar: 'تقييم أمني عملي وضبط الصلاحيات وتحسين ممارسات النشر الآمن.',
+    },
+  },
+  {
+    id: 'custom',
+    no: '08',
+    title: { en: 'Custom software & integrations', ar: 'برمجيات مخصصة وتكامل الأنظمة' },
+    body: {
+      en: 'Purpose-built tools that connect workflows, teams and existing platforms.',
+      ar: 'أدوات مصممة لربط سير العمل والفرق والمنصات الموجودة.',
+    },
+  },
 ];
