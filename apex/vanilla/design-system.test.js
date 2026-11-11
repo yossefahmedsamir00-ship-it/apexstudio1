@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 
 const styles = readFileSync('vanilla/styles.css', 'utf8');
 const editorial = readFileSync('vanilla/editorial.css', 'utf8');
-const homepage = readFileSync('vanilla/index.html', 'utf8');
+const publicPages = ['index.html', 'about.html', 'services.html', 'work.html', 'project.html', 'service.html'];
+const pageMarkup = publicPages.map((page) => [page, readFileSync(`vanilla/${page}`, 'utf8')]);
 
 describe('APEX public design tokens', () => {
   it('defines the black, electric-blue and cyan brand palette', () => {
@@ -21,8 +22,10 @@ describe('APEX public design tokens', () => {
     expect(editorial.includes('var(--gold')).toBe(false);
   });
 
-  it('sets the browser theme color to the APEX dark surface', () => {
-    expect(homepage).toMatch(/<meta name="theme-color" content="#070a10">/i);
+  it('sets the browser theme color to the APEX dark surface on every public route', () => {
+    for (const [page, markup] of pageMarkup) {
+      expect(markup, page).toMatch(/<meta name="theme-color" content="#070a10">/i);
+    }
   });
 
   it('keeps a reduced-motion mode for non-essential animation', () => {
