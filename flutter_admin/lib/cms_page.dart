@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-const _cmsGold = Color(0xFFD7AA5B);
-const _cmsBlue = Color(0xFF5C8DFF);
-const _cmsPanel = Color(0xFF0B0C0D);
-const _cmsMuted = Color(0xFF92958F);
+const _cmsElectricBlue = Color(0xFF1677FF);
+const _cmsCyan = Color(0xFF12D9FF);
+const _cmsPanel = Color(0xFF0C1422);
+const _cmsMuted = Color(0xFF9AA9BC);
 
 class CmsPage extends StatefulWidget {
   const CmsPage({super.key, this.client, this.demoMode = false});
@@ -130,7 +130,7 @@ class _CmsPageState extends State<CmsPage> {
   Future<void> _preview(_CmsEntry entry) => showDialog<void>(context: context, builder: (context) => AlertDialog(
     backgroundColor: _cmsPanel, title: Text('Preview · ${entry.title}'),
     content: SizedBox(width: 460, child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(entry.kind.toUpperCase(), style: const TextStyle(color: _cmsGold, letterSpacing: 1.4, fontSize: 11)),
+      Text(entry.kind.toUpperCase(), style: const TextStyle(color: _cmsElectricBlue, letterSpacing: 1.4, fontSize: 11)),
       const SizedBox(height: 16), Text(entry.title, style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w800)),
       const SizedBox(height: 10), Text(entry.summary.isEmpty ? 'Add a summary to complete this content block.' : entry.summary),
       const SizedBox(height: 20), const Text('Preview only · publishing is a separate action', style: TextStyle(color: _cmsMuted, fontSize: 12)),
@@ -145,7 +145,7 @@ class _CmsPageState extends State<CmsPage> {
     return ListView(physics: const AlwaysScrollableScrollPhysics(), padding: const EdgeInsets.all(18), children: [
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('CONTENT MANAGEMENT', style: TextStyle(color: _cmsGold, fontSize: 11, letterSpacing: 1.8, fontWeight: FontWeight.w700)),
+          Text('CONTENT MANAGEMENT', style: TextStyle(color: _cmsElectricBlue, fontSize: 11, letterSpacing: 1.8, fontWeight: FontWeight.w700)),
           SizedBox(height: 7), Text('Content studio', style: TextStyle(fontSize: 27, fontWeight: FontWeight.w900)),
           SizedBox(height: 5), Text('Manage the words and sections that shape the APEX experience.', style: TextStyle(color: _cmsMuted)),
         ])),
@@ -155,8 +155,8 @@ class _CmsPageState extends State<CmsPage> {
       const SizedBox(height: 18),
       if (widget.demoMode) Container(padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(color: const Color(0xFF1A202A), borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _cmsBlue.withValues(alpha: .22))),
-        child: const Row(children: [Icon(Icons.science_outlined, color: _cmsBlue), SizedBox(width: 10),
+          border: Border.all(color: _cmsCyan.withValues(alpha: .22))),
+        child: const Row(children: [Icon(Icons.science_outlined, color: _cmsCyan), SizedBox(width: 10),
           Expanded(child: Text('Demo mode · changes are local and will not persist. Production uses the secured Supabase CMS.',
             style: TextStyle(fontSize: 12, color: Colors.white70)))])),
       if (_error != null) Container(padding: const EdgeInsets.all(13),
@@ -169,7 +169,7 @@ class _CmsPageState extends State<CmsPage> {
           final columns = constraints.maxWidth > 850 ? 3 : 2;
           return GridView.count(crossAxisCount: columns, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 2.3, children: [
-              _CmsMetric(label: 'Content items', value: _entries.length.toString(), icon: Icons.article_outlined, color: _cmsGold),
+              _CmsMetric(label: 'Content items', value: _entries.length.toString(), icon: Icons.article_outlined, color: _cmsElectricBlue),
               _CmsMetric(label: 'Published', value: published.toString(), icon: Icons.public_outlined, color: const Color(0xFF8FE0B4)),
               _CmsMetric(label: 'Drafts', value: drafts.toString(), icon: Icons.edit_note_outlined, color: const Color(0xFFFFB27A)),
             ]);
@@ -186,8 +186,8 @@ class _CmsPageState extends State<CmsPage> {
           child: Center(child: Text('No content in this filter.', style: TextStyle(color: _cmsMuted)))),
         ..._visibleEntries.map((entry) => Card(color: _cmsPanel, margin: const EdgeInsets.only(bottom: 10),
           child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [
-            Container(width: 42, height: 42, decoration: BoxDecoration(color: _cmsGold.withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.article_outlined, color: _cmsGold)),
+            Container(width: 42, height: 42, decoration: BoxDecoration(color: _cmsElectricBlue.withValues(alpha: .12),
+              borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.article_outlined, color: _cmsElectricBlue)),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(entry.title, style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -198,12 +198,12 @@ class _CmsPageState extends State<CmsPage> {
                 fontSize: 11, fontWeight: FontWeight.w700)),
             ])),
             IconButton(tooltip: 'Preview ${entry.title}', onPressed: () => _preview(entry),
-              icon: const Icon(Icons.visibility_outlined, color: _cmsBlue)),
+              icon: const Icon(Icons.visibility_outlined, color: _cmsCyan)),
             IconButton(tooltip: 'Edit ${entry.title}', onPressed: _saving ? null : () => _editEntry(entry: entry),
               icon: const Icon(Icons.edit_outlined)),
             IconButton(tooltip: entry.status == 'published' ? 'Unpublish' : 'Publish',
               onPressed: _saving ? null : () => _setPublished(entry, entry.status != 'published'),
-              icon: Icon(entry.status == 'published' ? Icons.unpublished_outlined : Icons.publish_outlined, color: _cmsGold)),
+              icon: Icon(entry.status == 'published' ? Icons.unpublished_outlined : Icons.publish_outlined, color: _cmsElectricBlue)),
           ])))),
       ],
     ]);
