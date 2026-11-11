@@ -1,4 +1,4 @@
-name: Deploy APEX STUDIO HTML website to GitHub Pages
+name: Deploy APEX STUDIO static HTML CSS JS website to GitHub Pages
 
 on:
   push:
