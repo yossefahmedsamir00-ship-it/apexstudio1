@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 
-const styles = await readFile(new URL('./styles.css', import.meta.url), 'utf8');
+const styles = readFileSync('vanilla/styles.css', 'utf8');
 
 describe('APEX public design tokens', () => {
   it('defines the black, electric-blue and cyan brand palette', () => {
