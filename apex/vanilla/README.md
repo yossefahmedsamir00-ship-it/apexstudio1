@@ -48,7 +48,7 @@ A dedicated GitHub Actions workflow runs these checks for the migration branch a
 ## Current scope
 
 Implemented in this isolated phase:
-- Responsive black/gold home page and mobile navigation
+- Responsive black/electric-blue/cyan home page and mobile navigation
 - Arabic/English locale switching with document direction and safe storage fallback
 - Project category filters, keyboard-accessible project cards, and inquiry prefill
 - Service, process, about, payment-information, and CTA sections
