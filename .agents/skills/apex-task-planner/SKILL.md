@@ -8,8 +8,8 @@ description: "Use when a requested APEX change spans multiple files, needs archi
 ## Workflow
 1. Read `AGENTS.md` and the closest existing plan/spec. Inspect the actual source tree and current implementation before proposing files.
 2. Restate the user outcome in observable terms. Separate confirmed requirements from assumptions.
-3. Identify the correct APEX surface: public Flutter website, Flutter owner app, Supabase backend, AI chat, or shared infrastructure.
-4. Preserve the established stack and source of truth. Do not introduce React, a parallel website, or a second backend where the current plan defines Flutter/Dart and shared Supabase.
+3. Identify the correct APEX surface: framework-free public website in `apex/vanilla/`, Flutter owner app in `flutter_admin/`, shared Supabase backend, AI chat, or shared infrastructure.
+4. Preserve the established stack and source of truth: HTML/CSS/browser JavaScript for the public website, Flutter/Dart for the owner app, and the existing shared Supabase backend. Do not introduce React, a duplicate website, or a second backend.
 5. Break work into small ordered tasks. Each task must identify files, behavior, interfaces, edge cases, and verification.
 6. Identify dependencies and security/privacy implications. Prefer additive, reversible changes.
 7. Present unresolved decisions only when they materially change architecture, data handling, cost, or user-visible behavior.
