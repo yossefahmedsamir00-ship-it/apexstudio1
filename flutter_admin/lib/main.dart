@@ -20,7 +20,6 @@ const supabasePublishableKey = String.fromEnvironment(
 
 const _electricBlue = Color(0xFF1677FF);
 const _cyan = Color(0xFF12D9FF);
-const _cyan = Color(0xFF12D9FF);
 const _danger = Color(0xFFFF5C72);
 const _surface = Color(0xFF0C1422);
 const _background = Color(0xFF070A10);
