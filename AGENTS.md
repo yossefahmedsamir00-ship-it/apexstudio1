@@ -33,3 +33,18 @@ This repository follows the Superpowers methodology: https://github.com/obra/sup
 ## Scope and honesty
 
 This is a repository-level workflow guide inspired by Superpowers. It does not vendor or install the upstream plugin or its complete skill set. Install the official plugin separately in each supported coding-agent harness.
+
+## Mandatory APEX Agent Skills
+
+Load the complete repository skill when its trigger applies:
+
+- `$apex-task-planner`: multi-file, ambiguous, or architecture-affecting APEX work.
+- `$apex-vanilla-web`: public HTML/CSS/JavaScript website pages and browser behavior.
+- `$apex-flutter-ui`: Flutter owner-app UI, navigation, responsiveness, animation, and RTL/LTR.
+- `$apex-motion-system`: animation, transitions, scroll effects, reduced motion, and motion performance.
+- `$apex-supabase-security`: any Supabase Auth, PostgreSQL, RLS, Storage, Realtime, migration, or Edge Function work.
+- `$apex-ai-chat`: AI chat, model routing, prompt construction, streaming, or conversation persistence.
+- `$apex-code-review`: review branches, PRs, commits, and diffs.
+- `$apex-verify-delivery`: verify every implementation before claiming completion.
+
+Skills do not override approval gates, security requirements, or deployment restrictions. They are task-specific workflows, not blanket permission for external actions.

@@ -48,7 +48,7 @@ A dedicated GitHub Actions workflow runs these checks for the migration branch a
 ## Current scope
 
 Implemented in this isolated phase:
-- Responsive black/gold home page and mobile navigation
+- Responsive black/electric-blue/cyan home page and mobile navigation
 - Arabic/English locale switching with document direction and safe storage fallback
 - Project category filters, keyboard-accessible project cards, and inquiry prefill
 - Service, process, about, payment-information, and CTA sections
@@ -61,10 +61,10 @@ Implemented in this isolated phase:
 - Analytics event capture with the project id mapped to the dedicated RPC argument
 - Reduced-motion support, focus states, and safe handling when browser storage is unavailable
 - Lightweight CSS-based immersive showroom with pointer parallax, responsive founder contact card, keyboard-accessible enter/exit controls, and Escape-key exit
-- Cinematic first-visit welcome layer with animated CSS mascot study, gold/blue orbital lighting, localized welcome captions, optional browser speech synthesis, replay/skip/enter controls, and reduced-motion bypass
-- Welcome intro is session-scoped and does not run again after dismissal in the same tab; speech availability depends on browser voice support and autoplay policy
-- The current mascot is a CSS character study/prototype, not the final rigged 3D character.
-- A lightweight persistent mascot prototype is also mounted on the home page; it responds to scroll progress and the currently visible section, with passive scroll listeners, requestAnimationFrame updates, and reduced-motion support. A production-quality animated 3D character with facial/lip-sync animation requires a separately created and optimized rigged GLB/GLTF asset
+- Mounted staged intro with skip, localized copy, reduced-motion fallback, and no autoplay audio
+- The welcome controller is mounted and session-scoped; Skip and Escape end the sequence, while reduced-motion users receive a short static path. No speech synthesis or autoplay audio is used.
+- The persistent companion is a CSS astronaut silhouette placeholder, not the approved final astronaut artwork or a rigged 3D character.
+- Both `welcome-intro.js` and `scroll-mascot.js` are mounted from `index.html`. Browser visual, accessibility, RTL/LTR, and device QA are still required.
 - Shared bilingual copy modules for the homepage, standalone pages, and project/service detail pages
 - Browser smoke tests for homepage boot, language direction, assistant mode and opening, immersive showroom exit, all standalone page entry points, and bilingual detail not-found copy
 - Chat history pagination preserves chronological order when inserting older server-ordered messages

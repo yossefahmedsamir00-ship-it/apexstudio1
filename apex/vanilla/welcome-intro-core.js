@@ -24,25 +24,28 @@ export function getWelcomeCopy(locale = 'en') {
         caption: 'أهلاً بيك في APEX STUDIO',
         subtitle: 'مساحة جديدة لصناعة تجارب رقمية مختلفة.',
         replay: 'إعادة الترحيب الصوتي',
+        skip: 'تخطي المقدمة',
       }
     : {
         spoken: 'Welcome to APEX STUDIO',
         caption: 'WELCOME TO APEX STUDIO',
         subtitle: 'A new dimension of digital experiences.',
         replay: 'Replay welcome voice',
+        skip: 'Skip intro',
       };
 }
 
 export function getWelcomeDuration(prefersReducedMotion) {
-  return prefersReducedMotion ? 1800 : 7200;
+  return prefersReducedMotion ? 1500 : 13200;
 }
 
 export function getWelcomeStages() {
   return [
-    { id: 'hello', duration: 2000 },
-    { id: 'evolve', duration: 1800 },
-    { id: 'identity', duration: 2000 },
-    { id: 'greeting', duration: 2500 },
-    { id: 'website', duration: 2200 },
+    { id: 'hello', duration: 2100 },
+    { id: 'cursor', duration: 2100 },
+    { id: 'outline', duration: 2100 },
+    { id: 'armor', duration: 2400 },
+    { id: 'greeting', duration: 2400 },
+    { id: 'website', duration: 2100 },
   ];
 }

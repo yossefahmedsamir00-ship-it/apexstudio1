@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090909">
+  <meta name="theme-color" content="#070a10">
   <meta name="description" content="APEX STUDIO builds purposeful websites, digital products, mobile apps and AI systems.">
   <meta property="og:title" content="APEX STUDIO — Digital experiences with purpose">
   <meta property="og:description" content="Websites, apps, commerce and AI systems built around real outcomes.">
@@ -125,5 +125,26 @@
   </dialog>
   <dialog class="modal chat-modal" id="owner-modal"><section class="modal-card chat-card"><button type="button" class="modal-close" data-close-modal aria-label="Close">×</button><p class="eyebrow">APEX / DIRECT CONTACT</p><h2 data-i18n="ownerChatTitle">Chat with the owner.</h2><p class="modal-intro" data-i18n="ownerChatIntro">Your message goes to the APEX STUDIO owner. Replies appear here.</p><div class="chat-messages" id="owner-messages" aria-live="polite"></div><form id="owner-chat-form" class="chat-composer"><input id="owner-chat-input" maxlength="8000" autocomplete="off" placeholder="Write your message…" required><button class="button button-gold" type="submit" aria-label="Send">↑</button></form><p class="form-status" id="owner-chat-status" role="status"></p></section></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <section class="apex-welcome" id="apex-welcome" aria-label="APEX STUDIO introduction" aria-live="polite" aria-hidden="true" tabindex="-1" hidden>
+    <div class="welcome-terminal" aria-hidden="true">Hello World<span class="welcome-terminal-cursor">_</span></div>
+    <div class="welcome-build" aria-hidden="true">
+      <span class="welcome-build-cursor"></span>
+      <span class="welcome-build-orbit welcome-orbit-one"></span><span class="welcome-build-orbit welcome-orbit-two"></span>
+      <span class="welcome-astronaut">
+        <span class="astronaut-backpack"></span><span class="astronaut-helmet"><span class="astronaut-visor"></span></span>
+        <span class="astronaut-body"></span><span class="astronaut-arm astronaut-arm-left"></span><span class="astronaut-arm astronaut-arm-right"></span>
+      </span>
+      <span class="welcome-energy-ring"></span>
+    </div>
+    <div class="welcome-copy"><p class="welcome-caption" data-welcome-caption>WELCOME TO APEX STUDIO</p><p class="welcome-subtitle" data-welcome-subtitle>A new dimension of digital experiences.</p></div>
+    <button class="welcome-skip" type="button" data-welcome-skip>Skip intro</button>
+  </section>
+  <aside class="apex-scroll-mascot" id="apex-scroll-mascot" aria-label="APEX astronaut companion" data-section="home">
+    <span class="mascot-orbit" aria-hidden="true"></span>
+    <span class="mascot-astronaut" aria-hidden="true"><span class="mascot-pack"></span><span class="mascot-helmet"><span></span></span><span class="mascot-torso"></span><span class="mascot-arm mascot-arm-a"></span><span class="mascot-arm mascot-arm-b"></span></span>
+    <span class="mascot-label" aria-hidden="true">APEX / EXPLORER</span>
+  </aside>
+  <script type="module" src="./welcome-intro.js"></script>
+  <script type="module" src="./scroll-mascot.js"></script>
 </body>
 </html>
