@@ -132,6 +132,8 @@
 
 ### Task 5: Audit and harden the shared Supabase contracts
 
+**Status:** Initial static review recorded in `docs/audits/2026-11-11-apex-backend-security-review.md`. This is not a live database audit; transactional social workflows and database authorization tests remain open.
+
 **Files:**
 - Review: `supabase/migrations/*.sql`
 - Review: `supabase/functions/apex-client-chat/index.ts`, `apex-owner-bootstrap/index.ts`, `apex-ai-gateway/index.ts`, payment and social functions as relevant.
@@ -142,9 +144,9 @@
 - Privileged actions use verified auth context and server-side secrets.
 - Database access follows explicit grants and RLS policies; owner authorization is never inferred from user-editable metadata.
 
-- [ ] Build an actor/resource/action/ownership matrix for public visitors, authenticated clients, and the configured owner.
-- [ ] Review every exposed table, RPC, view, trigger, and Edge Function used by the selected flows.
-- [ ] Add negative tests for unauthenticated access, wrong-owner access, cross-client conversation access, malformed input, and invalid payment status transitions.
+- [x] Perform an initial actor/resource/action review for CMS, chat, owner, AI gateway, payments, and social workspace paths; formal matrix remains to be completed.
+- [x] Review the primary CMS/chat/owner/AI/payment/social Edge Function paths and migration policies; remaining functions and views still require a complete pass.
+- [ ] Add automated database negative tests for unauthenticated access, wrong-owner access, cross-client conversation access, malformed input, and invalid payment status transitions.
 - [ ] Propose additive reversible migrations only when current contracts cannot meet the approved behavior.
 - [ ] Do not apply migrations to production or rotate live secrets in this task.
 
