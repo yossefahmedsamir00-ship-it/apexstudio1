@@ -59,13 +59,13 @@ class ApexAdminApp extends StatelessWidget {
       colorScheme: scheme,
       dividerColor: Colors.white.withValues(alpha: .08),
       textTheme: ThemeData.dark().textTheme.apply(
-        bodyColor: const Color(0xFFF7F3EA),
-        displayColor: const Color(0xFFF7F3EA),
+        bodyColor: const Color(0xFFF2F7FF),
+        displayColor: const Color(0xFFF2F7FF),
         fontFamily: 'Roboto',
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: _background,
-        foregroundColor: Color(0xFFF7F3EA),
+        foregroundColor: Color(0xFFF2F7FF),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
@@ -210,7 +210,7 @@ class _ApexAmbientBackground extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [_background, Color(0xFF090A09), _background],
+                colors: [_background, Color(0xFF0C1422), _background],
               ),
             ),
           ),
@@ -237,7 +237,7 @@ class _ApexAmbientBackground extends StatelessWidget {
                 height: 380,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [_danger.withValues(alpha: .08), Colors.transparent]),
+                  gradient: RadialGradient(colors: [_cyan.withValues(alpha: .08), Colors.transparent]),
                 ),
               ),
             ),
