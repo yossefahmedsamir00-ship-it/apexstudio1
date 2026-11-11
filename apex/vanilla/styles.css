@@ -1467,7 +1467,7 @@ html[dir=rtl] body .project-kind {
 
 .assistant-mode.is-active,.assistant-mode:hover,.chat-tool-button:hover,.load-older:hover:not(:disabled) {
   border-color: var(--electric-blue);
-  color: var(--gold-light);
+  color: var(--cyan);
 }
 
 .assistant-mode.is-active {
@@ -1557,7 +1557,7 @@ html[dir=rtl] body .project-kind {
 }
 
 .project-back-link:hover {
-  color: var(--gold-light);
+  color: var(--cyan);
 }
 
 .project-detail-title {
@@ -1587,7 +1587,7 @@ html[dir=rtl] body .project-kind {
 .project-meta-chip {
   padding: 8px 12px;
   border: 1px solid var(--line);
-  color: var(--gold-light);
+  color: var(--cyan);
   font-size: 10px;
 }
 
@@ -1621,7 +1621,7 @@ html[dir=rtl] body .project-kind {
 
 .project-detail-section h2 {
   margin: 0 0 14px;
-  color: var(--gold-light);
+  color: var(--cyan);
   font-size: 18px;
   font-weight: 600;
 }
@@ -1979,7 +1979,7 @@ html[dir=rtl] body .project-detail-section {
 .service-page-card .text-link {
   display: inline-block;
   margin-top: 16px;
-  color: var(--gold-light);
+  color: var(--cyan);
 }
 
 .work-page-grid {
@@ -2257,7 +2257,7 @@ html[dir=rtl] body .service-page-card {
 .showroom-trigger:hover,.showroom-exit:hover {
   transform: translateY(-3px);
   background: #0d1720;
-  border-color: var(--gold-light);
+  border-color: var(--cyan);
 }
 
 .showroom-trigger[hidden],.showroom-exit[hidden] {
