@@ -7,6 +7,16 @@ describe('cinematic welcome intro', () => {
     expect(getWelcomeStages().reduce((total, stage) => total + stage.duration, 0)).toBe(10500);
   });
 
+  it('includes a skip action and a deliberate color progression for the astronaut build', () => {
+    expect(getWelcomeCopy('en').skip).toBe('Skip intro');
+    expect(getWelcomeCopy('ar').skip).toBe('تخطي المقدمة');
+    expect(getWelcomeStages().map((stage) => stage.id)).toEqual([
+      'hello', 'cursor', 'outline', 'armor', 'greeting', 'website',
+    ]);
+    expect(getWelcomeStages().reduce((total, stage) => total + stage.duration, 0)).toBeGreaterThanOrEqual(10000);
+    expect(getWelcomeStages().reduce((total, stage) => total + stage.duration, 0)).toBeLessThanOrEqual(16000);
+  });
+
   it('shows the intro once per tab unless the visitor already completed it', () => {
     expect(shouldShowWelcomeIntro({ getItem: () => null })).toBe(true);
     expect(shouldShowWelcomeIntro({ getItem: () => 'seen' })).toBe(false);
