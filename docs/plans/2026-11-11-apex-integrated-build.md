@@ -41,9 +41,9 @@
 - Flutter skill owns `flutter_admin/` only; it must not propose a duplicate Flutter public website.
 
 - [x] Import the six APEX-specific skills from PR #28 onto this integration branch.
-- [ ] Update Flutter UI skill to use electric blue/cyan and scope it to the owner app.
-- [ ] Add focused vanilla-web and motion skills with explicit triggers and stop conditions.
-- [ ] Verify all skill frontmatter, names, paths, and AGENTS.md routing.
+- [x] Update Flutter UI skill to use electric blue/cyan and scope it to the owner app.
+- [x] Add focused vanilla-web and motion skills with explicit triggers and stop conditions.
+- [x] Verify all eight skill frontmatter blocks, names, paths, and AGENTS.md routing.
 
 **Verification:**
 - Inspect every new `SKILL.md` and confirm valid YAML frontmatter with unique names.
@@ -65,12 +65,12 @@
 - Flutter theme in `flutter_admin/lib/main.dart` owns app-wide ColorScheme and component themes.
 - Reusable Flutter glass panels and stats cards consume theme tokens instead of inventing a second palette.
 
-- [ ] Add failing tests for required electric-blue/cyan design tokens and the Flutter theme's primary/secondary colors.
-- [ ] Run the focused tests and record the expected failure before changing production styles.
-- [ ] Implement a single palette: near-black base, raised graphite/navy surfaces, readable cool-white text, muted slate text, electric-blue primary accent, cyan secondary accent, and visible focus/border tokens.
-- [ ] Replace legacy gold/red emphasis in the selected target surfaces; retain colors only where they represent real status semantics.
-- [ ] Add reduced-motion rules and ensure hover/press effects never cause layout overflow.
-- [ ] Run the website test/build and Flutter test/analyze commands.
+- [x] Add regression tests for required electric-blue/cyan design tokens and the Flutter theme's primary/secondary colors.
+- [ ] TDD red was not captured before the production palette edits; do not claim a recorded red-green cycle. Add this as a follow-up verification debt.
+- [x] Implement the shared near-black/graphite, electric-blue, cyan, muted-slate, and visible-focus token set in the selected website and Flutter owner-app surfaces.
+- [x] Replace legacy gold-led emphasis in the selected target surfaces; retain red only for semantic danger/status use.
+- [x] Verify reduced-motion rules already exist in the selected website styles and retain them while applying the palette.
+- [x] GitHub Actions passed website tests/build, vanilla migration checks, Flutter analyze/tests, and Android debug APK build on the current PR head. Browser visual review remains outstanding.
 
 **Acceptance:**
 - Public site and owner app visibly share the same black/electric-blue/cyan identity.
@@ -78,6 +78,8 @@
 - No new runtime dependency is required for the theme.
 
 ### Task 3: Complete the public vanilla website as the public-site source of truth
+
+**Status:** Not started in this integration checkpoint. The existing site remains in place; only the shared palette and its regression checks have been updated.
 
 **Files:**
 - Modify as needed: `apex/vanilla/index.html`, `about.html`, `services.html`, `work.html`, `project.html`, `service.html`
