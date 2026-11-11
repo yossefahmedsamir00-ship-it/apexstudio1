@@ -187,3 +187,27 @@
 - The final public contact details, approved brand assets, and which portfolio projects are real client work versus concepts.
 - Which social, messaging, and payment integrations should be enabled in production and their provider/account configuration.
 - The approved production rollout date and hosting target.
+
+
+### Task 3A: Replace the mascot prototype with the approved APEX astronaut
+
+**Status:** Design direction approved; implementation not yet started.
+
+**Decision:** Use the armored astronaut in the upper-left hero area of the user's reference image (not the small AI-assistant robot). Keep the established black/electric-blue/cyan identity.
+
+**Static review:** `docs/audits/2026-11-11-apex-mascot-animation-review.md`
+
+**Findings:**
+- `scroll-mascot.js` and `welcome-intro.js` exist, but the reviewed homepage entry does not load them and the expected root elements were not found in `index.html`.
+- Their CSS character study is a placeholder, not the approved astronaut asset.
+- The homepage currently uses an editorial architecture hero, so the mascot should be introduced as a deliberate feature without replacing the existing page layout wholesale.
+
+**Implementation sequence:**
+- [ ] Create/obtain a clean transparent astronaut asset matching the approved upper-left character.
+- [ ] Add accessible bilingual welcome and persistent-mascot markup to the vanilla homepage.
+- [ ] Wire controllers from the real page entry and add tests for mount/skip/section state.
+- [ ] Use CSS transforms and IntersectionObserver for the initial lightweight animation; defer Rive until a rigged asset is available. Do not add GSAP unless a complex scroll timeline genuinely requires it.
+- [ ] Verify mobile overlap, RTL/LTR, keyboard behavior, reduced motion, image fallback, and performance.
+- [ ] Run website syntax checks, unit tests, build, and browser QA before marking complete.
+
+No production deployment or PR merge is authorized by this task.
