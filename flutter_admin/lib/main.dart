@@ -18,13 +18,13 @@ const supabasePublishableKey = String.fromEnvironment(
   defaultValue: 'sb_publishable_VD3iKy4zbt4pJFfZkO4YFA_rj5sS1Ui',
 );
 
-const _gold = Color(0xFFD7AA5B);
-const _goldLight = Color(0xFFFFE2A1);
-const _cyan = Color(0xFF5C8DFF);
-const _red = Color(0xFFFF543D);
-const _surface = Color(0xFF0B0C0D);
-const _background = Color(0xFF050505);
-const _muted = Color(0xFF92958F);
+const _electricBlue = Color(0xFF1677FF);
+const _cyan = Color(0xFF12D9FF);
+const _cyan = Color(0xFF12D9FF);
+const _danger = Color(0xFFFF5C72);
+const _surface = Color(0xFF0C1422);
+const _background = Color(0xFF070A10);
+const _muted = Color(0xFF9AA9BC);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,10 +49,10 @@ class ApexAdminApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: _gold,
+      seedColor: _electricBlue,
       brightness: Brightness.dark,
       surface: _surface,
-    ).copyWith(primary: _gold, secondary: _cyan, tertiary: _red, surface: _surface);
+    ).copyWith(primary: _electricBlue, secondary: _cyan, tertiary: _danger, surface: _surface);
     final theme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -77,29 +77,29 @@ class ApexAdminApp extends StatelessWidget {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: _gold.withValues(alpha: .13)),
+          side: BorderSide(color: _electricBlue.withValues(alpha: .13)),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: const Color(0xFF090A0A),
-        indicatorColor: _gold.withValues(alpha: .17),
+        indicatorColor: _electricBlue.withValues(alpha: .17),
         labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
-          color: states.contains(WidgetState.selected) ? _goldLight : _muted,
+          color: states.contains(WidgetState.selected) ? _cyan : _muted,
           fontSize: 10,
           fontWeight: states.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w500,
         )),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: const Color(0xFF080909),
-        indicatorColor: _gold.withValues(alpha: .17),
-        selectedIconTheme: const IconThemeData(color: _goldLight),
+        indicatorColor: _electricBlue.withValues(alpha: .17),
+        selectedIconTheme: const IconThemeData(color: _cyan),
         unselectedIconTheme: const IconThemeData(color: _muted),
-        selectedLabelTextStyle: const TextStyle(color: _goldLight, fontSize: 11, fontWeight: FontWeight.w800),
+        selectedLabelTextStyle: const TextStyle(color: _cyan, fontSize: 11, fontWeight: FontWeight.w800),
         unselectedLabelTextStyle: const TextStyle(color: _muted, fontSize: 11),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: _gold,
+          backgroundColor: _electricBlue,
           foregroundColor: const Color(0xFF100D07),
           minimumSize: const Size(0, 48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -117,7 +117,7 @@ class ApexAdminApp extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _goldLight, width: 1.4),
+          borderSide: const BorderSide(color: _cyan, width: 1.4),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
@@ -155,7 +155,7 @@ class _ApexBrandPainter extends CustomPainter {
     canvas.scale(scale, scale);
 
     final gold = Paint()
-      ..color = _gold
+      ..color = _electricBlue
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.2
       ..strokeJoin = StrokeJoin.round
@@ -238,7 +238,7 @@ class _ApexAmbientBackground extends StatelessWidget {
                 height: 380,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [_red.withValues(alpha: .08), Colors.transparent]),
+                  gradient: RadialGradient(colors: [_danger.withValues(alpha: .08), Colors.transparent]),
                 ),
               ),
             ),
@@ -252,7 +252,7 @@ class _ApexAmbientBackground extends StatelessWidget {
                 height: 260,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: RadialGradient(colors: [_gold.withValues(alpha: .07), Colors.transparent]),
+                  gradient: RadialGradient(colors: [_electricBlue.withValues(alpha: .07), Colors.transparent]),
                 ),
               ),
             ),
@@ -471,7 +471,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text(
                         'PRIVATE OWNER CONSOLE',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: _gold, fontSize: 11, letterSpacing: 2, fontWeight: FontWeight.w700),
+                        style: TextStyle(color: _electricBlue, fontSize: 11, letterSpacing: 2, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 28),
                       TextField(
@@ -789,7 +789,7 @@ class _AdminShellState extends State<AdminShell> {
                 padding: const EdgeInsets.fromLTRB(20, 18, 12, 12),
                 child: Row(
                   children: [
-                    const Icon(Icons.notifications_active_outlined, color: _gold),
+                    const Icon(Icons.notifications_active_outlined, color: _electricBlue),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text('Notifications', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
@@ -798,7 +798,7 @@ class _AdminShellState extends State<AdminShell> {
                     IconButton(
                       tooltip: _pushReady ? 'Enable background push alerts' : 'Firebase setup required for background alerts',
                       onPressed: _pushReady ? _enablePushNotifications : null,
-                      icon: Icon(Icons.notifications_active_outlined, color: _pushReady ? _gold : _muted),
+                      icon: Icon(Icons.notifications_active_outlined, color: _pushReady ? _electricBlue : _muted),
                     ),
                     IconButton(
                       tooltip: 'Close notifications',
@@ -832,10 +832,10 @@ class _AdminShellState extends State<AdminShell> {
                                 width: 42,
                                 height: 42,
                                 decoration: BoxDecoration(
-                                  color: _gold.withValues(alpha: .14),
+                                  color: _electricBlue.withValues(alpha: .14),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: const Icon(Icons.mark_chat_unread_outlined, color: _gold),
+                                child: const Icon(Icons.mark_chat_unread_outlined, color: _electricBlue),
                               ),
                               title: Text(client, style: const TextStyle(fontWeight: FontWeight.w800)),
                               subtitle: Padding(
@@ -844,7 +844,7 @@ class _AdminShellState extends State<AdminShell> {
                               ),
                               trailing: CircleAvatar(
                                 radius: 13,
-                                backgroundColor: _gold,
+                                backgroundColor: _electricBlue,
                                 child: Text(
                                   '${_integer(item['unreadCount'])}',
                                   style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w900),
@@ -1074,7 +1074,7 @@ class _AdminShellState extends State<AdminShell> {
                       constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                       decoration: BoxDecoration(
-                        color: _red,
+                        color: _danger,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: _background, width: 1.5),
                       ),
@@ -1251,13 +1251,13 @@ class OverviewPage extends StatelessWidget {
           crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: c.maxWidth < 380 ? 1.15 : 1.45,
           children: [
             GlassStatsCard(title: 'Recent leads', value: '${data.inquiries.length}', note: 'Latest 100 loaded', icon: Icons.groups_outlined, color: const Color(0xFF7BC8FF)),
-            GlassStatsCard(title: 'Contacts', value: '$contacts', note: 'Unique prospects', icon: Icons.person_search, color: _goldLight),
+            GlassStatsCard(title: 'Contacts', value: '$contacts', note: 'Unique prospects', icon: Icons.person_search, color: _cyan),
             GlassStatsCard(title: 'Conversations', value: '${data.conversations.length}', note: '$unread unread', icon: Icons.forum_outlined, color: const Color(0xFFB69CFF)),
             GlassStatsCard(title: 'Paid invoices', value: '${paid.length}', note: 'Confirmed payments', icon: Icons.verified_outlined, color: const Color(0xFF8FE0B4)),
             GlassStatsCard(title: 'EGP revenue', value: _compactMoney(egpMinor / 100), note: 'Paid EGP only', icon: Icons.account_balance_wallet_outlined, color: const Color(0xFF8FE0B4)),
             GlassStatsCard(title: 'Pending', value: '$pending', note: 'Awaiting payment', icon: Icons.hourglass_top, color: const Color(0xFFFFC46B)),
             GlassStatsCard(title: 'Recent events', value: '${data.events.length}', note: 'Latest 500 loaded', icon: Icons.insights, color: _cyan),
-            GlassStatsCard(title: 'Payment issues', value: '$failed', note: 'Failed / cancelled', icon: Icons.warning_amber, color: _red),
+            GlassStatsCard(title: 'Payment issues', value: '$failed', note: 'Failed / cancelled', icon: Icons.warning_amber, color: _danger),
           ]);
       }),
       const SizedBox(height: 18),
@@ -1411,14 +1411,14 @@ class _LeadsPageState extends State<LeadsPage> {
                   label: Text(label),
                   selected: _status == value,
                   onSelected: (_) => setState(() => _status = value),
-                  selectedColor: _gold.withValues(alpha: .2),
+                  selectedColor: _electricBlue.withValues(alpha: .2),
                   labelStyle: TextStyle(
-                    color: _status == value ? _goldLight : _muted,
+                    color: _status == value ? _cyan : _muted,
                     fontWeight: FontWeight.w700,
                     fontSize: 11,
                   ),
                   side: BorderSide(
-                    color: _status == value ? _gold.withValues(alpha: .65) : Colors.white12,
+                    color: _status == value ? _electricBlue.withValues(alpha: .65) : Colors.white12,
                   ),
                 ),
               );
@@ -1495,7 +1495,7 @@ class _InquiryCard extends StatelessWidget {
           Text(_string(item['client_email'], 'No email'), style: const TextStyle(color: _muted, fontSize: 12)),
           if (phone.isNotEmpty) Text(phone, style: const TextStyle(color: _muted, fontSize: 12)),
           const SizedBox(height: 12),
-          Text(_string(item['project_type'], 'Project inquiry'), style: const TextStyle(color: _gold, fontWeight: FontWeight.w700)),
+          Text(_string(item['project_type'], 'Project inquiry'), style: const TextStyle(color: _electricBlue, fontWeight: FontWeight.w700)),
           if (_string(item['budget_range'], '').isNotEmpty)
             Text('Budget: ${item['budget_range']}', style: const TextStyle(color: _muted, fontSize: 12)),
           const SizedBox(height: 8),
@@ -1510,7 +1510,7 @@ class _InquiryCard extends StatelessWidget {
                 itemBuilder: (context) => statuses!.map((value) => PopupMenuItem(value: value, child: Text(_prettyStatus(value)))).toList(),
                 child: const Padding(
                   padding: EdgeInsets.all(8),
-                  child: Row(children: [Icon(Icons.edit_outlined, size: 17, color: _gold), SizedBox(width: 5), Text('Update', style: TextStyle(color: _gold))]),
+                  child: Row(children: [Icon(Icons.edit_outlined, size: 17, color: _electricBlue), SizedBox(width: 5), Text('Update', style: TextStyle(color: _electricBlue))]),
                 ),
               ),
           ]),
@@ -1657,12 +1657,12 @@ class _ConversationCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(children: [
-            CircleAvatar(backgroundColor: _gold.withValues(alpha: .15), child: const Icon(Icons.person_outline, color: _gold)),
+            CircleAvatar(backgroundColor: _electricBlue.withValues(alpha: .15), child: const Icon(Icons.person_outline, color: _electricBlue)),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(_string(item['clientName'], _string(item['clientEmail'], 'Website visitor')), style: const TextStyle(fontWeight: FontWeight.w800)),
               const SizedBox(height: 4),
-              Text(_string(item['subject'], 'Project inquiry'), style: const TextStyle(color: _gold, fontSize: 12)),
+              Text(_string(item['subject'], 'Project inquiry'), style: const TextStyle(color: _electricBlue, fontSize: 12)),
               if (last.isNotEmpty) ...[
                 const SizedBox(height: 5),
                 Text('$senderLabel: ${_string(last['body'], '')}', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _muted, fontSize: 12)),
@@ -1840,7 +1840,7 @@ class _ConversationDetailPageState extends State<ConversationDetailPage> {
                 icon: _sending
                     ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.send_rounded),
-                style: IconButton.styleFrom(backgroundColor: _gold, foregroundColor: Colors.black),
+                style: IconButton.styleFrom(backgroundColor: _electricBlue, foregroundColor: Colors.black),
               ),
             ]),
           ),
@@ -1977,7 +1977,7 @@ class PaymentsPage extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(17),
             child: Row(children: [
-              const Icon(Icons.account_balance_wallet_outlined, color: _gold),
+              const Icon(Icons.account_balance_wallet_outlined, color: _electricBlue),
               const SizedBox(width: 12),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('Invoice total', style: TextStyle(color: _muted)),
@@ -2001,7 +2001,7 @@ class PaymentsPage extends StatelessWidget {
                 _StatusPill(status: _string(item['status'], 'pending')),
               ]),
               const SizedBox(height: 10),
-              Text(_egp(_integer(item['amount_minor'])), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: _gold)),
+              Text(_egp(_integer(item['amount_minor'])), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: _electricBlue)),
               const SizedBox(height: 4),
               Text('${_string(item['provider'], 'payment').toUpperCase()} · ${_dateTime(item['created_at'])}', style: const TextStyle(color: _muted, fontSize: 10)),
               if (_string(item['provider_reference'], '').isNotEmpty)
@@ -2098,7 +2098,7 @@ class _LogList extends StatelessWidget {
           child: ListTile(
             leading: Icon(
               isSecurity ? Icons.shield_outlined : Icons.receipt_long_outlined,
-              color: severity == 'critical' || severity == 'high' ? const Color(0xFFFF8B80) : _gold,
+              color: severity == 'critical' || severity == 'high' ? const Color(0xFFFF8B80) : _electricBlue,
             ),
             title: Text(_prettyStatus(title), style: const TextStyle(fontWeight: FontWeight.w700)),
             subtitle: Text('$detail · ${_dateTime(row['created_at'])}', style: const TextStyle(color: _muted, fontSize: 10)),
@@ -2192,7 +2192,7 @@ class _ControlsPageState extends State<ControlsPage> {
               if (_string(widget.controls['lockdown_reason'], '').isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
-                  child: Text('Current reason: ${widget.controls['lockdown_reason']}', style: const TextStyle(color: _gold, fontSize: 12)),
+                  child: Text('Current reason: ${widget.controls['lockdown_reason']}', style: const TextStyle(color: _electricBlue, fontSize: 12)),
                 ),
               const SizedBox(height: 18),
               SizedBox(
@@ -2267,7 +2267,7 @@ class _StatusPill extends StatelessWidget {
         ? const Color(0xFF8FE0B4)
         : normalized == 'critical' || normalized == 'high' || normalized == 'failed' || normalized == 'locked' || normalized == 'cancelled'
             ? const Color(0xFFFF8B80)
-            : _gold;
+            : _electricBlue;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
@@ -2331,7 +2331,7 @@ class _LoadingScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(28),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              const CircularProgressIndicator(color: _gold),
+              const CircularProgressIndicator(color: _electricBlue),
               const SizedBox(height: 20),
               Text(title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
               const SizedBox(height: 7),
@@ -2352,7 +2352,7 @@ class _ErrorState extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(26),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.cloud_off_outlined, size: 42, color: _gold),
+            const Icon(Icons.cloud_off_outlined, size: 42, color: _electricBlue),
             const SizedBox(height: 12),
             const Text('Workspace unavailable', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19)),
             const SizedBox(height: 8),
