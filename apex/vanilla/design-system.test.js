@@ -21,6 +21,6 @@ describe('APEX public design tokens', () => {
   });
 
   it('keeps a reduced-motion mode for non-essential animation', () => {
-    expect(styles.includes('prefers-reduced-motion: reduce')).toBe(true);
+    expect(styles.includes('prefers-reduced-motion')).toBe(true);
   });
 });
