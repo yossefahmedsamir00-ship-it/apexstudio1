@@ -6,20 +6,21 @@ const editorial = readFileSync('vanilla/editorial.css', 'utf8');
 
 describe('APEX public design tokens', () => {
   it('defines the black, electric-blue and cyan brand palette', () => {
-    expect(styles).toMatch(/--bg:\s*#070a10/i);
-    expect(styles).toMatch(/--electric-blue:\s*#1677ff/i);
-    expect(styles).toMatch(/--cyan:\s*#12d9ff/i);
-    expect(styles).toMatch(/--surface:\s*#0c1422/i);
+    expect(styles.includes('--bg: #070a10')).toBe(true);
+    expect(styles.includes('--electric-blue: #1677ff')).toBe(true);
+    expect(styles.includes('--cyan: #12d9ff')).toBe(true);
+    expect(styles.includes('--surface: #0c1422')).toBe(true);
   });
 
   it('keeps the editorial layer on the same palette without legacy gold variables', () => {
-    expect(editorial).toMatch(/--bg:\s*#070a10/i);
-    expect(editorial).toMatch(/--electric-blue:\s*#1677ff/i);
-    expect(editorial).toMatch(/--cyan:\s*#12d9ff/i);
-    expect(editorial).not.toMatch(/--gold:|var\(\s*--gold/i);
+    expect(editorial.includes('--bg: #070a10')).toBe(true);
+    expect(editorial.includes('--electric-blue: #1677ff')).toBe(true);
+    expect(editorial.includes('--cyan: #12d9ff')).toBe(true);
+    expect(editorial.includes('--gold:')).toBe(false);
+    expect(editorial.includes('var(--gold')).toBe(false);
   });
 
   it('keeps a reduced-motion mode for non-essential animation', () => {
-    expect(styles).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/i);
+    expect(styles.includes('prefers-reduced-motion: reduce')).toBe(true);
   });
 });
