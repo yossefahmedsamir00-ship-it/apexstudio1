@@ -7,6 +7,7 @@ Status: proposed server contract; no function is deployed by this document.
 - Browser and Flutter clients call Edge Functions only. They never query social tables directly.
 - Every owner route requires a valid Supabase access token, verified with `auth.getUser(token)`.
 - After authentication, the server verifies the caller against the existing `apex_owner_settings.owner_user_id`. A matching email address or client-supplied role is not sufficient.
+- Release 1 has exactly one configured owner identity. No staff invitations, public admin registration, or team roles are supported.
 - Privileged database access uses a server-only Supabase secret/service-role key. Never return it, provider tokens, encryption material, or raw provider errors.
 - Do not trust tenant IDs supplied by clients. Resolve the active tenant server-side from the configured owner membership/tenant record.
 - Apply bounded request sizes, strict schemas, rate limits, CORS allowlists, no-store responses, and audit events to mutations.
