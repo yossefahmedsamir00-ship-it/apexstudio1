@@ -37,12 +37,15 @@ See docs/APEX_SOCIAL_AI_GROWTH_SYSTEM.md for the unified Brand Brain, research, 
 - AI agents: Research, Writer, Creative, Analyst, and Orchestrator. They can draft and recommend; they cannot approve or publish.
 
 ## 5. Tenant and authorization model
+- Release 1 provisions one APEX STUDIO tenant and exactly one configured owner identity.
+- The APEX Admin application is private to that owner account. No public admin registration, staff accounts, invitations, or team roles are enabled in Release 1.
 - Every tenant-owned row includes `tenant_id`.
-- Release 1 provisions one APEX STUDIO tenant and only owner-authorized accounts.
 - RLS denies cross-tenant reads and writes.
 - Owner-only operations require a verified owner identity on the server; hiding UI controls is not authorization.
+- The server resolves the active tenant and owner identity from trusted configuration/database records, never from client-supplied role or tenant claims.
 - Service-role credentials remain in Edge Function secrets only.
 - Destructive actions, account disconnects, publishing, and workflow changes are audited.
+- A future team-access model requires a separate approved decision and permission design; it is not part of Release 1.
 
 ## 6. Content and publishing lifecycle
 `idea -> draft -> in_review -> approved -> scheduled -> publishing -> published`
@@ -63,7 +66,7 @@ Alternative terminal/recovery states: `rejected`, `failed`, `cancelled`.
 
 ## 8. Initial data entities
 - `social_tenants`
-- `social_memberships`
+- `social_memberships` (Release 1 contains only the owner's active membership)
 - `social_accounts`
 - `social_account_secrets` (server-only access; encrypted values)
 - `social_campaigns`
@@ -121,6 +124,8 @@ Every function validates caller identity, tenant membership, ownership, payload 
 - No platform password is requested or stored.
 - No secret or service-role key is shipped to web/mobile clients.
 - RLS tests prove tenant isolation.
+- Non-owner users cannot access any admin data or operation.
+- No staff invitation, public admin registration, or team-role flow exists in Release 1.
 - No AI agent can approve or publish.
 - Editing approved content invalidates approval.
 - Every publish attempt is idempotent and auditable.
@@ -136,3 +141,4 @@ Every function validates caller identity, tenant membership, ownership, payload 
 - Auto-publishing without owner approval.
 - Unofficial scraping or UI automation.
 - Paid ads campaign management or ad spend controls.
+- Multi-user admin access, staff accounts, invitations, and team roles.
