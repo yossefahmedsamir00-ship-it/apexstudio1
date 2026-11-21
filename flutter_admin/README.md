@@ -2,6 +2,17 @@
 
 Private Flutter application for managing the same APEX STUDIO Supabase project used by the website.
 
+## Release 1 access decision
+
+APEX Admin is restricted to exactly one configured owner account.
+
+- No public admin sign-up, staff accounts, employee invitations, or team-role management in Release 1.
+- Authentication does not grant admin access by itself; the backend must verify the signed-in user against the configured owner identity.
+- Any non-owner account is denied access to admin screens and protected operations.
+- The architecture may support separately approved team access in a future release, but no such access is enabled now.
+
+See [ADR-001 — APEX Admin: Single Owner Account](../docs/decisions/ADR-001-apex-admin-single-owner.md).
+
 ## Connected modules
 
 - Password sign-in and email OTP sign-in.
@@ -42,7 +53,7 @@ The app requests email OTP with account creation disabled. Supabase Auth email m
 
 ## Owner onboarding
 
-The existing owner account must use the owner email configured in the deployed apex-owner-bootstrap Edge Function and must have a verified email. On the first successful owner login, the Edge Function claims the owner slot if it has not already been claimed. The app does not create owner accounts or allow self-assigned roles.
+The existing owner account must use the owner identity configured in the deployed apex-owner-bootstrap Edge Function and must have a verified email. On the first successful owner login, the Edge Function claims the owner slot if it has not already been claimed. The app does not create owner accounts or allow self-assigned roles.
 
 ## CI
 
